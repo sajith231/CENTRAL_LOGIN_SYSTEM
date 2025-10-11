@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Add User{% endblock %}
+{% block header_title %}<strong>Users</strong><span class="muted"> / add</span>{% endblock %}
+{% block active_users %}active{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="card" style="margin-bottom:12px;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+    <h2 style="margin-top:0;">Add User</h2>
+    <form method="post" action="{% url 'add_user' %}">
+      {% csrf_token %}
+
+      <label style="display:block; margin-top:12px;">Name</label>
+      <input name="name" type="text" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+
+      <label style="display:block; margin-top:12px;">Email</label>
+      <input name="email" type="email" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+
+      <label style="display:block; margin-top:12px;">Password</label>
+      <input name="password" type="text" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+
+      <label style="display:block; margin-top:12px;">Branch</label>
+      <select name="branch" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+        <option value="" disabled selected>-- select branch --</option>
+        {% for b in branches %}
+          <option value="{{ b }}">{{ b }}</option>
+        {% endfor %}
+      </select>
+
+      <label style="display:block; margin-top:12px;">User Role</label>
+      <input name="user_role" type="text" placeholder="e.g., Sales Executive, Accountant" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+
+      <label style="display:block; margin-top:12px;">Level</label>
+      <select name="level" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+        <option value="" disabled selected>-- select level --</option>
+        {% for l in levels %}
+          <option value="{{ l }}">{{ l }}</option>
+        {% endfor %}
+      </select>
+
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <button class="btn" type="submit">Save</button>
+        <a class="btn" href="{% url 'users_table' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Admin{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root{
+      --bg:#0f172a;         /* page background (slate-900)   */
+      --panel:#111827;      /* panels/nav (gray-900)         */
+      --text:#e5e7eb;       /* text (gray-200)               */
+      --muted:#9ca3af;      /* muted text (gray-400)         */
+      --hover:#1f2937;      /* hover panel (gray-800)        */
+      --radius:14px;
+      --shadow:0 10px 30px rgba(0,0,0,.25);
+      --sidebar:260px;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; background:var(--bg); color:var(--text); }
+
+    /* Layout */
+    .layout { display:flex; min-height:100vh; }
+    .sidebar {
+      width:var(--sidebar);
+      background:var(--panel);
+      padding:18px 14px;
+      box-shadow:var(--shadow);
+      position:sticky; top:0; height:100vh;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .menu { list-style:none; padding:0; margin:0; }
+    .menu li { margin:6px 0; }
+    .menu a {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 12px; border-radius:12px; text-decoration:none; color:var(--text);
+      background:transparent;
+    }
+    .menu a:hover { background:var(--hover); }
+    .menu a.active { background:var(--hover); outline:1px solid rgba(255,255,255,.06); }
+
+    .content { flex:1; display:flex; flex-direction:column; min-width:0; }
+    .topbar {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 20px; background:var(--panel); position:sticky; top:0; z-index:2; box-shadow:var(--shadow);
+    }
+    .muted { color:var(--muted); }
+    .btn { padding:10px 14px; background:var(--panel); border-radius:10px; color:var(--text); text-decoration:none; display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; }
+    .btn:hover { background:var(--hover); }
+    main { padding:22px; }
+    .card { background:var(--panel); padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); }
+
+    /* Mobile (collapsible sidebar) */
+    @media (max-width: 900px) {
+      .sidebar { position:fixed; left:-100%; transition:left .25s ease; z-index:5; }
+      .sidebar.open { left:0; }
+      .content { margin-left:0; }
+      .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:4; }
+      .overlay.show { display:block; }
+      .hamburger { display:inline-flex; padding:10px 12px; border-radius:10px; background:var(--panel); border:none; color:var(--text); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar (no brand, no logout) -->
+    <aside id="sidebar" class="sidebar">
+      <ul class="menu">
+        <li>
+  <a href="{% url 'admin_dashboard' %}" class="{% block active_dashboard %}{% endblock %}">
+    <i class="fa-solid fa-gauge"></i> Dashboard
+  </a>
+</li>
+<li>
+  <a href="#" class="{% block active_web %}{% endblock %}">
+    <i class="fa-solid fa-globe"></i> Web Control
+  </a>
+</li>
+<li>
+  <a href="#" class="{% block active_app %}{% endblock %}">
+    <i class="fa-solid fa-mobile-screen-button"></i> App Control
+  </a>
+</li>
+<li>
+  <a href="{% url 'users_table' %}" class="{% block active_users %}{% endblock %}">
+    <i class="fa-solid fa-users"></i> Users
+  </a>
+</li>
+
+      </ul>
+
+      <div class="muted" style="font-size:12px; margin-top:auto;">
+        Signed in as <strong>
+          {% if request.user.is_superuser %}
+            {{ request.user.username }}
+          {% else %}
+            {{ request.session.custom_user_name }}
+          {% endif %}
+        </strong>
+      </div>
+    </aside>
+
+    <!-- Right side -->
+    <div class="content">
+      <div class="topbar">
+        <div class="mobile-top">
+          <button id="hamburger" class="hamburger" aria-label="Toggle menu" onclick="toggleSidebar()">☰</button>
+          <div>{% block header_title %}<strong>Admin</strong><span class="muted"> / panel</span>{% endblock %}</div>
+        </div>
+        <!-- Logout (only here) -->
+        <a class="btn" href="{% url 'logout' %}">Logout</a>
+      </div>
+
+      <main>
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  <script>
+    // simple mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    function toggleSidebar() {
+      const open = sidebar.classList.toggle('open');
+      overlay.classList.toggle('show', open);
+    }
+    // hide hamburger on desktop
+    const mq = window.matchMedia('(min-width: 901px)');
+    function syncHamburger(){
+      const btn = document.getElementById('hamburger');
+      if (!btn) return;
+      btn.style.display = mq.matches ? 'none' : 'inline-flex';
+    }
+    mq.addEventListener('change', syncHamburger); syncHamburger();
+  </script>
+</body>
+</html>
