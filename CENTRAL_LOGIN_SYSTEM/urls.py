@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("app1.urls")),   # routes to app1
-]
+    path("webapp/", include("WebApp.urls")),   # routes to web_control 
+    path("mobileapp/", include("MobileApp.urls")),   
+    
+]+ (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG and not settings.CLOUDFLARE_R2_ENABLED else [])

@@ -13,31 +13,76 @@
 
   <div class="card">
     <h2 style="margin-top:0;">Add User</h2>
-    <form method="post" action="{% url 'add_user' %}">
+
+    <form method="post" action="{% url 'add_user' %}" enctype="multipart/form-data">
       {% csrf_token %}
 
+      <!-- Name -->
       <label style="display:block; margin-top:12px;">Name</label>
-      <input name="name" type="text" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input
+        name="name"
+        type="text"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Profile Image (optional) -->
+      <label style="display:block; margin-top:12px;">Profile Picture <span class="muted">(optional)</span></label>
+      <input
+        name="profile_image"
+        type="file"
+        accept="image/*"
+        style="width:100%;"
+      >
+
+      <!-- Email -->
       <label style="display:block; margin-top:12px;">Email</label>
-      <input name="email" type="email" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input
+        name="email"
+        type="email"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Password -->
       <label style="display:block; margin-top:12px;">Password</label>
-      <input name="password" type="text" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input
+        name="password"
+        type="text"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Branch -->
       <label style="display:block; margin-top:12px;">Branch</label>
-      <select name="branch" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <select
+        name="branch"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
         <option value="" disabled selected>-- select branch --</option>
         {% for b in branches %}
           <option value="{{ b }}">{{ b }}</option>
         {% endfor %}
       </select>
 
+      <!-- User Role -->
       <label style="display:block; margin-top:12px;">User Role</label>
-      <input name="user_role" type="text" placeholder="e.g., Sales Executive, Accountant" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input
+        name="user_role"
+        type="text"
+        placeholder="e.g., Sales Executive, Accountant"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Level -->
       <label style="display:block; margin-top:12px;">Level</label>
-      <select name="level" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <select
+        name="level"
+        required
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
         <option value="" disabled selected>-- select level --</option>
         {% for l in levels %}
           <option value="{{ l }}">{{ l }}</option>

@@ -92,30 +92,47 @@ def logout_view(request):
 
 # --------- ADMIN ONLY: USER MANAGEMENT ----------
 # Make the LIST visible to ALL logged-in users (Django-auth OR custom session)
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Users
+
+
 def users_table(request):
+    """Display all users with profile images and details."""
+    # Check if the user is logged in (works for both Django auth and custom session)
     is_logged_in = request.user.is_authenticated or ('custom_user_id' in request.session)
     if not is_logged_in:
         messages.error(request, "Please log in to access this page.")
         return redirect("login")
 
-    rows = [
-        {
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "branch": u.branch,
-            "user_role": u.user_role,
-            "level": u.level,
-            "password": u.password,  # Plain text password
-        }
-        for u in Users.objects.all().order_by("-id")
-    ]
+    # Fetch all users ordered by newest first
+    rows = Users.objects.all().order_by("-id")
+
+    # Pass model instances directly to the template
+    # so {{ r.profile_image.url }} works automatically
     return render(request, "users_table.html", {"rows": rows})
 
-# Keep CREATE/UPDATE/DELETE restricted to Django superusers
-@login_required(login_url=reverse_lazy('login'))
-@user_passes_test(is_superuser, login_url=reverse_lazy('login'))
+
+
+
+
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+
+from .models import Users, BRANCH_CHOICES, LEVEL_CHOICES
+
+# Helper to check whether either Django user or custom session user is logged in
+def is_any_user_logged_in(request):
+    return request.user.is_authenticated or ('custom_user_id' in request.session)
+
+# ----------------- ALLOW ALL LOGGED-IN USERS TO CREATE / UPDATE / DELETE -----------------
+
 def add_user(request):
+    if not is_any_user_logged_in(request):
+        messages.error(request, "Please log in to access this page.")
+        return redirect("login")
+
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
@@ -123,6 +140,7 @@ def add_user(request):
         branch = request.POST.get("branch", "")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
+        image_file = request.FILES.get("profile_image")  # NEW
 
         if not all([name, email, password, branch, user_role, level]):
             messages.error(request, "Please fill in all fields.")
@@ -132,15 +150,18 @@ def add_user(request):
             messages.error(request, "A user with this email already exists.")
             return redirect("add_user")
 
-        # ⚠️ STORING PLAIN TEXT PASSWORD - INSECURE!
-        Users.objects.create(
+        u = Users(
             name=name,
             email=email,
-            password=password,
+            password=password,  # NOTE: still plain text in your schema
             branch=branch,
             user_role=user_role,
             level=level,
         )
+        if image_file:
+            u.profile_image = image_file   # this triggers R2 upload on save
+        u.save()
+
         messages.success(request, f"User '{name}' saved.")
         return redirect("users_table")
 
@@ -148,9 +169,14 @@ def add_user(request):
     levels = [l[0] for l in LEVEL_CHOICES]
     return render(request, "add_user.html", {"branches": branches, "levels": levels})
 
-@login_required(login_url=reverse_lazy('login'))
-@user_passes_test(is_superuser, login_url=reverse_lazy('login'))
+
 def edit_user(request, pk):
+    """Edit an existing user, with optional profile image update (R2 compatible)."""
+    # Only allow access to logged-in users (Django-auth OR custom session)
+    if not is_any_user_logged_in(request):
+        messages.error(request, "Please log in to access this page.")
+        return redirect("login")
+
     u = get_object_or_404(Users, pk=pk)
 
     if request.method == "POST":
@@ -160,6 +186,7 @@ def edit_user(request, pk):
         branch = request.POST.get("branch", "")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
+        image_file = request.FILES.get("profile_image")  # ✅ handle image update
 
         if not all([name, email, branch, user_role, level]):
             messages.error(request, "Please fill in all required fields.")
@@ -169,25 +196,39 @@ def edit_user(request, pk):
             messages.error(request, "A user with this email already exists.")
             return redirect("edit_user", pk=pk)
 
+        # Update fields
         u.name = name
         u.email = email
         u.branch = branch
         u.user_role = user_role
         u.level = level
         if password:
-            u.password = password  # Plain text
+            u.password = password  # (still plain text — consider hashing later)
+
+        # ✅ Handle new image upload (optional)
+        if image_file:
+            # Delete old image from R2 (or local storage) if exists
+            if u.profile_image:
+                u.profile_image.delete(save=False)
+            # Save new one
+            u.profile_image = image_file
+
         u.save()
 
-        messages.success(request, "User updated.")
+        messages.success(request, "User updated successfully.")
         return redirect("users_table")
 
     branches = [b[0] for b in BRANCH_CHOICES]
     levels = [l[0] for l in LEVEL_CHOICES]
     return render(request, "edit_user.html", {"u": u, "branches": branches, "levels": levels})
 
-@login_required(login_url=reverse_lazy('login'))
-@user_passes_test(is_superuser, login_url=reverse_lazy('login'))
+
 def delete_user(request, pk):
+    # Only allow access to logged-in users (Django-auth OR custom session)
+    if not is_any_user_logged_in(request):
+        messages.error(request, "Please log in to access this page.")
+        return redirect("login")
+
     u = get_object_or_404(Users, pk=pk)
     if request.method == "POST":
         name = u.name

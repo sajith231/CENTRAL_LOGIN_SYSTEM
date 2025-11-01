@@ -13,35 +13,94 @@
 
   <div class="card">
     <h2 style="margin-top:0;">Edit User</h2>
-    <form method="post" action="{% url 'edit_user' u.id %}">
+    <form method="post" action="{% url 'edit_user' u.id %}" enctype="multipart/form-data">
       {% csrf_token %}
 
+      <!-- Name -->
       <label style="display:block; margin-top:12px;">Name</label>
-      <input name="name" type="text" value="{{ u.name }}" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input 
+        name="name" 
+        type="text" 
+        value="{{ u.name }}" 
+        required 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Current Profile Image -->
+      {% if u.profile_image %}
+        <label style="display:block; margin-top:12px;">Current Profile Picture</label>
+        <div style="margin-bottom:10px;">
+          <img 
+            src="{{ u.profile_image.url }}" 
+            alt="{{ u.name }}" 
+            style="height:80px; width:80px; border-radius:50%; object-fit:cover; border:1px solid #1e293b;"
+          >
+        </div>
+      {% endif %}
+
+      <!-- Upload New Profile Image -->
+      <label style="display:block; margin-top:12px;">Change Profile Picture <span class="muted">(optional)</span></label>
+      <input 
+        name="profile_image" 
+        type="file" 
+        accept="image/*" 
+        style="width:100%; padding:8px;"
+      >
+
+      <!-- Email -->
       <label style="display:block; margin-top:12px;">Email</label>
-      <input name="email" type="email" value="{{ u.email }}" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input 
+        name="email" 
+        type="email" 
+        value="{{ u.email }}" 
+        required 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
-      <label style="display:block; margin-top:12px;">Password <span class="muted">(leave blank to keep)</span></label>
-      <input name="password" type="text" placeholder="••••••••" style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <!-- Password -->
+      <label style="display:block; margin-top:12px;">Password <span class="muted">(leave blank to keep current)</span></label>
+      <input 
+        name="password" 
+        type="text" 
+        placeholder="••••••••" 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Branch -->
       <label style="display:block; margin-top:12px;">Branch</label>
-      <select name="branch" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <select 
+        name="branch" 
+        required 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
         {% for b in branches %}
           <option value="{{ b }}" {% if u.branch == b %}selected{% endif %}>{{ b }}</option>
         {% endfor %}
       </select>
 
+      <!-- User Role -->
       <label style="display:block; margin-top:12px;">User Role</label>
-      <input name="user_role" type="text" value="{{ u.user_role }}" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <input 
+        name="user_role" 
+        type="text" 
+        value="{{ u.user_role }}" 
+        required 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
 
+      <!-- Level -->
       <label style="display:block; margin-top:12px;">Level</label>
-      <select name="level" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+      <select 
+        name="level" 
+        required 
+        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
+      >
         {% for l in levels %}
           <option value="{{ l }}" {% if u.level == l %}selected{% endif %}>{{ l }}</option>
         {% endfor %}
       </select>
 
+      <!-- Buttons -->
       <div style="margin-top:16px; display:flex; gap:10px;">
         <button class="btn" type="submit">Update</button>
         <a class="btn" href="{% url 'users_table' %}">Cancel</a>

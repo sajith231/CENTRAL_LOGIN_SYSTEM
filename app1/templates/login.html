@@ -7,20 +7,177 @@
   <style>
     body { 
       font-family: system-ui, sans-serif; 
-      background:#0f172a; 
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
       display:flex; 
       min-height:100vh; 
       align-items:center; 
       justify-content:center;
       color:#e5e7eb;
+      margin: 0;
+      padding: 20px;
     }
     .card { 
       background:#111827; 
       width:400px; 
+      max-width: 100%;
       padding:32px; 
-      border-radius:16px; 
-      box-shadow:0 20px 50px rgba(0,0,0,.3); 
+      border-radius:20px; 
+      box-shadow:0 25px 60px rgba(0,0,0,.5); 
+      position: relative;
     }
+    
+    /* Lock Character Container */
+    .lock-container {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Custom Lock Design */
+    .lock-body {
+      width: 80px;
+      height: 90px;
+      background: linear-gradient(145deg, #3b82f6, #2563eb);
+      border-radius: 15px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+      animation: lockBounce 0.6s ease-out;
+    }
+    
+    .lock-shackle {
+      width: 50px;
+      height: 35px;
+      border: 8px solid #3b82f6;
+      border-bottom: none;
+      border-radius: 25px 25px 0 0;
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .lock-keyhole {
+      width: 8px;
+      height: 8px;
+      background: #0f172a;
+      border-radius: 50%;
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .lock-keyhole::after {
+      content: '';
+      width: 3px;
+      height: 15px;
+      background: #0f172a;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 0 0 2px 2px;
+    }
+    
+    @keyframes lockBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* Face Features on Lock */
+    .face-container {
+      position: absolute;
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+    }
+    
+    .eyes {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .eye {
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .pupil {
+      width: 7px;
+      height: 7px;
+      background: #0f172a;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.2s ease;
+    }
+    
+    .eye.closed {
+      height: 14px;
+      overflow: hidden;
+    }
+    
+    .eye.closed .pupil {
+      transform: translate(-50%, -50%);
+    }
+    
+    .eyelid {
+      position: absolute;
+      top: -14px;
+      left: 0;
+      width: 100%;
+      height: 14px;
+      background: linear-gradient(180deg, #2563eb 0%, #3b82f6 100%);
+      border-radius: 50%;
+      transition: top 0.3s ease;
+    }
+    
+    .eye.closed .eyelid {
+      top: 0;
+    }
+    
+    .mouth {
+      width: 24px;
+      height: 12px;
+      border: 2px solid #1e293b;
+      border-top: none;
+      border-radius: 0 0 24px 24px;
+      margin: 0 auto;
+      transition: all 0.3s ease;
+    }
+    
+    .mouth.smile {
+      border-radius: 0 0 30px 30px;
+      border-color: #22c55e;
+      height: 15px;
+      width: 30px;
+      border-width: 3px;
+    }
+    
+    .mouth.angry {
+      border: none;
+      border-bottom: 3px solid #ef4444;
+      border-radius: 24px 24px 0 0;
+      transform: rotate(180deg);
+      height: 10px;
+      width: 24px;
+    }
+    
     .title { 
       margin:0 0 8px; 
       font-size:24px; 
@@ -48,6 +205,8 @@
       background:#0f172a;
       color:#e5e7eb;
       font-size:15px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
     }
     input:focus {
       border-color:#3b82f6;
@@ -63,10 +222,12 @@
       background:#3b82f6; 
       color:#fff;
       font-size:15px;
-      transition:background 0.2s;
+      transition:all 0.3s;
     }
     button:hover {
       background:#2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
     }
     .msg { 
       margin-top:12px; 
@@ -74,7 +235,20 @@
       border-radius:8px;
       font-size:14px;
       font-weight:600;
+      animation: slideIn 0.3s ease-out;
     }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     .msg.error {
       background:rgba(239, 68, 68, 0.1);
       border-left:3px solid #ef4444;
@@ -93,11 +267,45 @@
       font-size:13px;
       color:#9ca3af;
       text-align:center;
+      border: 1px solid #1f2937;
+    }
+    
+    /* Shake animation for wrong password */
+    @keyframes shake {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-5px) rotate(-5deg); }
+      75% { transform: translateY(-5px) rotate(5deg); }
+    }
+    
+    .shake {
+      animation: shake 0.4s ease-in-out;
     }
   </style>
 </head>
 <body>
   <div class="card">
+    <!-- Animated Lock with Face -->
+    <div class="lock-container">
+      <div class="lock-body" id="lockBody">
+        <div class="lock-shackle"></div>
+        <div class="lock-keyhole"></div>
+        
+        <div class="face-container">
+          <div class="eyes" id="eyes">
+            <div class="eye">
+              <div class="pupil" id="pupil-left"></div>
+              <div class="eyelid"></div>
+            </div>
+            <div class="eye">
+              <div class="pupil" id="pupil-right"></div>
+              <div class="eyelid"></div>
+            </div>
+          </div>
+          <div class="mouth" id="mouth"></div>
+        </div>
+      </div>
+    </div>
+
     <h1 class="title">Welcome Back</h1>
     <p class="subtitle">Sign in to continue to your dashboard</p>
 
@@ -109,21 +317,89 @@
       {% endfor %}
     {% endif %}
 
-    <form method="post" action="{% url 'login' %}">
+    <form method="post" action="{% url 'login' %}" id="loginForm">
       {% csrf_token %}
       <label>Email / Username</label>
-      <input type="text" name="username" placeholder="Enter your email or username" required autofocus />
+      <input type="text" name="username" id="username" placeholder="Enter your email or username" required autofocus />
 
       <label>Password</label>
-      <input type="password" name="password" placeholder="Enter your password" required />
+      <input type="password" name="password" id="password" placeholder="Enter your password" required />
 
       <button type="submit">Sign in</button>
     </form>
 
-    <div class="info-box">
-      <strong>Admin:</strong> Use your username<br>
-      <strong>User:</strong> Use your email address
-    </div>
+    
   </div>
+
+  <script>
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const eyes = document.querySelectorAll('.eye');
+    const pupils = document.querySelectorAll('.pupil');
+    const mouth = document.getElementById('mouth');
+    const lockBody = document.getElementById('lockBody');
+    const card = document.querySelector('.card');
+
+    // Track eye movement based on email input
+    usernameInput.addEventListener('input', (e) => {
+      const length = e.target.value.length;
+      const maxMove = 3;
+      const movement = Math.min(length * 0.5, maxMove);
+      
+      pupils.forEach(pupil => {
+        pupil.style.transform = `translate(calc(-50% + ${movement}px), -50%)`;
+      });
+    });
+
+    // Close eyes when typing password
+    passwordInput.addEventListener('focus', () => {
+      eyes.forEach(eye => eye.classList.add('closed'));
+    });
+
+    passwordInput.addEventListener('blur', () => {
+      if (passwordInput.value === '') {
+        eyes.forEach(eye => eye.classList.remove('closed'));
+      }
+    });
+
+    // Check for error messages on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const errorMsg = document.querySelector('.msg.error');
+      const successMsg = document.querySelector('.msg.success');
+      
+      if (errorMsg) {
+        // Show angry face
+        mouth.classList.add('angry');
+        lockBody.classList.add('shake');
+        eyes.forEach(eye => eye.classList.remove('closed'));
+        
+        setTimeout(() => {
+          lockBody.classList.remove('shake');
+        }, 400);
+      }
+      
+      if (successMsg) {
+        // Show happy face
+        mouth.classList.add('smile');
+        eyes.forEach(eye => eye.classList.remove('closed'));
+        
+        pupils.forEach(pupil => {
+          pupil.style.transform = 'translate(-50%, -50%)';
+        });
+      }
+    });
+
+    // Reset face on new input
+    usernameInput.addEventListener('focus', () => {
+      mouth.classList.remove('angry', 'smile');
+      if (passwordInput.value === '') {
+        eyes.forEach(eye => eye.classList.remove('closed'));
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      mouth.classList.remove('angry', 'smile');
+    });
+  </script>
 </body>
 </html>

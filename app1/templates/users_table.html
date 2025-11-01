@@ -16,7 +16,9 @@
       <h2 style="margin:0;">Users</h2>
       <a class="btn" href="{% url 'add_user' %}" title="Add New" aria-label="Add New" style="padding:10px; width:40px; height:40px; justify-content:center;">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
         </svg>
       </a>
     </div>
@@ -27,8 +29,8 @@
           <thead>
             <tr>
               <th style="text-align:left; padding:10px;">#</th>
-              <th style="text-align:left; padding:10px;">ID</th>
               <th style="text-align:left; padding:10px;">Name</th>
+              <th style="text-align:left; padding:10px;">Profile</th>
               <th style="text-align:left; padding:10px;">Email</th>
               <th style="text-align:left; padding:10px;">Branch</th>
               <th style="text-align:left; padding:10px;">User Role</th>
@@ -41,30 +43,44 @@
             {% for r in rows %}
               <tr style="background:#0f1b31;">
                 <td style="padding:10px;">{{ forloop.counter }}</td>
-                <td style="padding:10px;">{{ r.id }}</td>
                 <td style="padding:10px;">{{ r.name|default:"-" }}</td>
+
+                <!-- 🖼 Profile Image -->
+                <td style="padding:10px;">
+                  {% if r.profile_image %}
+                    <img src="{{ r.profile_image.url }}" alt="{{ r.name }}" style="height:40px; width:40px; border-radius:50%; object-fit:cover; border:1px solid #1e293b;">
+                  {% else %}
+                    <div style="height:40px; width:40px; border-radius:50%; background:#1e293b; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                      <span style="font-size:13px;">N/A</span>
+                    </div>
+                  {% endif %}
+                </td>
+
                 <td style="padding:10px;">{{ r.email|default:"-" }}</td>
                 <td style="padding:10px;">{{ r.branch }}</td>
                 <td style="padding:10px;">{{ r.user_role }}</td>
                 <td style="padding:10px;">{{ r.level }}</td>
                 <td style="padding:10px; font-family:monospace;">{{ r.password }}</td>
+
                 <td style="padding:6px 10px;">
                   <div style="display:flex; gap:8px;">
-                    <!-- Edit -->
+                    <!-- ✏️ Edit -->
                     <a class="btn" href="{% url 'edit_user' r.id %}" title="Edit" aria-label="Edit" style="padding:8px; width:36px; height:36px; justify-content:center;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 20h9"></path>
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
                       </svg>
                     </a>
-                    <!-- Delete -->
+
+                    <!-- 🗑 Delete -->
                     <form method="post" action="{% url 'delete_user' r.id %}" onsubmit="return confirm('Delete this user?');">
                       {% csrf_token %}
                       <button type="submit" class="btn" title="Delete" aria-label="Delete" style="padding:8px; width:36px; height:36px; justify-content:center;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                          <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                          <path d="M10 11v6"></path>
+                          <path d="M14 11v6"></path>
                           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
                         </svg>
                       </button>
