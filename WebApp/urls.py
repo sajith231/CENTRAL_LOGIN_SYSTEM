@@ -1,23 +1,24 @@
 from django.urls import path
 from . import views
 
-# App name for namespacing (optional but recommended)
 app_name = 'WebApp'
 
 urlpatterns = [
-    # List view - Display all web projects in a table
-    # URL: /webapp/weblist/
+    # Web project routes
     path("weblist/", views.web_home, name="webapp_list"),
-    
-    # Create view - Form to add new web project
-    # URL: /webapp/webproject/create/
     path("webproject/create/", views.webproject_create, name="webproject_create"),
-    
-    # Edit view - Form to update existing web project
-    # URL: /webapp/webproject/edit/1/ (where 1 is the project ID)
     path("webproject/edit/<int:pk>/", views.webproject_edit, name="webproject_edit"),
-    
-    # Delete view - Remove a web project (called from modal)
-    # URL: /webapp/webproject/delete/1/ (where 1 is the project ID)
     path("webproject/delete/<int:pk>/", views.webproject_delete, name="webproject_delete"),
+
+    # Web Control routes
+    path("web_control/", views.web_control_list, name="web_control"),
+    path("web_control/add/", views.add_web_control, name="add_web_control"),
+    path("web_control/edit/<int:pk>/", views.edit_web_control, name="edit_web_control"),
+    path("web_control/delete/<int:pk>/", views.delete_web_control, name="delete_web_control"),
+    
+    # API routes
+    # GET: Retrieve all customers data for a project
+    path("api/project/<str:endpoint>/", views.api_get_project_data, name="api_get_project"),
+    # POST: Log a login attempt
+    path("api/project/<str:endpoint>/login/", views.api_post_login, name="api_post_login"),
 ]

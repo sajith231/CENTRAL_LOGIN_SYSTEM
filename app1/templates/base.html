@@ -83,7 +83,7 @@
             <i class="fa-solid fa-chevron-right chev"></i>
           </button>
           <div id="submenu-web" class="submenu">
-            <a href="#" class="{% block active_web_control %}{% endblock %}"><i class="fa-solid fa-sliders"></i> Web Control</a>
+            <a href="{% url 'WebApp:web_control' %}" class="{% block active_web_control %}{% endblock %}"><i class="fa-solid fa-sliders"></i> Web Control</a>
             <a href="{% url 'WebApp:webapp_list' %}" class="{% block active_web_app_list %}{% endblock %}"><i class="fa-solid fa-list-check"></i> Web App List</a>
           </div>
         </li>

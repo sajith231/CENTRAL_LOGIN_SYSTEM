@@ -1,24 +1,31 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+from .models import WebProject, WebControl, LoginLog
+
+from django.shortcuts import render
 from .models import WebProject
 
 def web_home(request):
-    """
-    Display list of all web projects
-    URL: /weblist/
-    """
+    """Display list of all web projects"""
     projects = WebProject.objects.all()
+
+    # build_absolute_uri('/') returns e.g. "http://127.0.0.1:8000/"
+    # strip trailing slash so later joins are consistent
+    base_url = request.build_absolute_uri('/')[:-1]
+
     context = {
-        'projects': projects
+        'projects': projects,
+        'base_url': base_url,
     }
     return render(request, "webapp_list.html", context)
 
+
 def webproject_create(request):
-    """
-    Create a new web project
-    URL: /webproject/create/
-    Methods: GET (show form), POST (save data)
-    """
+    """Create a new web project"""
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
@@ -36,11 +43,7 @@ def webproject_create(request):
     return render(request, "webproject_create.html")
 
 def webproject_edit(request, pk):
-    """
-    Edit an existing web project
-    URL: /webproject/edit/<id>/
-    Methods: GET (show form), POST (update data)
-    """
+    """Edit an existing web project"""
     project = get_object_or_404(WebProject, pk=pk)
     
     if request.method == 'POST':
@@ -50,25 +53,221 @@ def webproject_edit(request, pk):
         if project_name:
             project.project_name = project_name
             project.description = description if description else None
-            project.save()
+            project.save()  # API endpoint will auto-update
             messages.success(request, 'Web project updated successfully!')
             return redirect('WebApp:webapp_list')
         else:
             messages.error(request, 'Project name is required!')
     
-    context = {
-        'project': project
-    }
+    context = {'project': project}
     return render(request, "webproject_edit.html", context)
 
 def webproject_delete(request, pk):
-    """
-    Delete a web project
-    URL: /webproject/delete/<id>/
-    Method: GET (via confirmation modal link)
-    """
+    """Delete a web project"""
     project = get_object_or_404(WebProject, pk=pk)
     project_name = project.project_name
     project.delete()
     messages.success(request, f'Web project "{project_name}" deleted successfully!')
     return redirect('WebApp:webapp_list')
+
+
+# WEB CONTROL VIEWS
+def web_control_list(request):
+    """Shows table of WebControl entries"""
+    controls = WebControl.objects.select_related('project').all()
+    context = {'controls': controls}
+    return render(request, "web_control.html", context)
+
+def add_web_control(request):
+    """Add web control"""
+    projects = WebProject.objects.all()
+
+    if request.method == 'POST':
+        project_id = request.POST.get('project')
+        customer_name = request.POST.get('customer_name', '').strip()
+        client_id = request.POST.get('client_id', '').strip()
+        login_limit = request.POST.get('login_limit', '1').strip()
+
+        if not project_id or not customer_name or not client_id:
+            messages.error(request, 'Project, Customer name and Client ID are required.')
+            return render(request, "add_web_control.html", {'projects': projects})
+
+        try:
+            project = WebProject.objects.get(pk=int(project_id))
+        except (WebProject.DoesNotExist, ValueError):
+            messages.error(request, 'Selected project not found.')
+            return render(request, "add_web_control.html", {'projects': projects})
+
+        try:
+            login_limit_val = int(login_limit)
+            if login_limit_val < 0:
+                raise ValueError()
+        except ValueError:
+            messages.error(request, 'Login limit must be a non-negative integer.')
+            return render(request, "add_web_control.html", {'projects': projects})
+
+        WebControl.objects.create(
+            project=project,
+            customer_name=customer_name,
+            client_id=client_id,
+            login_limit=login_limit_val
+        )
+        messages.success(request, 'Web control saved successfully!')
+        return redirect('WebApp:web_control')
+
+    return render(request, "add_web_control.html", {'projects': projects})
+
+def edit_web_control(request, pk):
+    """Edit web control"""
+    control = get_object_or_404(WebControl, pk=pk)
+    projects = WebProject.objects.all()
+
+    if request.method == 'POST':
+        project_id = request.POST.get('project')
+        customer_name = request.POST.get('customer_name', '').strip()
+        client_id = request.POST.get('client_id', '').strip()
+        login_limit = request.POST.get('login_limit', '1').strip()
+
+        if not project_id or not customer_name or not client_id:
+            messages.error(request, 'Project, Customer name and Client ID are required.')
+            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+
+        try:
+            project = WebProject.objects.get(pk=int(project_id))
+        except (WebProject.DoesNotExist, ValueError):
+            messages.error(request, 'Selected project not found.')
+            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+
+        try:
+            login_limit_val = int(login_limit)
+            if login_limit_val < 0:
+                raise ValueError()
+        except ValueError:
+            messages.error(request, 'Login limit must be a non-negative integer.')
+            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+
+        control.project = project
+        control.customer_name = customer_name
+        control.client_id = client_id
+        control.login_limit = login_limit_val
+        control.save()
+        messages.success(request, 'Web control updated successfully!')
+        return redirect('WebApp:web_control')
+
+    return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+
+def delete_web_control(request, pk):
+    """Delete web control"""
+    control = get_object_or_404(WebControl, pk=pk)
+    name = str(control)
+    control.delete()
+    messages.success(request, f'Web control "{name}" deleted.')
+    return redirect('WebApp:web_control')
+
+
+# ==================== API VIEWS ====================
+
+@require_http_methods(["GET"])
+def api_get_project_data(request, endpoint):
+    """
+    GET API: Returns all customers data for a project
+    URL: /api/project/{endpoint}/
+    Returns: project name, list of all customers with client_id, login_limit, logged_count
+    """
+    try:
+        project = WebProject.objects.get(api_endpoint=endpoint)
+        controls = WebControl.objects.filter(project=project)
+        
+        customers_data = []
+        for control in controls:
+            # Count total logins for this client
+            logged_count = LoginLog.objects.filter(control=control).count()
+            
+            customers_data.append({
+                'customer_name': control.customer_name,
+                'client_id': control.client_id,
+                'login_limit': control.login_limit,
+                'logged_count': logged_count
+            })
+        
+        response_data = {
+            'success': True,
+            'project_name': project.project_name,
+            'customers': customers_data
+        }
+        
+        return JsonResponse(response_data, status=200)
+    
+    except WebProject.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Project not found'
+        }, status=404)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_post_login(request, endpoint):
+    """
+    POST API: Log a login attempt for a client
+    URL: /api/project/{endpoint}/login/
+    Body: {"client_id": "xxx"}
+    Returns: success status and updated logged_count
+    """
+    try:
+        data = json.loads(request.body)
+        client_id = data.get('client_id', '').strip()
+        
+        if not client_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'client_id is required'
+            }, status=400)
+        
+        # Find project
+        project = WebProject.objects.get(api_endpoint=endpoint)
+        
+        # Find control for this client
+        try:
+            control = WebControl.objects.get(project=project, client_id=client_id)
+        except WebControl.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Client ID not found for this project'
+            }, status=404)
+        
+        # Get client IP
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        
+        # Create login log
+        LoginLog.objects.create(
+            control=control,
+            client_id=client_id,
+            ip_address=ip
+        )
+        
+        # Get updated count
+        logged_count = LoginLog.objects.filter(control=control).count()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Login logged successfully',
+            'client_id': client_id,
+            'logged_count': logged_count,
+            'login_limit': control.login_limit
+        }, status=200)
+    
+    except WebProject.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Project not found'
+        }, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON'
+        }, status=400)

@@ -224,15 +224,31 @@ def edit_user(request, pk):
 
 
 def delete_user(request, pk):
+    """
+    Delete a user and remove their profile image from Cloudflare R2 (or local media).
+    """
     # Only allow access to logged-in users (Django-auth OR custom session)
     if not is_any_user_logged_in(request):
         messages.error(request, "Please log in to access this page.")
         return redirect("login")
 
     u = get_object_or_404(Users, pk=pk)
+
     if request.method == "POST":
         name = u.name
+
+        # ✅ Delete profile image from R2 (or local) before deleting the user
+        if u.profile_image:
+            try:
+                u.profile_image.delete(save=False)
+            except Exception as e:
+                print(f"[WARN] Failed to delete image for {u.name}: {e}")
+
+        # ✅ Delete the user record
         u.delete()
-        messages.success(request, f"Deleted '{name}'.")
+
+        messages.success(request, f"Deleted '{name}' successfully.")
         return redirect("users_table")
+
+    # Fallback redirect if method isn’t POST
     return redirect("users_table")

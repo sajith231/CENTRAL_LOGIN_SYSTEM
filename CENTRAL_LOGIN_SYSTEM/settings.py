@@ -97,9 +97,11 @@ WSGI_APPLICATION = 'CENTRAL_LOGIN_SYSTEM.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'newdb.sqlite3',
     }
 }
+
+
 
 LOGIN_URL = "/login/"
 
