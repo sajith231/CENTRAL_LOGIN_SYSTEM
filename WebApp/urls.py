@@ -21,4 +21,5 @@ urlpatterns = [
     path("api/project/<str:endpoint>/", views.api_get_project_data, name="api_get_project"),
     # POST: Log a login attempt
     path("api/project/<str:endpoint>/login/", views.api_post_login, name="api_post_login"),
+    path("api/project/<str:endpoint>/logout/", views.api_post_logout, name="api_post_logout"),
 ]

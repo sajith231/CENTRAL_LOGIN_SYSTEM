@@ -61,3 +61,18 @@ class LoginLog(models.Model):
     
     def __str__(self):
         return f"{self.client_id} logged at {self.logged_at}"
+
+
+
+
+class ActiveDevice(models.Model):
+    control = models.ForeignKey(WebControl, on_delete=models.CASCADE, related_name='active_devices')
+    device_id = models.CharField(max_length=255)
+    logged_in_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ['control', 'device_id']
+
+    def __str__(self):
+        return f"{self.control.client_id} - {self.device_id}"

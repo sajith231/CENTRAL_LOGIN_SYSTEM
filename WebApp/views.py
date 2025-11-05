@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from .models import WebProject, WebControl, LoginLog
+from .models import ActiveDevice, WebProject, WebControl, LoginLog
 
 from django.shortcuts import render
 from .models import WebProject
@@ -167,107 +167,162 @@ def delete_web_control(request, pk):
 
 # ==================== API VIEWS ====================
 
-@require_http_methods(["GET"])
-def api_get_project_data(request, endpoint):
-    """
-    GET API: Returns all customers data for a project
-    URL: /api/project/{endpoint}/
-    Returns: project name, list of all customers with client_id, login_limit, logged_count
-    """
-    try:
-        project = WebProject.objects.get(api_endpoint=endpoint)
-        controls = WebControl.objects.filter(project=project)
+# @require_http_methods(["GET"])
+# def api_get_project_data(request, endpoint):
+#     """
+#     GET API: Returns all customers data for a project
+#     Shows correct active device count
+#     """
+#     try:
+#         project = WebProject.objects.get(api_endpoint=endpoint)
+#         controls = WebControl.objects.filter(project=project)
         
-        customers_data = []
-        for control in controls:
-            # Count total logins for this client
-            logged_count = LoginLog.objects.filter(control=control).count()
+#         customers_data = []
+#         for control in controls:
+#             # Count current active devices
+#             active_count = control.active_devices.count()
             
-            customers_data.append({
-                'customer_name': control.customer_name,
-                'client_id': control.client_id,
-                'login_limit': control.login_limit,
-                'logged_count': logged_count
-            })
+#             customers_data.append({
+#                 'customer_name': control.customer_name,
+#                 'client_id': control.client_id,
+#                 'login_limit': control.login_limit,
+#                 'logged_count': active_count,  # ✅ Correct count now
+#             })
         
-        response_data = {
-            'success': True,
-            'project_name': project.project_name,
-            'customers': customers_data
-        }
-        
-        return JsonResponse(response_data, status=200)
-    
-    except WebProject.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Project not found'
-        }, status=404)
+#         response_data = {
+#             'success': True,
+#             'project_name': project.project_name,
+#             'customers': customers_data
+#         }
+#         return JsonResponse(response_data, status=200)
+
+#     except WebProject.DoesNotExist:
+#         return JsonResponse({
+#             'success': False,
+#             'error': 'Project not found'
+#         }, status=404)
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_post_login(request, endpoint):
     """
-    POST API: Log a login attempt for a client
-    URL: /api/project/{endpoint}/login/
-    Body: {"client_id": "xxx"}
-    Returns: success status and updated logged_count
+    POST API: Logs in a device if under limit
+    Body: {"client_id": "xxx", "device_id": "yyy"}
     """
     try:
         data = json.loads(request.body)
         client_id = data.get('client_id', '').strip()
-        
-        if not client_id:
-            return JsonResponse({
-                'success': False,
-                'error': 'client_id is required'
-            }, status=400)
-        
-        # Find project
+        device_id = data.get('device_id', '').strip()
+
+        if not client_id or not device_id:
+            return JsonResponse({'success': False, 'error': 'client_id and device_id are required'}, status=400)
+
         project = WebProject.objects.get(api_endpoint=endpoint)
-        
-        # Find control for this client
-        try:
-            control = WebControl.objects.get(project=project, client_id=client_id)
-        except WebControl.DoesNotExist:
+        control = WebControl.objects.get(project=project, client_id=client_id)
+
+        # Count currently logged in devices
+        active_count = ActiveDevice.objects.filter(control=control).count()
+        if active_count >= control.login_limit:
             return JsonResponse({
                 'success': False,
-                'error': 'Client ID not found for this project'
-            }, status=404)
-        
-        # Get client IP
+                'error': 'Login limit reached',
+                'login_limit': control.login_limit,
+                'active_devices': active_count
+            }, status=403)
+
+        # Check if already logged in
+        if ActiveDevice.objects.filter(control=control, device_id=device_id).exists():
+            return JsonResponse({'success': True, 'message': 'Already logged in'}, status=200)
+
+        # Register new device
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        
-        # Create login log
-        LoginLog.objects.create(
-            control=control,
-            client_id=client_id,
-            ip_address=ip
-        )
-        
-        # Get updated count
-        logged_count = LoginLog.objects.filter(control=control).count()
-        
+        ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+        ActiveDevice.objects.create(control=control, device_id=device_id, ip_address=ip)
+
         return JsonResponse({
             'success': True,
-            'message': 'Login logged successfully',
-            'client_id': client_id,
-            'logged_count': logged_count,
+            'message': 'Login successful',
+            'device_id': device_id,
+            'active_devices': ActiveDevice.objects.filter(control=control).count(),
             'login_limit': control.login_limit
         }, status=200)
-    
+
     except WebProject.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Project not found'
-        }, status=404)
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+    except WebControl.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Client ID not found for this project'}, status=404)
     except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+
+
+
+
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_post_logout(request, endpoint):
+    """
+    POST API: Logs out a specific device
+    Body: {"client_id": "xxx", "device_id": "yyy"}
+    """
+    try:
+        data = json.loads(request.body)
+        client_id = data.get('client_id', '').strip()
+        device_id = data.get('device_id', '').strip()
+
+        if not client_id or not device_id:
+            return JsonResponse({'success': False, 'error': 'client_id and device_id are required'}, status=400)
+
+        project = WebProject.objects.get(api_endpoint=endpoint)
+        control = WebControl.objects.get(project=project, client_id=client_id)
+
+        deleted, _ = ActiveDevice.objects.filter(control=control, device_id=device_id).delete()
+        if deleted:
+            return JsonResponse({'success': True, 'message': 'Logged out successfully'}, status=200)
+        else:
+            return JsonResponse({'success': False, 'error': 'Device not found or already logged out'}, status=404)
+
+    except WebProject.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+    except WebControl.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Client ID not found for this project'}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+
+
+
+@require_http_methods(["GET"])
+def api_get_project_data(request, endpoint):
+    """
+    GET API: Returns all customers with login data + active devices list
+    """
+    try:
+        project = WebProject.objects.get(api_endpoint=endpoint)
+        controls = WebControl.objects.filter(project=project)
+
+        customers_data = []
+        for control in controls:
+            active_devices = list(control.active_devices.values(
+                'device_id', 'ip_address', 'logged_in_at'
+            ))
+
+            customers_data.append({
+                'customer_name': control.customer_name,
+                'client_id': control.client_id,
+                'login_limit': control.login_limit,
+                'logged_count': len(active_devices),
+                'active_devices': active_devices,
+            })
+
         return JsonResponse({
-            'success': False,
-            'error': 'Invalid JSON'
-        }, status=400)
+            'success': True,
+            'project_name': project.project_name,
+            'customers': customers_data
+        })
+
+    except WebProject.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
