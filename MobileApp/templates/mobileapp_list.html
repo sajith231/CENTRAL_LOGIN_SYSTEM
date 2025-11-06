@@ -5,121 +5,481 @@
 {% block header_title %}<strong>Mobile App List</strong>{% endblock %}
 
 {% block content %}
+
 <div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-    <h2 style="margin:0; font-size:20px;">Mobile App Projects</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0; font-size:20px;">Mobile App Projects</h2>
 
-    <a href="{% url 'MobileApp:mobileproject_create' %}" class="btn">
-      <i class="fa-solid fa-plus"></i> Add New
-    </a>
-  </div>
+        <a href="{% url 'MobileApp:mobileproject_create' %}" class="btn">
+            <i class="fa-solid fa-plus"></i> Add New
+        </a>
+    </div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-  {% if projects %}
+    <!-- Table -->
+    {% if projects %}
     <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse:collapse;">
-        <thead>
-          <tr style="background:#1e293b;">
-            <th style="padding:12px; text-align:left;">No</th>
-            <th style="padding:12px; text-align:left;">Created Date</th>
-            <th style="padding:12px; text-align:left;">Project Name</th>
-            <th style="padding:12px; text-align:center;">Description</th>
-            <th style="padding:12px; text-align:left;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for project in projects %}
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:12px;">{{ forloop.counter }}</td>
-              <td style="padding:12px;">{{ project.created_date|date:"d/m/Y" }}</td>
-              <td style="padding:12px;"><strong>{{ project.project_name }}</strong></td>
-              <td style="padding:12px; text-align:center;">
-                {% if project.description %}
-                  <button class="btn" data-bs-toggle="modal" data-bs-target="#descModal{{ project.id }}">
-                    <i class="fa-solid fa-file-lines"></i>
-                  </button>
-                {% else %}
-                  <span style="color:#9ca3af;">-</span>
-                {% endif %}
-              </td>
-              <td style="padding:12px;">
-                <a href="{% url 'MobileApp:mobileproject_edit' project.id %}" class="btn">
-                  <i class="fa-solid fa-pen-to-square"></i> Edit
-                </a>
-                <button class="btn" style="background:#7f1d1d;"
-                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
-                  <i class="fa-solid fa-trash"></i> Delete
-                </button>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#1e293b;">
+                    <th style="padding:12px; text-align:left;">No</th>
+                    <th style="padding:12px; text-align:left;">Created Date</th>
+                    <th style="padding:12px; text-align:left;">Project Name</th>
+                    <th style="padding:12px; text-align:left;">GET API</th>
+                    <th style="padding:12px; text-align:left;">POST API</th>
+                    <th style="padding:12px; text-align:center;">Description</th>
+                    <th style="padding:12px; text-align:left;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for project in projects %}
+                <tr style="border-bottom:1px solid #1e293b;">
+                    <td style="padding:12px;">{{ forloop.counter }}</td>
+
+                    <td style="padding:12px;">
+                        {{ project.created_date|date:"d/m/Y" }}
+                    </td>
+
+                    <td style="padding:12px;">
+                        <strong>{{ project.project_name }}</strong>
+                    </td>
+
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#065f46; font-size:12px;"
+                                data-bs-toggle="modal" data-bs-target="#getApiModal{{ project.id }}"
+                                onclick="loadActiveDevices({{ project.id }}, '{{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}')">
+                            <i class="fa-solid fa-code"></i> GET
+                        </button>
+                    </td>
+
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#7c2d12; font-size:12px;"
+                                data-bs-toggle="modal" data-bs-target="#postApiModal{{ project.id }}">
+                            <i class="fa-solid fa-paper-plane"></i> POST
+                        </button>
+                    </td>
+
+                    <td style="padding:12px; text-align:center;">
+                        {% if project.description %}
+                        <button class="btn" data-bs-toggle="modal" data-bs-target="#descModal{{ project.id }}">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </button>
+                        {% else %}
+                        <span style="color:#9ca3af;">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:12px;">
+                        <a href="{% url 'MobileApp:mobileproject_edit' project.id %}" class="btn">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </a>
+
+                        <button class="btn" style="background:#7f1d1d;"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <p style="margin-top:16px; color:#9ca3af;">
-      Total Projects: {{ projects.count }}
+        Total Projects: {{ projects.count }}
     </p>
 
-  {% else %}
+    {% else %}
     <div style="padding:40px; text-align:center;">
-      <i class="fa-solid fa-circle-info" style="font-size:40px; margin-bottom:10px;"></i>
-      <h3>No mobile projects found</h3>
-      <p>Add your first project using the button above.</p>
+        <i class="fa-solid fa-circle-info" style="font-size:40px; margin-bottom:10px;"></i>
+        <h3>No mobile projects found</h3>
+        <p>Add your first project using the button above.</p>
     </div>
-  {% endif %}
+    {% endif %}
 </div>
 
-<!-- Modals -->
+<!-- ALL MODALS -->
 {% for project in projects %}
-  {% if project.description %}
-  <div class="modal fade" id="descModal{{ project.id }}" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:#1e293b; color:white;">
-        <div class="modal-header" style="border-bottom:1px solid #334155;">
-          <h5 class="modal-title">Description - {{ project.project_name }}</h5>
-          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          {{ project.description|linebreaks }}
-        </div>
-        <div class="modal-footer" style="border-top:1px solid #334155;">
-          <button class="btn" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
 
-  <div class="modal fade" id="deleteModal{{ project.id }}" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:#1e293b; color:white;">
-        <div class="modal-header" style="border-bottom:1px solid #334155;">
-          <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete</h5>
-          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<!-- GET API Modal -->
+<div class="modal fade" id="getApiModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-code"></i> GET API - {{ project.project_name }}
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Full absolute GET endpoint (not clickable) -->
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <strong style="color:#10b981;">Endpoint:</strong>
+                    <code id="get-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+                        {{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}
+                    </code>
+                    <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
+                            onclick="copyText('get-endpoint-{{ project.id }}')">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <h6 style="color:#10b981; margin-bottom:10px;">Response Data:</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
+                    <table style="width:100%; color:#e5e7eb; font-size:13px;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #334155;">
+                                <th style="padding:8px; text-align:left;">Customer Name</th>
+                                <th style="padding:8px; text-align:left;">Client ID</th>
+                                <th style="padding:8px; text-align:center;">Login Limit</th>
+                                <th style="padding:8px; text-align:center;">Logged Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for control in project.controls.all %}
+                            <tr style="border-bottom:1px solid #1e293b;">
+                                <td style="padding:8px;">{{ control.customer_name }}</td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.client_id }}</code></td>
+                                <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
+                                <td style="padding:8px; text-align:center;">
+                                    <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="padding:20px; text-align:center; color:#9ca3af;">
+                                    No customers added yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <h6 style="color:#10b981; margin-top:20px;">Active Devices:</h6>
+                    <div id="active-devices-{{ project.id }}" style="background:#0f172a; padding:15px; border-radius:8px; color:#e5e7eb; font-size:13px;">
+                        <em>Loading active devices...</em>
+                    </div>
+
+                    <script>
+                    async function loadActiveDevices(projectId, endpoint) {
+                    const container = document.getElementById('active-devices-' + projectId);
+                    if (!container) return;
+
+                    try {
+                        const res = await fetch(endpoint);
+                        const data = await res.json();
+
+                        if (!data.success) {
+                        container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
+                        return;
+                        }
+
+                        let html = '';
+                        for (const c of data.customers) {
+                        html += `<h5 style="margin-top:10px; color:#facc15;">${c.customer_name} (${c.client_id})</h5>`;
+                        if (c.active_devices.length === 0) {
+                            html += `<p style="color:#9ca3af;">No active devices</p>`;
+                        } else {
+                            html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+                            <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Login Time</th><th></th></tr>`;
+                            for (const d of c.active_devices) {
+                            html += `<tr style="border-bottom:1px solid #1e293b;">
+                                <td>${d.device_id}</td>
+                                <td>${d.ip_address || '-'}</td>
+                                <td>${new Date(d.logged_in_at).toLocaleString()}</td>
+                                <td><button onclick="removeDevice('${endpoint}','${c.client_id}','${d.device_id}', ${projectId})"
+                                        style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
+                                        Remove
+                                    </button></td>
+                            </tr>`;
+                            }
+                            html += `</table>`;
+                        }
+                        }
+
+                        container.innerHTML = html;
+                    } catch (err) {
+                        container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
+                    }
+                    }
+
+                    async function removeDevice(endpoint, client_id, device_id, projectId) {
+                    if (!confirm('Remove this device?')) return;
+                    const logoutUrl = endpoint + 'logout/';
+                    const body = JSON.stringify({ client_id, device_id });
+
+                    const res = await fetch(logoutUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body
+                    });
+
+                    const data = await res.json();
+                    alert(data.message || data.error);
+                    loadActiveDevices(projectId, endpoint); // refresh list
+                    }
+                    </script>
+
+
+                <div style="margin-top:15px; padding:12px; background:#065f46; border-radius:8px;">
+                    <strong>Note:</strong> This GET API returns all customers with their login data for this project.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p>Are you sure you want to delete:</p>
-          <h4 class="text-center">{{ project.project_name }}</h4>
-          <div style="margin-top:10px; background:#7f1d1d; padding:12px; border-radius:8px;">
-            This action cannot be undone.
-          </div>
-        </div>
-        <div class="modal-footer" style="border-top:1px solid #334155;">
-          <button class="btn" data-bs-dismiss="modal">Cancel</button>
-          <a href="{% url 'MobileApp:mobileproject_delete' project.id %}" class="btn" style="background:#b91c1c;">
-            Yes, Delete
-          </a>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- POST API Modal -->
+<div class="modal fade" id="postApiModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-paper-plane"></i> POST API - {{ project.project_name }}
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Full absolute POST endpoint (not clickable) -->
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <strong style="color:#f97316;">Endpoint:</strong>
+                    <code id="post-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+                        {{ base_url }}{% url 'MobileApp:api_post_login' project.api_endpoint %}
+                    </code>
+                    <button class="btn btn-sm" style="background:#7c2d12; margin-left:10px;"
+                            onclick="copyText('post-endpoint-{{ project.id }}')">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+
+                    <!-- Try POST (in-browser tester) -->
+                    <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
+                            onclick="tryPost('{{ project.id }}')">
+                        <i class="fa-solid fa-play"></i> Try POST
+                    </button>
+                </div>
+
+                <h6 style="color:#f97316; margin-bottom:10px;">Request Body (JSON):</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">
+{
+  "client_id": "your_client_id_here",
+  "device_id": "your_device_id_here"
+}</pre>
+                </div>
+
+                <h6 style="color:#f97316; margin-bottom:10px;">Available Client IDs:</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
+                    <table style="width:100%; color:#e5e7eb; font-size:13px;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #334155;">
+                                <th style="padding:8px; text-align:left;">Customer Name</th>
+                                <th style="padding:8px; text-align:left;">Client ID</th>
+                                <th style="padding:8px; text-align:center;">Login Limit</th>
+                                <th style="padding:8px; text-align:center;">Current Logins</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for control in project.controls.all %}
+                            <tr style="border-bottom:1px solid #1e293b;">
+                                <td style="padding:8px;">{{ control.customer_name }}</td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.client_id }}</code></td>
+                                <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
+                                <td style="padding:8px; text-align:center;">
+                                    <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="padding:20px; text-align:center; color:#9ca3af;">
+                                    No customers added yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:15px; padding:12px; background:#7c2d12; border-radius:8px;">
+                    <strong>Note:</strong> Send a POST request with client_id and device_id to log a login attempt. The API tracks each login.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description Modal -->
+{% if project.description %}
+<div class="modal fade" id="descModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">Description - {{ project.project_name }}</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{ project.description|linebreaks }}
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Are you sure you want to delete:</p>
+                <h4 class="text-center">{{ project.project_name }}</h4>
+                <div style="margin-top:10px; background:#7f1d1d; padding:12px; border-radius:8px;">
+                    This action cannot be undone.
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'MobileApp:mobileproject_delete' project.id %}"
+                   class="btn" style="background:#b91c1c;">
+                    Yes, Delete
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 {% endfor %}
+
+<!-- JS helpers: copy & tryPost (CSRF-aware) -->
+<script>
+/**
+ * Copy text from an element (by id) to clipboard.
+ */
+function copyText(elementId) {
+  try {
+    const el = document.getElementById(elementId);
+    if (!el) { alert('Element not found: ' + elementId); return; }
+    const text = el.innerText.trim();
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        // lightweight feedback
+        const short = text.length > 120 ? text.slice(0, 120) + '…' : text;
+        alert('Copied URL:\n' + short);
+      })
+      .catch(err => {
+        alert('Copy failed: ' + err);
+      });
+  } catch (err) {
+    alert('Copy error: ' + err);
+  }
+}
+
+/**
+ * Read a cookie (for CSRF)
+ */
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      // Does this cookie string begin with the name we want?
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+/**
+ * Try POST from the browser. Prompts for client_id and device_id, posts JSON, shows response.
+ * Uses CSRF token from cookie (Django default).
+ */
+async function tryPost(projectId) {
+  const elId = 'post-endpoint-' + projectId;
+  const el = document.getElementById(elId);
+  if (!el) { alert('Endpoint not found: ' + elId); return; }
+  const endpoint = el.innerText.trim();
+
+  // prompt for client_id and device_id (quick and explicit)
+  const client_id = prompt('Enter client_id to send (example: abc123):', '');
+  if (client_id === null) {
+    // user cancelled
+    return;
+  }
+  if (client_id.trim() === '') {
+    alert('client_id cannot be empty');
+    return;
+  }
+
+  const device_id = prompt('Enter device_id to send (example: device123):', '');
+  if (device_id === null) {
+    // user cancelled
+    return;
+  }
+  if (device_id.trim() === '') {
+    alert('device_id cannot be empty');
+    return;
+  }
+
+  const payload = { client_id: client_id.trim(), device_id: device_id.trim() };
+  const csrftoken = getCookie('csrftoken');
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken || ''
+      },
+      body: JSON.stringify(payload)
+    });
+
+    let bodyText;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const json = await res.json();
+      bodyText = JSON.stringify(json, null, 2);
+    } else {
+      bodyText = await res.text();
+    }
+
+    alert('Status: ' + res.status + '\n\n' + bodyText.slice(0, 2000));
+  } catch (err) {
+    alert('POST failed: ' + err);
+  }
+}
+</script>
+
 {% endblock %}
