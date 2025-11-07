@@ -101,6 +101,25 @@
           </div>
         </li>
 
+
+
+        <li>
+  <button class="menu-toggle" aria-expanded="false" data-target="submenu-clients">
+    <i class="fa-solid fa-building-user"></i>
+    <span>Clients</span>
+    <i class="fa-solid fa-chevron-right chev"></i>
+  </button>
+  <div id="submenu-clients" class="submenu">
+    <a href="" class="{% block active_store %}{% endblock %}">
+      <i class="fa-solid fa-store"></i> Store
+    </a>
+
+    <a href="" class="{% block active_shop %}{% endblock %}">
+      <i class="fa-solid fa-shop"></i> Shop
+    </a>
+  </div>
+</li>
+
         <!-- 3) User Management -->
         <li>
           <button class="menu-toggle" aria-expanded="false" data-target="submenu-user">
@@ -113,7 +132,26 @@
             <a href="#" class="{% block active_user_menu_control %}{% endblock %}"><i class="fa-solid fa-user-gear"></i> User Menu Control</a>
           </div>
         </li>
+
+
+        <li>
+  <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
+    <i class="fa-solid fa-layer-group"></i>
+    <span>Master</span>
+    <i class="fa-solid fa-chevron-right chev"></i>
+  </button>
+  <div id="submenu-master" class="submenu">
+    <a href="{% url 'branch_list' %}" class="{% block active_branch %}{% endblock %}">
+      <i class="fa-solid fa-code-branch"></i> Branch
+    </a>
+    <a href="" class="">
+      <i class="fa-solid fa-code-branch"></i> country
+    </a>
+  </div>
+</li>
       </ul>
+
+      
 
       <div class="muted" style="font-size:12px; margin-top:auto;">
         Signed in as <strong>

@@ -24,5 +24,6 @@ urlpatterns = [
     path("", include("app1.urls")),   # routes to app1
     path("webapp/", include("WebApp.urls")),   # routes to web_control 
     path("mobileapp/", include("MobileApp.urls")),   
+    path('branch/', include('branch.urls')),
     
 ]+ (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG and not settings.CLOUDFLARE_R2_ENABLED else [])
