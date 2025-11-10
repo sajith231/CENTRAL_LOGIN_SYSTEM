@@ -1,54 +1,63 @@
-{% extends "base.html" %}
-{% load static %}
-
+{% extends 'base.html' %}
 {% block active_web_control %}active{% endblock %}
 {% block header_title %}<strong>Add Web Control</strong>{% endblock %}
 
 {% block content %}
 <div class="card" style="padding:20px;">
-    <h2 style="margin-bottom:20px;color:white;">Add Web Control</h2>
+  <h2 style="margin-bottom:20px;">Add Web Control</h2>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-                {{ message }}
-            </div>
+  {% if messages %}
+    {% for message in messages %}
+      <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label>Project</label>
+      <select name="project" class="form-control" required>
+        <option value="">Select Project</option>
+        {% for project in projects %}
+          <option value="{{ project.id }}">{{ project.project_name }}</option>
         {% endfor %}
-    {% endif %}
+      </select>
+    </div>
 
-    <form method="POST">
-        {% csrf_token %}
+    <div class="mb-3">
+      <label>Shop</label>
+      <select id="shopSelect" name="shop" class="form-control" required>
+        <option value="">Select Shop</option>
+        {% for shop in shops %}
+          <option value="{{ shop.id }}" data-client="{{ shop.client_id }}">{{ shop.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Project <span class="text-danger">*</span></label>
-            <select name="project" class="form-control" required>
-                <option value="">-- Select Project --</option>
-                {% for p in projects %}
-                <option value="{{ p.id }}" style="color: black;">{{ p.project_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="mb-3">
+      <label>Client ID</label>
+      <input type="text" id="clientIdInput" class="form-control" readonly style="border:2px solid #16a34a; background:#0f172a;">
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
-            <input type="text" name="customer_name" class="form-control" required>
-        </div>
+    <div class="mb-3">
+      <label>Login Limit</label>
+      <input type="number" name="login_limit" class="form-control" value="1" min="0" required>
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Client ID <span class="text-danger">*</span></label>
-            <input type="text" name="client_id" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Login Limit</label>
-            <input type="number" name="login_limit" class="form-control" value="1" min="0" required>
-            <small class="text-muted">Set how many concurrent/logins are allowed.</small>
-        </div>
-
-        <div class="d-flex gap-3">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a href="{% url 'WebApp:web_control' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+    <button type="submit" class="btn btn-success">Save</button>
+  </form>
 </div>
+
+<script>
+document.getElementById("shopSelect").addEventListener("change", function() {
+  const selectedOption = this.options[this.selectedIndex];
+  const clientId = selectedOption.getAttribute("data-client") || "";
+  const input = document.getElementById("clientIdInput");
+  input.value = clientId;
+  input.style.borderColor = clientId ? "#16a34a" : "#475569";
+});
+</script>
+
 {% endblock %}

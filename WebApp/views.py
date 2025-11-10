@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 from .models import ActiveDevice, WebProject, WebControl, LoginLog
-
+from StoreShop.models import Shop
 from django.shortcuts import render
 from .models import WebProject
 
@@ -79,24 +79,21 @@ def web_control_list(request):
     return render(request, "web_control.html", context)
 
 def add_web_control(request):
-    """Add web control"""
+    """Add Web Control"""
     projects = WebProject.objects.all()
+    shops = Shop.objects.all()
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
-        customer_name = request.POST.get('customer_name', '').strip()
-        client_id = request.POST.get('client_id', '').strip()
+        shop_id = request.POST.get('shop')
         login_limit = request.POST.get('login_limit', '1').strip()
 
-        if not project_id or not customer_name or not client_id:
-            messages.error(request, 'Project, Customer name and Client ID are required.')
-            return render(request, "add_web_control.html", {'projects': projects})
+        if not project_id or not shop_id:
+            messages.error(request, 'Project and Shop are required.')
+            return render(request, "add_web_control.html", {'projects': projects, 'shops': shops})
 
-        try:
-            project = WebProject.objects.get(pk=int(project_id))
-        except (WebProject.DoesNotExist, ValueError):
-            messages.error(request, 'Selected project not found.')
-            return render(request, "add_web_control.html", {'projects': projects})
+        project = get_object_or_404(WebProject, pk=project_id)
+        shop = get_object_or_404(Shop, pk=shop_id)
 
         try:
             login_limit_val = int(login_limit)
@@ -104,39 +101,38 @@ def add_web_control(request):
                 raise ValueError()
         except ValueError:
             messages.error(request, 'Login limit must be a non-negative integer.')
-            return render(request, "add_web_control.html", {'projects': projects})
+            return render(request, "add_web_control.html", {'projects': projects, 'shops': shops})
 
         WebControl.objects.create(
             project=project,
-            customer_name=customer_name,
-            client_id=client_id,
+            customer_name=shop.name,
+            client_id=shop.client_id,
             login_limit=login_limit_val
         )
+
         messages.success(request, 'Web control saved successfully!')
         return redirect('WebApp:web_control')
 
-    return render(request, "add_web_control.html", {'projects': projects})
+    return render(request, "add_web_control.html", {'projects': projects, 'shops': shops})
+
 
 def edit_web_control(request, pk):
-    """Edit web control"""
+    """Edit Web Control"""
     control = get_object_or_404(WebControl, pk=pk)
     projects = WebProject.objects.all()
+    shops = Shop.objects.all()
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
-        customer_name = request.POST.get('customer_name', '').strip()
-        client_id = request.POST.get('client_id', '').strip()
+        shop_id = request.POST.get('shop')
         login_limit = request.POST.get('login_limit', '1').strip()
 
-        if not project_id or not customer_name or not client_id:
-            messages.error(request, 'Project, Customer name and Client ID are required.')
-            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+        if not project_id or not shop_id:
+            messages.error(request, 'Project and Shop are required.')
+            return render(request, "edit_web_control.html", {'control': control, 'projects': projects, 'shops': shops})
 
-        try:
-            project = WebProject.objects.get(pk=int(project_id))
-        except (WebProject.DoesNotExist, ValueError):
-            messages.error(request, 'Selected project not found.')
-            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+        project = get_object_or_404(WebProject, pk=project_id)
+        shop = get_object_or_404(Shop, pk=shop_id)
 
         try:
             login_limit_val = int(login_limit)
@@ -144,17 +140,19 @@ def edit_web_control(request, pk):
                 raise ValueError()
         except ValueError:
             messages.error(request, 'Login limit must be a non-negative integer.')
-            return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+            return render(request, "edit_web_control.html", {'control': control, 'projects': projects, 'shops': shops})
 
         control.project = project
-        control.customer_name = customer_name
-        control.client_id = client_id
+        control.customer_name = shop.name
+        control.client_id = shop.client_id
         control.login_limit = login_limit_val
         control.save()
+
         messages.success(request, 'Web control updated successfully!')
         return redirect('WebApp:web_control')
 
-    return render(request, "edit_web_control.html", {'control': control, 'projects': projects})
+    return render(request, "edit_web_control.html", {'control': control, 'projects': projects, 'shops': shops})
+
 
 def delete_web_control(request, pk):
     """Delete web control"""

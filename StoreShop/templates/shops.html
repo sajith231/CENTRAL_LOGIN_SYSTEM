@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Shops{% endblock %}
+{% block header_title %}<strong>Shops</strong><span class="muted"> / list</span>{% endblock %}
+{% block active_shop %}active{% endblock %}
+
+{% block content %}
+<div class="card" style="padding:0;">
+  <div style="display:flex; justify-content:space-between; align-items:center;
+              padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+    <h2 style="margin:0;">Shops</h2>
+    <a href="{% url 'add_shop' %}" class="btn btn-success">Add New</a>
+  </div>
+
+  <div style="padding:12px 20px 20px;">
+    <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+      <thead>
+        <tr style="background: var(--hover);">
+            <th style="padding:12px;">#</th>
+            <th style="padding:12px;">Shop Name</th>
+            <th style="padding:12px;">Client ID</th>
+            <th style="padding:12px;">Store</th>
+            <th style="padding:12px;">Email</th>
+            <th style="padding:12px;">Contact No</th>
+            <th style="padding:12px;">Edit</th>
+            <th style="padding:12px;">Delete</th>
+        </tr>
+        </thead>
+      <tbody>
+        {% for shop in shops %}
+        <tr style="background:#0f1b31;">
+          <td style="padding:12px;">{{ forloop.counter }}</td>
+          <td style="padding:12px;">{{ shop.name }}</td>
+          <td style="padding:12px;">{{ shop.client_id }}</td>
+          <td style="padding:12px;">{{ shop.store.name }}</td>
+          <td style="padding:12px;">{{ shop.email }}</td>
+          <td style="padding:12px;">{{ shop.contact_no }}</td>
+          <td style="padding:12px;">
+            <a href="{% url 'edit_shop' shop.id %}" class="btn btn-primary btn-sm">Edit</a>
+          </td>
+          <td style="padding:12px;">
+            <form method="post" action="{% url 'delete_shop' shop.id %}" onsubmit="return confirm('Are you sure?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="padding:12px;">No shops yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

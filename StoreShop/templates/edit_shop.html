@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Edit Shop</h2>
+<form method="POST">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Shop Name</label>
+    <input type="text" name="name" value="{{ shop.name }}" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Store</label>
+    <select name="store" class="form-control" required>
+      {% for store in stores %}
+        <option value="{{ store.id }}" {% if store.id == shop.store.id %}selected{% endif %}>
+          {{ store.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Email</label>
+    <input type="email" name="email" value="{{ shop.email }}" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Contact No</label>
+    <input type="text" name="contact_no" value="{{ shop.contact_no }}" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Update</button>
+</form>
+{% endblock %}

@@ -6,15 +6,18 @@
 
 {% block content %}
 <div class="card">
+    <!-- Header Section -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h2 style="margin:0; font-size:20px;">Web Control</h2>
 
-        <!-- The button you requested named "Control" that goes to add page -->
-        <a href="{% url 'WebApp:add_web_control' %}" class="btn">
+        <!-- Add Control Button -->
+        <a href="{% url 'WebApp:add_web_control' %}" class="btn" 
+           style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
             <i class="fa-solid fa-sliders"></i> Control
         </a>
     </div>
 
+    <!-- Messages -->
     {% if messages %}
         {% for message in messages %}
             <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
@@ -23,6 +26,7 @@
         {% endfor %}
     {% endif %}
 
+    <!-- Table Section -->
     {% if controls %}
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse;">
@@ -31,28 +35,35 @@
                     <th style="padding:12px; text-align:left;">No</th>
                     <th style="padding:12px; text-align:left;">Created</th>
                     <th style="padding:12px; text-align:left;">Project</th>
-                    <th style="padding:12px; text-align:left;">Customer</th>
+                    <th style="padding:12px; text-align:left;">Shop</th>
                     <th style="padding:12px; text-align:left;">Client ID</th>
                     <th style="padding:12px; text-align:center;">Login Limit</th>
-                    <th style="padding:12px; text-align:left;">Actions</th>
+                    <th style="padding:12px; text-align:center;">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for c in controls %}
-                <tr style="border-bottom:1px solid #1e293b;">
+                <tr style="border-bottom:1px solid #1e293b; background:#0f172a;">
                     <td style="padding:12px;">{{ forloop.counter }}</td>
                     <td style="padding:12px;">{{ c.created_date|date:"d/m/Y H:i" }}</td>
                     <td style="padding:12px;"><strong>{{ c.project.project_name }}</strong></td>
                     <td style="padding:12px;">{{ c.customer_name }}</td>
-                    <td style="padding:12px;">{{ c.client_id }}</td>
-                    <td style="padding:12px; text-align:center;">{{ c.login_limit }}</td>
                     <td style="padding:12px;">
-                        <a href="{% url 'WebApp:edit_web_control' c.id %}" class="btn">
+                        <span style="background:#16a34a33; padding:4px 8px; border-radius:6px; font-weight:600; color:#16a34a;">
+                            {{ c.client_id }}
+                        </span>
+                    </td>
+                    <td style="padding:12px; text-align:center;">{{ c.login_limit }}</td>
+                    <td style="padding:12px; text-align:center;">
+                        <!-- Edit -->
+                        <a href="{% url 'WebApp:edit_web_control' c.id %}" 
+                           class="btn" style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
                             <i class="fa-solid fa-pen-to-square"></i> Edit
                         </a>
 
-                        <button class="btn" style="background:#7f1d1d;"
+                        <!-- Delete -->
+                        <button class="btn" style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;"
                                 data-bs-toggle="modal" data-bs-target="#deleteModal{{ c.id }}">
                             <i class="fa-solid fa-trash"></i> Delete
                         </button>
@@ -63,20 +74,22 @@
         </table>
     </div>
 
+    <!-- Summary -->
     <p style="margin-top:16px; color:#9ca3af;">
         Total Controls: {{ controls.count }}
     </p>
 
     {% else %}
+    <!-- No Data -->
     <div style="padding:40px; text-align:center;">
-        <i class="fa-solid fa-circle-info" style="font-size:40px; margin-bottom:10px;"></i>
+        <i class="fa-solid fa-circle-info" style="font-size:40px; margin-bottom:10px; color:#9ca3af;"></i>
         <h3>No controls found</h3>
-        <p>Add one via the Control button above.</p>
+        <p style="color:#9ca3af;">Add one via the “Control” button above.</p>
     </div>
     {% endif %}
 </div>
 
-<!-- Delete modals -->
+<!-- Delete Modals -->
 {% for c in controls %}
 <div class="modal fade" id="deleteModal{{ c.id }}" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -87,11 +100,13 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete:</p>
-                <h4 class="text-center">{{ c.customer_name }} — {{ c.project.project_name }}</h4>
+                <h4 class="text-center" style="color:#f87171;">
+                    {{ c.customer_name }} — {{ c.project.project_name }}
+                </h4>
             </div>
             <div class="modal-footer" style="border-top:1px solid #334155;">
                 <button class="btn" data-bs-dismiss="modal">Cancel</button>
-                <a href="{% url 'WebApp:delete_web_control' c.id %}" class="btn" style="background:#b91c1c;">
+                <a href="{% url 'WebApp:delete_web_control' c.id %}" class="btn" style="background:#b91c1c; color:white;">
                     Yes, Delete
                 </a>
             </div>
@@ -99,5 +114,4 @@
     </div>
 </div>
 {% endfor %}
-
 {% endblock %}

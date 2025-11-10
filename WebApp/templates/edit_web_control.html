@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="card" style="padding:20px;">
-    <h2 style="margin-bottom:20px;color:white;">Edit Web Control</h2>
+    <h2 style="margin-bottom:20px; color:white;">Edit Web Control</h2>
 
     {% if messages %}
         {% for message in messages %}
@@ -19,6 +19,7 @@
     <form method="POST">
         {% csrf_token %}
 
+        <!-- Select Project -->
         <div class="mb-3">
             <label class="form-label">Project <span class="text-danger">*</span></label>
             <select name="project" class="form-control" required>
@@ -29,25 +30,52 @@
             </select>
         </div>
 
+        <!-- Select Shop -->
         <div class="mb-3">
-            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
-            <input type="text" name="customer_name" class="form-control" value="{{ control.customer_name }}" required>
+            <label class="form-label">Shop Name <span class="text-danger">*</span></label>
+            <select id="shopSelect" name="shop" class="form-control" required>
+                <option value="">-- Select Shop --</option>
+                {% for shop in shops %}
+                <option value="{{ shop.id }}" data-client="{{ shop.client_id }}"
+                    {% if shop.name == control.customer_name %}selected{% endif %}>
+                    {{ shop.name }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
 
+        <!-- Auto-Filled Client ID -->
         <div class="mb-3">
             <label class="form-label">Client ID <span class="text-danger">*</span></label>
-            <input type="text" name="client_id" class="form-control" value="{{ control.client_id }}" required>
+            <input type="text" id="clientIdInput" name="client_id" 
+                   value="{{ control.client_id }}" readonly
+                   class="form-control"
+                   style="border:2px solid #16a34a; background:#0f172a; color:#fff;">
         </div>
 
+        <!-- Login Limit -->
         <div class="mb-3">
             <label class="form-label">Login Limit</label>
-            <input type="number" name="login_limit" class="form-control" value="{{ control.login_limit }}" min="0" required>
+            <input type="number" name="login_limit" 
+                   class="form-control" value="{{ control.login_limit }}" 
+                   min="0" required>
         </div>
 
+        <!-- Buttons -->
         <div class="d-flex gap-3">
             <button type="submit" class="btn btn-primary">Update</button>
             <a href="{% url 'WebApp:web_control' %}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
+
+<script>
+document.getElementById("shopSelect").addEventListener("change", function() {
+  const selectedOption = this.options[this.selectedIndex];
+  const clientId = selectedOption.getAttribute("data-client") || "";
+  const input = document.getElementById("clientIdInput");
+  input.value = clientId;
+  input.style.borderColor = clientId ? "#16a34a" : "#475569";
+});
+</script>
 {% endblock %}

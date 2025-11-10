@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     "WebApp",
     "MobileApp",
     "storages",  # for Cloudflare R2 (S3-compatible)
-    'branch'
+    'branch',
+    'StoreShop',
 ]
 
 # -------------------- Media (defaults: local) ---

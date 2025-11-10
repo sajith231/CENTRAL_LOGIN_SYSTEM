@@ -1,54 +1,50 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block active_mobile_control %}active{% endblock %}
-{% block header_title %}<strong>Edit Mobile Control</strong>{% endblock %}
-
+{% extends 'base.html' %}
 {% block content %}
-<div class="card" style="padding:20px;">
-    <h2 style="margin-bottom:20px;color:white;">Edit Mobile Control</h2>
+<h2>Edit Mobile Control</h2>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+<form method="POST">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Project</label>
+    <select name="project" class="form-control" required>
+      {% for project in projects %}
+        <option value="{{ project.id }}" {% if project.id == control.project.id %}selected{% endif %}>
+          {{ project.project_name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <form method="POST">
-        {% csrf_token %}
+  <div class="mb-3">
+    <label>Shop</label>
+    <select id="shopSelect" name="shop" class="form-control" required>
+      {% for shop in shops %}
+        <option value="{{ shop.id }}" data-client="{{ shop.client_id }}" {% if shop.name == control.customer_name %}selected{% endif %}>
+          {{ shop.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-        <div class="mb-3">
-            <label class="form-label">Project <span class="text-danger">*</span></label>
-            <select name="project" class="form-control" required>
-                <option value="">-- Select Project --</option>
-                {% for p in projects %}
-                <option value="{{ p.id }}" {% if p.id == control.project.id %}selected{% endif %}>{{ p.project_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+  <div class="mb-3">
+    <label>Client ID</label>
+    <input type="text" id="clientIdInput" class="form-control" value="{{ control.client_id }}" readonly>
+  </div>
 
-        <div class="mb-3">
-            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
-            <input type="text" name="customer_name" class="form-control" value="{{ control.customer_name }}" required>
-        </div>
+  <div class="mb-3">
+    <label>Login Limit</label>
+    <input type="number" name="login_limit" class="form-control" value="{{ control.login_limit }}" required>
+  </div>
 
-        <div class="mb-3">
-            <label class="form-label">Client ID <span class="text-danger">*</span></label>
-            <input type="text" name="client_id" class="form-control" value="{{ control.client_id }}" required>
-        </div>
+  <button type="submit" class="btn btn-primary">Update</button>
+</form>
 
-        <div class="mb-3">
-            <label class="form-label">Login Limit</label>
-            <input type="number" name="login_limit" class="form-control" value="{{ control.login_limit }}" min="0" required>
-        </div>
+<script>
+document.getElementById("shopSelect").addEventListener("change", function() {
+  const selectedOption = this.options[this.selectedIndex];
+  const clientId = selectedOption.getAttribute("data-client") || "";
+  document.getElementById("clientIdInput").value = clientId;
+});
+</script>
 
-        <div class="d-flex gap-3">
-            <button type="submit" class="btn btn-primary">Update</button>
-            <a href="{% url 'MobileApp:mobile_control' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
-</div>
 {% endblock %}
-

@@ -110,11 +110,11 @@
     <i class="fa-solid fa-chevron-right chev"></i>
   </button>
   <div id="submenu-clients" class="submenu">
-    <a href="" class="{% block active_store %}{% endblock %}">
+    <a href="{% url 'stores_list' %}" class="{% block active_store %}{% endblock %}">
       <i class="fa-solid fa-store"></i> Store
     </a>
 
-    <a href="" class="{% block active_shop %}{% endblock %}">
+    <a href="{% url 'shop_list' %}" class="{% block active_shop %}{% endblock %}">
       <i class="fa-solid fa-shop"></i> Shop
     </a>
   </div>
