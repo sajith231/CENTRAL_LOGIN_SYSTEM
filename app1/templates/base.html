@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>{% block title %}Admin{% endblock %}</title>
@@ -11,59 +12,213 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0f172a;         /* page background (slate-900) */
-      --panel:#111827;      /* panels/nav (gray-900)       */
-      --text:#e5e7eb;       /* text (gray-200)             */
-      --muted:#9ca3af;      /* muted text (gray-400)       */
-      --hover:#1f2937;      /* hover panel (gray-800)      */
-      --radius:14px;
-      --shadow:0 10px 30px rgba(0,0,0,.25);
-      --sidebar:260px;
+    :root {
+      --bg: #0f172a;
+      /* page background (slate-900) */
+      --panel: #111827;
+      /* panels/nav (gray-900)       */
+      --text: #e5e7eb;
+      /* text (gray-200)             */
+      --muted: #9ca3af;
+      /* muted text (gray-400)       */
+      --hover: #1f2937;
+      /* hover panel (gray-800)      */
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+      --sidebar: 260px;
     }
-    *{ box-sizing:border-box; color:var(--text); }
-    body{ margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; background:var(--bg); color:var(--text); }
 
-    .layout{ display:flex; min-height:100vh; }
+    * {
+      box-sizing: border-box;
+      color: var(--text);
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
     /* Sidebar */
-    .sidebar{ width:var(--sidebar); background:var(--panel); padding:18px 14px; box-shadow:var(--shadow); position:sticky; top:0; height:100vh; display:flex; flex-direction:column; gap:12px; }
-    .brand{ font-weight:700; letter-spacing:.3px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,.03); display:flex; align-items:center; gap:10px; }
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--panel);
+      padding: 18px 14px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-    .menu{ list-style:none; padding:0; margin:10px 0 0; }
-    .menu > li{ margin:6px 0; }
+    .brand {
+      font-weight: 700;
+      letter-spacing: .3px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .03);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    .menu .menu-toggle{ width:100%; background:transparent; border:none; text-align:left; display:flex; align-items:center; gap:10px; padding:12px; border-radius:12px; cursor:pointer; }
-    .menu .menu-toggle:hover{ background:var(--hover); }
-    .menu .menu-toggle .chev{ margin-left:auto; transition:transform .2s ease; }
-    .menu .menu-toggle[aria-expanded="true"] .chev{ transform:rotate(90deg); }
+    .menu {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+    }
 
-    .submenu{ display:none; padding-left:8px; }
-    .submenu.open{ display:block; }
-    .submenu a{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; color:var(--text); }
-    .submenu a:hover{ background:var(--hover); }
-    .submenu a.active{ background:var(--hover); outline:1px solid rgba(255,255,255,.06); }
+    .menu>li {
+      margin: 6px 0;
+    }
 
-    .topbar{ display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:var(--panel); position:sticky; top:0; z-index:2; box-shadow:var(--shadow); }
-    .btn-ghost{ padding:10px 14px; background:var(--panel); border-radius:10px; color:var(--text); text-decoration:none; display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; }
-    .btn-ghost:hover{ background:var(--hover); }
+    .menu .menu-toggle {
+      width: 100%;
+      background: transparent;
+      border: none;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
 
-    main{ padding:22px; }
-    .card{ background:var(--panel); padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); }
+    .menu .menu-toggle:hover {
+      background: var(--hover);
+    }
 
-    .muted{ color:var(--muted); }
+    .menu .menu-toggle .chev {
+      margin-left: auto;
+      transition: transform .2s ease;
+    }
+
+    .menu .menu-toggle[aria-expanded="true"] .chev {
+      transform: rotate(90deg);
+    }
+
+    .submenu {
+      display: none;
+      padding-left: 8px;
+    }
+
+    .submenu.open {
+      display: block;
+    }
+
+    .submenu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .submenu a:hover {
+      background: var(--hover);
+    }
+
+    .submenu a.active {
+      background: var(--hover);
+      outline: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--panel);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-ghost {
+      padding: 10px 14px;
+      background: var(--panel);
+      border-radius: 10px;
+      color: var(--text);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      background: var(--hover);
+    }
+
+    main {
+      padding: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
 
     /* Mobile */
-    @media (max-width: 900px){
-      .sidebar{ position:fixed; left:-100%; transition:left .25s ease; z-index:5; }
-      .sidebar.open{ left:0; }
-      .content{ margin-left:0; }
-      .overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:4; }
-      .overlay.show{ display:block; }
-      .hamburger{ display:inline-flex; padding:10px 12px; border-radius:10px; background:var(--panel); border:none; color:var(--text); }
+    @media (max-width: 900px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left .25s ease;
+        z-index: 5;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .content {
+        margin-left: 0;
+      }
+
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .35);
+        z-index: 4;
+      }
+
+      .overlay.show {
+        display: block;
+      }
+
+      .hamburger {
+        display: inline-flex;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--panel);
+        border: none;
+        color: var(--text);
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="layout">
     <!-- Sidebar -->
@@ -83,8 +238,10 @@
             <i class="fa-solid fa-chevron-right chev"></i>
           </button>
           <div id="submenu-web" class="submenu">
-            <a href="{% url 'WebApp:web_control' %}" class="{% block active_web_control %}{% endblock %}"><i class="fa-solid fa-sliders"></i> Web Control</a>
-            <a href="{% url 'WebApp:webapp_list' %}" class="{% block active_web_app_list %}{% endblock %}"><i class="fa-solid fa-list-check"></i> Web App List</a>
+            <a href="{% url 'WebApp:web_control' %}" class="{% block active_web_control %}{% endblock %}"><i
+                class="fa-solid fa-sliders"></i> Web Control</a>
+            <a href="{% url 'WebApp:webapp_list' %}" class="{% block active_web_app_list %}{% endblock %}"><i
+                class="fa-solid fa-list-check"></i> Web App List</a>
           </div>
         </li>
 
@@ -96,29 +253,50 @@
             <i class="fa-solid fa-chevron-right chev"></i>
           </button>
           <div id="submenu-mobile" class="submenu">
-            <a href="{% url 'MobileApp:mobile_control' %}" class="{% block active_mobile_control %}{% endblock %}"><i class="fa-solid fa-sliders"></i> Mobile Control</a>
-            <a href="{% url 'MobileApp:mobileapp_list' %}" class="{% block active_mobile_app_list %}{% endblock %}"><i class="fa-solid fa-list-check"></i> Mobile App List</a>
+            <a href="{% url 'MobileApp:mobile_control' %}" class="{% block active_mobile_control %}{% endblock %}"><i
+                class="fa-solid fa-sliders"></i> Mobile Control</a>
+            <a href="{% url 'MobileApp:mobileapp_list' %}" class="{% block active_mobile_app_list %}{% endblock %}"><i
+                class="fa-solid fa-list-check"></i> Mobile App List</a>
+          </div>
+        </li>
+
+
+        <li>
+          <button class="menu-toggle" aria-expanded="false" data-target="submenu-module-package">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Module & Package</span>
+            <i class="fa-solid fa-chevron-right chev"></i>
+          </button>
+
+          <div id="submenu-module-package" class="submenu">
+            <a href="{% url 'ModuleAndPackage:module_list' %}">
+                <i class="fa-solid fa-puzzle-piece"></i> Module
+            </a>
+
+            <a href="#" class="">
+              <i class="fa-solid fa-box-open"></i> Package
+            </a>
           </div>
         </li>
 
 
 
         <li>
-  <button class="menu-toggle" aria-expanded="false" data-target="submenu-clients">
-    <i class="fa-solid fa-building-user"></i>
-    <span>Clients</span>
-    <i class="fa-solid fa-chevron-right chev"></i>
-  </button>
-  <div id="submenu-clients" class="submenu">
-    <a href="{% url 'stores_list' %}" class="{% block active_store %}{% endblock %}">
-      <i class="fa-solid fa-store"></i> Store
-    </a>
+          <button class="menu-toggle" aria-expanded="false" data-target="submenu-clients">
+            <i class="fa-solid fa-building-user"></i>
+            <span>Clients</span>
+            <i class="fa-solid fa-chevron-right chev"></i>
+          </button>
+          <div id="submenu-clients" class="submenu">
+            <a href="{% url 'stores_list' %}" class="{% block active_store %}{% endblock %}">
+              <i class="fa-solid fa-store"></i> Store
+            </a>
 
-    <a href="{% url 'shop_list' %}" class="{% block active_shop %}{% endblock %}">
-      <i class="fa-solid fa-shop"></i> Shop
-    </a>
-  </div>
-</li>
+            <a href="{% url 'shop_list' %}" class="{% block active_shop %}{% endblock %}">
+              <i class="fa-solid fa-shop"></i> Shop
+            </a>
+          </div>
+        </li>
 
         <!-- 3) User Management -->
         <li>
@@ -128,37 +306,39 @@
             <i class="fa-solid fa-chevron-right chev"></i>
           </button>
           <div id="submenu-user" class="submenu">
-            <a href="{% url 'users_table' %}" class="{% block active_users %}{% endblock %}"><i class="fa-solid fa-users"></i> Users</a>
-            <a href="#" class="{% block active_user_menu_control %}{% endblock %}"><i class="fa-solid fa-user-gear"></i> User Menu Control</a>
+            <a href="{% url 'users_table' %}" class="{% block active_users %}{% endblock %}"><i
+                class="fa-solid fa-users"></i> Users</a>
+            <a href="#" class="{% block active_user_menu_control %}{% endblock %}"><i class="fa-solid fa-user-gear"></i>
+              User Menu Control</a>
           </div>
         </li>
 
 
         <li>
-  <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
-    <i class="fa-solid fa-layer-group"></i>
-    <span>Master</span>
-    <i class="fa-solid fa-chevron-right chev"></i>
-  </button>
-  <div id="submenu-master" class="submenu">
-    <a href="{% url 'branch_list' %}" class="{% block active_branch %}{% endblock %}">
-      <i class="fa-solid fa-code-branch"></i> Branch
-    </a>
-    <a href="" class="">
-      <i class="fa-solid fa-code-branch"></i> country
-    </a>
-  </div>
-</li>
+          <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Master</span>
+            <i class="fa-solid fa-chevron-right chev"></i>
+          </button>
+          <div id="submenu-master" class="submenu">
+            <a href="{% url 'branch_list' %}" class="{% block active_branch %}{% endblock %}">
+              <i class="fa-solid fa-code-branch"></i> Branch
+            </a>
+            <a href="" class="">
+              <i class="fa-solid fa-code-branch"></i> country
+            </a>
+          </div>
+        </li>
       </ul>
 
-      
+
 
       <div class="muted" style="font-size:12px; margin-top:auto;">
         Signed in as <strong>
           {% if request.user.is_superuser %}
-            {{ request.user.username }}
+          {{ request.user.username }}
           {% else %}
-            {{ request.session.custom_user_name }}
+          {{ request.session.custom_user_name }}
           {% endif %}
         </strong>
       </div>
@@ -191,9 +371,9 @@
     // Mobile sidebar toggle
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
-    function toggleSidebar(){ const open = sidebar.classList.toggle('open'); overlay.classList.toggle('show', open); }
+    function toggleSidebar() { const open = sidebar.classList.toggle('open'); overlay.classList.toggle('show', open); }
     const mq = window.matchMedia('(min-width: 901px)');
-    function syncHamburger(){ const btn = document.getElementById('hamburger'); if(!btn) return; btn.style.display = mq.matches ? 'none' : 'inline-flex'; }
+    function syncHamburger() { const btn = document.getElementById('hamburger'); if (!btn) return; btn.style.display = mq.matches ? 'none' : 'inline-flex'; }
     mq.addEventListener('change', syncHamburger); syncHamburger();
 
     // Dropdown logic
@@ -211,12 +391,13 @@
     // Auto-open the correct dropdown when a child has .active
     document.querySelectorAll('.submenu').forEach(panel => {
       const hasActive = panel.querySelector('a.active');
-      if(hasActive){
+      if (hasActive) {
         panel.classList.add('open');
-        const toggle = document.querySelector('[data-target="'+panel.id+'"]');
-        if(toggle) toggle.setAttribute('aria-expanded','true');
+        const toggle = document.querySelector('[data-target="' + panel.id + '"]');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
       }
     });
   </script>
 </body>
+
 </html>

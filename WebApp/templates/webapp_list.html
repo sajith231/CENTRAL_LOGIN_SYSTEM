@@ -10,9 +10,10 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h2 style="margin:0; font-size:20px;">Web App Projects</h2>
 
-        <a href="{% url 'WebApp:webproject_create' %}" class="btn">
-            <i class="fa-solid fa-plus"></i> Add New
-        </a>
+        <a href="{% url 'WebApp:webproject_create' %}" class="btn"
+            style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+                <i class="fa-solid fa-plus"></i> Add New
+            </a>
     </div>
 
     <!-- Messages -->
@@ -79,14 +80,16 @@
                     </td>
 
                     <td style="padding:12px;">
-                        <a href="{% url 'WebApp:webproject_edit' project.id %}" class="btn">
-                            <i class="fa-solid fa-pen-to-square"></i> Edit
-                        </a>
+                        <a href="{% url 'WebApp:webproject_edit' project.id %}"
+   class="btn" style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
+    <i class="fa-solid fa-pen-to-square"></i> Edit
+</a>
 
-                        <button class="btn" style="background:#7f1d1d;"
-                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </button>
+<button class="btn" style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;"
+        data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
+    <i class="fa-solid fa-trash"></i> Delete
+</button>
+
                     </td>
                 </tr>
                 {% endfor %}
