@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from MobileApp.models import MobileProject
 from .models import Module
+from django.http import JsonResponse
 
 def module_list(request):
     modules = Module.objects.select_related('project').all()
@@ -57,3 +58,68 @@ def delete_module(request, pk):
     module.delete()
     messages.success(request, "Module deleted successfully")
     return redirect("ModuleAndPackage:module_list")
+
+
+
+
+from .models import Module, Package
+from MobileApp.models import MobileProject
+
+def package_list(request):
+    packages = Package.objects.all().prefetch_related("modules", "project")
+    return render(request, "packages.html", {"packages": packages})
+
+
+def add_package_page(request):
+    projects = MobileProject.objects.all()
+    return render(request, "add_packages.html", {"projects": projects})
+
+
+def save_package(request):
+    if request.method == "POST":
+        project_id = request.POST.get("project")
+        package_name = request.POST.get("package_name")
+        selected_modules = request.POST.getlist("modules")
+
+        project = MobileProject.objects.get(id=project_id)
+        package = Package.objects.create(project=project, package_name=package_name)
+
+        # Add multiple modules
+        package.modules.set(selected_modules)
+        package.save()
+
+        return redirect("ModuleAndPackage:package_list")
+
+    return redirect("ModuleAndPackage:package_list")
+
+
+def edit_package(request, pk):
+    package = get_object_or_404(Package, pk=pk)
+    projects = MobileProject.objects.all()
+    modules = Module.objects.filter(project=package.project)
+
+    if request.method == "POST":
+        package.package_name = request.POST.get("package_name")
+        selected_modules = request.POST.getlist("modules")
+
+        package.modules.set(selected_modules)
+        package.save()
+
+        return redirect("ModuleAndPackage:package_list")
+
+    return render(request, "edit_package.html", {
+        "package": package,
+        "projects": projects,
+        "modules": modules
+    })
+
+
+def delete_package(request, pk):
+    package = get_object_or_404(Package, pk=pk)
+    package.delete()
+    return redirect("ModuleAndPackage:package_list")
+
+
+def get_modules(request, project_id):
+    modules = Module.objects.filter(project_id=project_id).values("id", "module_name")
+    return JsonResponse(list(modules), safe=False)

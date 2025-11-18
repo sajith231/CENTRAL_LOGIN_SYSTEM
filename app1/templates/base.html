@@ -273,8 +273,8 @@
                 <i class="fa-solid fa-puzzle-piece"></i> Module
             </a>
 
-            <a href="#" class="">
-              <i class="fa-solid fa-box-open"></i> Package
+            <a href="{% url 'ModuleAndPackage:package_list' %}" class="{% block active_package %}{% endblock %}">
+                <i class="fa-solid fa-box-open"></i> Package
             </a>
           </div>
         </li>
@@ -325,7 +325,7 @@
               <i class="fa-solid fa-code-branch"></i> Branch
             </a>
             <a href="" class="">
-              <i class="fa-solid fa-code-branch"></i> country
+              <!-- <i class="fa-solid fa-code-branch"></i> country -->
             </a>
           </div>
         </li>

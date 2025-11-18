@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h2>Add New Branch</h2>
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Add New Branch</h2>
 
-<form method="POST">
-    {% csrf_token %}
-    
-    <label>Branch Name</label>
-    <input type="text" name="name" required class="form-control">
+    <form method="POST">
+        {% csrf_token %}
 
-    <br>
-    <button type="submit" class="btn btn-success">Save</button>
-</form>
+        <!-- Branch Name -->
+        <div class="mb-3">
+            <label>Branch Name</label>
+            <input type="text" name="name" required class="form-control"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
 
 {% endblock %}

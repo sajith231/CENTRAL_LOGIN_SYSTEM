@@ -23,3 +23,19 @@ class Module(models.Model):
 
     def __str__(self):
         return f"{self.module_name} ({self.project.project_name})"
+
+
+
+
+from django.db import models
+from MobileApp.models import MobileProject
+from .models import Module    # already exists
+
+class Package(models.Model):
+    project = models.ForeignKey(MobileProject, on_delete=models.CASCADE)
+    modules = models.ManyToManyField(Module)
+    package_name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.package_name

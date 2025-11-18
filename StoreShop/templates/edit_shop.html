@@ -1,55 +1,72 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Edit Shop</h2>
 
-<form method="POST">
-  {% csrf_token %}
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Edit Shop</h2>
 
-  <div class="mb-3">
-    <label>Shop Name</label>
-    <input type="text" name="name" value="{{ shop.name }}" class="form-control" required>
-  </div>
+    <form method="POST">
+        {% csrf_token %}
 
-  <div class="mb-3">
-    <label>Store</label>
-    <select name="store" class="form-control" required>
-      {% for store in stores %}
-        <option value="{{ store.id }}" {% if store.id == shop.store.id %}selected{% endif %}>
-          {{ store.name }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
+        <!-- Shop Name -->
+        <div class="mb-3">
+            <label>Shop Name</label>
+            <input type="text" name="name" value="{{ shop.name }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
 
-  <!-- New Branch Dropdown -->
-  <div class="mb-3">
-    <label>Branch</label>
-    <select name="branch" class="form-control" required>
-      {% for branch in branches %}
-        <option value="{{ branch.id }}" {% if shop.branch.id == branch.id %}selected{% endif %}>
-          {{ branch.name }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
+        <!-- Store Dropdown -->
+        <div class="mb-3">
+            <label>Store</label>
+            <select name="store" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for store in stores %}
+                    <option value="{{ store.id }}"
+                            {% if store.id == shop.store.id %}selected{% endif %}
+                            style="background:#0f1b31; color:white;">
+                        {{ store.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-  <!-- New Place Field -->
-  <div class="mb-3">
-    <label>Place</label>
-    <input type="text" name="place" value="{{ shop.place }}" class="form-control" required>
-  </div>
+        <!-- Branch Dropdown -->
+        <div class="mb-3">
+            <label>Branch</label>
+            <select name="branch" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}"
+                            {% if shop.branch.id == branch.id %}selected{% endif %}
+                            style="background:#0f1b31; color:white;">
+                        {{ branch.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-  <div class="mb-3">
-    <label>Email</label>
-    <input type="email" name="email" value="{{ shop.email }}" class="form-control" required>
-  </div>
+        <!-- Place -->
+        <div class="mb-3">
+            <label>Place</label>
+            <input type="text" name="place" value="{{ shop.place }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
 
-  <div class="mb-3">
-    <label>Contact No</label>
-    <input type="text" name="contact_no" value="{{ shop.contact_no }}" class="form-control" required>
-  </div>
+        <!-- Email -->
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ shop.email }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
 
-  <button type="submit" class="btn btn-primary">Update</button>
-</form>
+        <!-- Contact No -->
+        <div class="mb-3">
+            <label>Contact No</label>
+            <input type="text" name="contact_no" value="{{ shop.contact_no }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
 
 {% endblock %}

@@ -8,7 +8,7 @@
 
 <div class="card" style="max-width:600px; margin:auto;">
 
-    <h2 style="margin-bottom:15px;">Add New Module</h2>
+    <h2 style="margin-bottom:15px;color: white;">Add New Module</h2>
 
     {% if messages %}
         {% for message in messages %}
@@ -23,18 +23,26 @@
 
         <div class="mb-3">
             <label>Project Name</label>
-            <select name="project" class="form-control" required>
-                <option value="">-- Select Project --</option>
-                {% for p in projects %}
-                <option value="{{ p.id }}">{{ p.project_name }}</option>
-                {% endfor %}
-            </select>
+           <select name="project" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <option value="" style="background:#0f1b31; color:white;">-- Select Project --</option>
+
+            {% for p in projects %}
+            <option value="{{ p.id }}" style="background:#0f1b31; color:white;">
+                {{ p.project_name }}
+            </option>
+            {% endfor %}
+        </select>
+
         </div>
 
         <div class="mb-3">
             <label>Module Name</label>
-            <input type="text" name="module_name" class="form-control" placeholder="Enter module name" required>
+            <input type="text" name="module_name" class="form-control"
+                placeholder="Enter module name" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
+
 
         <button class="btn" style="background:#16a34a; color:white;">Save</button>
 

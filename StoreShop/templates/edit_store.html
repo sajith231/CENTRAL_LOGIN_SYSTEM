@@ -1,32 +1,43 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Edit Store</h2>
 
-<form method="POST">
-  {% csrf_token %}
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Edit Store</h2>
 
-  <div class="mb-3">
-    <label>Store Name</label>
-    <input type="text" name="name" value="{{ store.name }}" class="form-control" required>
-  </div>
+    <form method="POST">
+        {% csrf_token %}
 
-  <div class="mb-3">
-    <label>Branch</label>
-    <select name="branch" class="form-control" required>
-      {% for branch in branches %}
-        <option value="{{ branch.id }}" {% if branch.id == store.branch.id %}selected{% endif %}>
-          {{ branch.name }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
+        <!-- Store Name -->
+        <div class="mb-3">
+            <label>Store Name</label>
+            <input type="text" name="name" value="{{ store.name }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
 
-  <div class="mb-3">
-    <label>Place</label>
-    <input type="text" name="place" value="{{ store.place }}" class="form-control" required>
-  </div>
+        <!-- Branch -->
+        <div class="mb-3">
+            <label>Branch</label>
+            <select name="branch" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for branch in branches %}
+                <option value="{{ branch.id }}"
+                        {% if branch.id == store.branch.id %}selected{% endif %}
+                        style="background:#0f1b31; color:white;">
+                    {{ branch.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-  <button type="submit" class="btn btn-primary">Update</button>
-</form>
+        <!-- Place -->
+        <div class="mb-3">
+            <label>Place</label>
+            <input type="text" name="place" value="{{ store.place }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
 
 {% endblock %}

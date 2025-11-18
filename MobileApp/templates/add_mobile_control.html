@@ -1,47 +1,66 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Add Mobile Control</h2>
 
-<form method="POST">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label>Project</label>
-    <select name="project" class="form-control" required>
-      <option value="">Select Project</option>
-      {% for project in projects %}
-        <option value="{{ project.id }}">{{ project.project_name }}</option>
-      {% endfor %}
-    </select>
-  </div>
+<div class="card" style="padding:20px;">
+    <h2 style="color:whitesmoke;">Add Mobile Control</h2>
 
-  <div class="mb-3">
-    <label>Shop</label>
-    <select id="shopSelect" name="shop" class="form-control" required>
-      <option value="">Select Shop</option>
-      {% for shop in shops %}
-        <option value="{{ shop.id }}" data-client="{{ shop.client_id }}">{{ shop.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <form method="POST">
+        {% csrf_token %}
 
-  <div class="mb-3">
-    <label>Client ID</label>
-    <input type="text" id="clientIdInput" class="form-control" readonly>
-  </div>
+        <!-- Project -->
+        <div class="mb-3">
+            <label>Project</label>
+            <select name="project" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="" style="background:#0f1b31; color:white;">Select Project</option>
 
-  <div class="mb-3">
-    <label>Login Limit</label>
-    <input type="number" name="login_limit" class="form-control" value="1" required>
-  </div>
+                {% for project in projects %}
+                <option value="{{ project.id }}" style="background:#0f1b31; color:white;">
+                    {{ project.project_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-  <button type="submit" class="btn btn-success">Save</button>
-</form>
+        <!-- Shop -->
+        <div class="mb-3">
+            <label>Shop</label>
+            <select id="shopSelect" name="shop" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="" style="background:#0f1b31; color:white;">Select Shop</option>
+
+                {% for shop in shops %}
+                <option value="{{ shop.id }}" data-client="{{ shop.client_id }}"
+                        style="background:#0f1b31; color:white;">
+                    {{ shop.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Client ID -->
+        <div class="mb-3">
+            <label>Client ID</label>
+            <input type="text" id="clientIdInput" class="form-control" readonly
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Login Limit -->
+        <div class="mb-3">
+            <label>Login Limit</label>
+            <input type="number" name="login_limit" class="form-control" value="1" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
 
 <script>
 document.getElementById("shopSelect").addEventListener("change", function() {
-  const selectedOption = this.options[this.selectedIndex];
-  const clientId = selectedOption.getAttribute("data-client") || "";
-  document.getElementById("clientIdInput").value = clientId;
+    const selectedOption = this.options[this.selectedIndex];
+    const clientId = selectedOption.getAttribute("data-client") || "";
+    document.getElementById("clientIdInput").value = clientId;
 });
 </script>
 

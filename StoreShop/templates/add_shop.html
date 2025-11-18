@@ -1,43 +1,72 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Add Shop</h2>
-<form method="POST">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label>Shop Name</label>
-    <input type="text" name="name" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label>Store</label>
-    <select name="store" class="form-control" required>
-      <option value="">Select Store</option>
-      {% for store in stores %}
-      <option value="{{ store.id }}">{{ store.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="mb-3">
-    <label>Email</label>
-    <input type="email" name="email" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label>Contact No</label>
-    <input type="text" name="contact_no" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label>Branch</label>
-    <select name="branch" class="form-control" required>
-      <option value="">Select Branch</option>
-      {% for branch in branches %}
-      <option value="{{ branch.id }}">{{ branch.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
 
-  <div class="mb-3">
-    <label>Place</label>
-    <input type="text" name="place" class="form-control" required>
-  </div>
-  <button type="submit" class="btn btn-success">Save</button>
-</form>
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Add Shop</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Shop Name -->
+        <div class="mb-3">
+            <label>Shop Name</label>
+            <input type="text" name="name" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Store -->
+        <div class="mb-3">
+            <label>Store</label>
+            <select name="store" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="" style="background:#0f1b31; color:white;">Select Store</option>
+
+                {% for store in stores %}
+                <option value="{{ store.id }}" style="background:#0f1b31; color:white;">
+                    {{ store.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Contact No -->
+        <div class="mb-3">
+            <label>Contact No</label>
+            <input type="text" name="contact_no" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Branch -->
+        <div class="mb-3">
+            <label>Branch</label>
+            <select name="branch" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="" style="background:#0f1b31; color:white;">Select Branch</option>
+
+                {% for branch in branches %}
+                <option value="{{ branch.id }}" style="background:#0f1b31; color:white;">
+                    {{ branch.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Place -->
+        <div class="mb-3">
+            <label>Place</label>
+            <input type="text" name="place" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
+
 {% endblock %}
