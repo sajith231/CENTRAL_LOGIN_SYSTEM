@@ -30,14 +30,20 @@
           <td style="padding:12px;">{{ forloop.counter }}</td>
           <td style="padding:12px;">{{ p.package_name }}</td>
           <td style="padding:12px;">{{ p.project.project_name }}</td>
+
+          <!-- UPDATED MODULE DISPLAY -->
           <td style="padding:12px;">
               {% for m in p.modules.all %}
-                <span class="badge bg-info">{{ m.module_name }}</span>
+                <span class="badge bg-info" style="margin-right:4px;">
+                    {{ m.module_name }} ({{ m.module_code }})
+                </span>
               {% endfor %}
           </td>
+
           <td style="padding:12px;">
               <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
+
           <td style="padding:12px;">
             <a href="{% url 'ModuleAndPackage:delete_package' p.id %}"
                class="btn btn-danger btn-sm"
@@ -51,7 +57,6 @@
         </tr>
         {% endfor %}
       </tbody>
-
     </table>
   </div>
 
