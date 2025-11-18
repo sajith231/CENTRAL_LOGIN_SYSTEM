@@ -12,7 +12,7 @@
     <select name="store" class="form-control" required>
       <option value="">Select Store</option>
       {% for store in stores %}
-        <option value="{{ store.id }}">{{ store.name }}</option>
+      <option value="{{ store.id }}">{{ store.name }}</option>
       {% endfor %}
     </select>
   </div>
@@ -23,6 +23,20 @@
   <div class="mb-3">
     <label>Contact No</label>
     <input type="text" name="contact_no" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Branch</label>
+    <select name="branch" class="form-control" required>
+      <option value="">Select Branch</option>
+      {% for branch in branches %}
+      <option value="{{ branch.id }}">{{ branch.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label>Place</label>
+    <input type="text" name="place" class="form-control" required>
   </div>
   <button type="submit" class="btn btn-success">Save</button>
 </form>

@@ -11,7 +11,26 @@
     <a href="{% url 'add_shop' %}" class="btn btn-success">Add New</a>
   </div>
 
-  <div style="padding:12px 20px 20px;">
+  <!-- 🔍 Shop Name Search -->
+  <div style="padding:12px 20px;">
+      <input type="text" id="shopSearch" placeholder="Search shop..."
+             style="padding:8px 12px; width:250px; border-radius:6px;
+                    border:1px solid #334155; background:#0f1b31; color:white;">
+  </div>
+
+  <script>
+      document.getElementById("shopSearch").addEventListener("keyup", function () {
+          let keyword = this.value.toLowerCase();
+          let rows = document.querySelectorAll("table tbody tr");
+
+          rows.forEach(row => {
+              let shopName = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
+              row.style.display = shopName.includes(keyword) ? "" : "none";
+          });
+      });
+  </script>
+
+  <div style="padding:0 20px 20px;">
     <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
       <thead>
         <tr style="background: var(--hover);">
@@ -21,6 +40,8 @@
             <th style="padding:12px;">Store</th>
             <th style="padding:12px;">Email</th>
             <th style="padding:12px;">Contact No</th>
+            <th>Branch</th>
+            <th>Place</th>
             <th style="padding:12px;">Edit</th>
             <th style="padding:12px;">Delete</th>
         </tr>
@@ -34,6 +55,8 @@
           <td style="padding:12px;">{{ shop.store.name }}</td>
           <td style="padding:12px;">{{ shop.email }}</td>
           <td style="padding:12px;">{{ shop.contact_no }}</td>
+          <td>{{ shop.branch.name }}</td>
+          <td>{{ shop.place }}</td>
           <td style="padding:12px;">
             <a href="{% url 'edit_shop' shop.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
@@ -45,7 +68,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7" style="padding:12px;">No shops yet.</td></tr>
+        <tr><td colspan="8" style="padding:12px;">No shops yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

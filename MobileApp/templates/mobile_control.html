@@ -17,6 +17,30 @@
         </a>
     </div>
 
+    <!-- Filter Dropdown -->
+    <div style="margin-bottom:15px;">
+        <select id="projectFilter"
+                style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+            <option value="">All Projects</option>
+
+            {% for c in controls %}
+                <option value="{{ c.project.project_name }}">{{ c.project.project_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <script>
+        document.getElementById("projectFilter").addEventListener("change", function () {
+            let selected = this.value.toLowerCase();
+            let rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                let project = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+                row.style.display = (selected === "" || project === selected) ? "" : "none";
+            });
+        });
+    </script>
+
     <!-- Messages -->
     {% if messages %}
         {% for message in messages %}

@@ -1,9 +1,14 @@
 from django.db import models
 import random
 import string
+from branch.models import Branch
+
+
 
 class Store(models.Model):
     name = models.CharField(max_length=100)
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
+    place = models.CharField(max_length=150, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -11,7 +16,9 @@ class Store(models.Model):
 
 class Shop(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
+    place = models.CharField(max_length=150, null=True, blank=True)
     email = models.EmailField()
     contact_no = models.CharField(max_length=15)
     client_id = models.CharField(max_length=50, unique=True, editable=False)

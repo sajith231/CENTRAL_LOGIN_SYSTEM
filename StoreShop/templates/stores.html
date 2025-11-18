@@ -11,12 +11,34 @@
     <a href="{% url 'add_store' %}" class="btn btn-success">Add New</a>
   </div>
 
-  <div style="padding:12px 20px 20px;">
+  <!-- 🔍 Search Filter -->
+  <div style="padding:12px 20px;">
+      <input type="text" id="storeSearch" placeholder="Search store..."
+             style="padding:8px 12px; width:250px; border-radius:6px;
+                    border:1px solid #334155; background:#0f1b31; color:white;">
+  </div>
+
+  <script>
+      document.getElementById("storeSearch").addEventListener("keyup", function () {
+          let keyword = this.value.toLowerCase();
+          let rows = document.querySelectorAll("table tbody tr");
+
+          rows.forEach(row => {
+              let name = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
+              row.style.display = name.includes(keyword) ? "" : "none";
+          });
+      });
+  </script>
+
+  <div style="padding:0 20px 20px;">
     <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
       <thead>
         <tr style="background: var(--hover);">
           <th style="padding:12px;">#</th>
           <th style="padding:12px;">Store Name</th>
+          <th style="padding:12px;">Branch</th>
+          <th style="padding:12px;">Place</th>
+
           <th style="padding:12px;">Edit</th>
           <th style="padding:12px;">Delete</th>
         </tr>
@@ -26,6 +48,8 @@
         <tr style="background:#0f1b31;">
           <td style="padding:12px;">{{ forloop.counter }}</td>
           <td style="padding:12px;">{{ store.name }}</td>
+          <td style="padding:12px;">{{ store.branch.name }}</td>
+          <td style="padding:12px;">{{ store.place }}</td>
           <td style="padding:12px;">
             <a href="{% url 'edit_store' store.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
@@ -37,7 +61,9 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="4" style="padding:12px;">No stores yet.</td></tr>
+        <tr>
+          <td colspan="4" style="padding:12px;">No stores yet.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

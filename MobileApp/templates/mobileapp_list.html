@@ -5,6 +5,8 @@
 {% block header_title %}<strong>Mobile App List</strong>{% endblock %}
 
 {% block content %}
+<!-- <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"> -->
+
 
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -15,6 +17,11 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </a>
     </div>
+
+    <div style="margin-bottom:15px; display:flex; gap:10px;">
+    <input type="text" id="searchProject" placeholder="Search Project..."
+           style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+</div>
 
     <!-- Messages -->
     {% if messages %}
@@ -483,6 +490,20 @@ async function tryPost(projectId) {
     alert('POST failed: ' + err);
   }
 }
+</script>
+
+<script>
+function filterProjectList() {
+    let input = document.getElementById("searchProject").value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+        let name = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+        row.style.display = name.includes(input) ? "" : "none";
+    });
+}
+
+document.getElementById("searchProject").addEventListener("keyup", filterProjectList);
 </script>
 
 {% endblock %}
