@@ -1,8 +1,8 @@
 from django.db import models
-from MobileApp.models import MobileProject
+
 
 class Module(models.Model):
-    project = models.ForeignKey(MobileProject, on_delete=models.CASCADE, related_name="modules")
+    project = models.ForeignKey("MobileApp.MobileProject", on_delete=models.CASCADE, related_name="modules")
     module_name = models.CharField(max_length=200)
     module_code = models.CharField(max_length=20, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -28,11 +28,11 @@ class Module(models.Model):
 
 
 from django.db import models
-from MobileApp.models import MobileProject
+
 from .models import Module    # already exists
 
 class Package(models.Model):
-    project = models.ForeignKey(MobileProject, on_delete=models.CASCADE)
+    project = models.ForeignKey("MobileApp.MobileProject", on_delete=models.CASCADE)
     modules = models.ManyToManyField(Module)
     package_name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,6 @@
 from django.db import models
 import re
+from ModuleAndPackage.models import Package
 
 class MobileProject(models.Model):
     project_name = models.CharField(max_length=200)
@@ -36,6 +37,9 @@ class MobileControl(models.Model):
     customer_name = models.CharField(max_length=255)
     client_id = models.CharField(max_length=200)
     login_limit = models.PositiveIntegerField(default=1)
+ 
+    package = models.ForeignKey("ModuleAndPackage.Package", on_delete=models.SET_NULL, null=True, blank=True)
+
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 

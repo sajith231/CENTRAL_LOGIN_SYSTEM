@@ -144,36 +144,70 @@
                 </div>
 
                 <h6 style="color:#10b981; margin-bottom:10px;">Response Data:</h6>
-                <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
-                    <table style="width:100%; color:#e5e7eb; font-size:13px;">
-                        <thead>
-                            <tr style="border-bottom:1px solid #334155;">
-                                <th style="padding:8px; text-align:left;">Customer Name</th>
-                                <th style="padding:8px; text-align:left;">Client ID</th>
-                                <th style="padding:8px; text-align:center;">Login Limit</th>
-                                <th style="padding:8px; text-align:center;">Logged Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for control in project.controls.all %}
-                            <tr style="border-bottom:1px solid #1e293b;">
-                                <td style="padding:8px;">{{ control.customer_name }}</td>
-                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.client_id }}</code></td>
-                                <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
-                                <td style="padding:8px; text-align:center;">
-                                    <span style="color:#10b981;">{{ control.active_devices.count }}</span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" style="padding:20px; text-align:center; color:#9ca3af;">
-                                    No customers added yet
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+
+<div style="background:#0f172a; padding:15px; border-radius:8px;">
+
+    {% for control in project.controls.all %}
+    <div style="padding:10px; border-bottom:1px solid #334155; margin-bottom:12px;">
+
+        <!-- Customer -->
+        <p style="margin:0; font-size:14px;">
+            <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
+        </p>
+
+        <!-- Client ID -->
+        <p style="margin:0; font-size:14px;">
+            <strong style="color:#e5e7eb;">Client ID:</strong>
+            <code style="color:#fbbf24;">{{ control.client_id }}</code>
+        </p>
+
+        <!-- Package -->
+        <p style="margin:0; font-size:14px;">
+            <strong style="color:#e5e7eb;">Package:</strong>
+            {% if control.package %}
+                <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;">
+                    {{ control.package.package_name }}
+                </span>
+            {% else %}
+                <span style="color:#9ca3af;">None</span>
+            {% endif %}
+        </p>
+
+        <!-- MODULES LIST -->
+        <div style="margin-top:5px;">
+            <strong style="color:#e5e7eb;">Modules:</strong>
+
+            {% if control.package %}
+                {% for m in control.package.modules.all %}
+                    <div style="margin-top:4px;">
+                        <span style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
+                            {{ m.module_name }}
+                        </span>
+                        <span style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
+                            {{ m.module_code }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#9ca3af; font-size:13px;">No modules</p>
+            {% endif %}
+        </div>
+
+        <!-- Login info -->
+        <p style="margin-top:8px; font-size:14px;">
+            <strong style="color:#e5e7eb;">Login Limit:</strong> {{ control.login_limit }}
+        </p>
+        <p style="margin:0; font-size:14px;">
+            <strong style="color:#e5e7eb;">Logged Count:</strong>
+            <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+        </p>
+
+    </div>
+    {% empty %}
+       <p style="color:#9ca3af; text-align:center;">No customers added yet</p>
+    {% endfor %}
+</div>
+
 
 
                 <h6 style="color:#10b981; margin-top:20px;">Active Devices:</h6>

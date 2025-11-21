@@ -55,6 +55,13 @@
                    value="{{ control.login_limit }}" required
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
+       <div class="mb-3">
+    <label>Package</label>
+    <select id="packageSelect" name="package" class="form-control" required
+            style="background:#0f1b31; color:white; border:1px solid #334155;">
+        <option value="">Select Package</option>
+    </select>
+</div>
 
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
@@ -66,6 +73,36 @@ document.getElementById("shopSelect").addEventListener("change", function() {
     const clientId = selectedOption.getAttribute("data-client") || "";
     document.getElementById("clientIdInput").value = clientId;
 });
+</script>
+
+<script>
+let selectedPkg = "{{ control.package.id }}";
+let selectedProject = "{{ control.project.id }}";
+
+function loadPackages(projectID, selectedPkgID = null) {
+    fetch(`/module-package/get-packages/${projectID}/`)
+        .then(res => res.json())
+        .then(data => {
+            let pkgSelect = document.getElementById("packageSelect");
+            pkgSelect.innerHTML = '<option value="">Select Package</option>';
+
+            data.forEach(pkg => {
+                pkgSelect.innerHTML += `
+                    <option value="${pkg.id}"
+                        ${selectedPkgID == pkg.id ? "selected" : ""}
+                        style="background:#0f1b31; color:white;">
+                        ${pkg.package_name}
+                    </option>`;
+            });
+        });
+}
+
+document.querySelector("select[name='project']").addEventListener("change", function () {
+    loadPackages(this.value);
+});
+
+// Load packages on page load for the existing project
+loadPackages(selectedProject, selectedPkg);
 </script>
 
 {% endblock %}

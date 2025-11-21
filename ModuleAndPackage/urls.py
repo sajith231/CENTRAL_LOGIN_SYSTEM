@@ -16,4 +16,5 @@ urlpatterns = [
     path('packages/edit/<int:pk>/', views.edit_package, name='edit_package'),
     path('packages/delete/<int:pk>/', views.delete_package, name='delete_package'),
     path("get-modules/<int:project_id>/", views.get_modules, name="get_modules"),
+    path("get-packages/<int:project_id>/", views.get_packages, name="get_packages"),
 ]

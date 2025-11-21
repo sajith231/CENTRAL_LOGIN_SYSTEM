@@ -123,3 +123,8 @@ def delete_package(request, pk):
 def get_modules(request, project_id):
     modules = Module.objects.filter(project_id=project_id).values("id", "module_name")
     return JsonResponse(list(modules), safe=False)
+
+
+def get_packages(request, project_id):
+    packages = Package.objects.filter(project_id=project_id).values("id", "package_name")
+    return JsonResponse(list(packages), safe=False)

@@ -51,6 +51,14 @@
             <input type="number" name="login_limit" class="form-control" value="1" required
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
+        <div class="mb-3">
+    <label>Package</label>
+    <select id="packageSelect" name="package" class="form-control" required
+            style="background:#0f1b31; color:white; border:1px solid #334155;">
+        <option value="">Select Package</option>
+    </select>
+</div>
+
 
         <button type="submit" class="btn btn-success">Save</button>
     </form>
@@ -61,6 +69,31 @@ document.getElementById("shopSelect").addEventListener("change", function() {
     const selectedOption = this.options[this.selectedIndex];
     const clientId = selectedOption.getAttribute("data-client") || "";
     document.getElementById("clientIdInput").value = clientId;
+});
+</script>
+
+<script>
+document.querySelector("select[name='project']").addEventListener("change", function () {
+    let projectID = this.value;
+
+    if (!projectID) {
+        document.getElementById("packageSelect").innerHTML = '<option value="">Select Package</option>';
+        return;
+    }
+
+    fetch(`/module-package/get-packages/${projectID}/`)
+        .then(res => res.json())
+        .then(data => {
+            let pkgSelect = document.getElementById("packageSelect");
+            pkgSelect.innerHTML = '<option value="">Select Package</option>';
+
+            data.forEach(pkg => {
+                pkgSelect.innerHTML += `
+                    <option value="${pkg.id}" style="background:#0f1b31; color:white;">
+                        ${pkg.package_name}
+                    </option>`;
+            });
+        });
 });
 </script>
 

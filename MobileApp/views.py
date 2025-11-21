@@ -1,3 +1,4 @@
+from importlib.resources import Package
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
@@ -8,6 +9,7 @@ from .models import ActiveDevice, MobileProject, MobileControl, LoginLog
 from StoreShop.models import Shop
 from django.shortcuts import render
 from .models import MobileProject
+from ModuleAndPackage.models import Package
 
 def mobile_home(request):
     """Display list of all mobile projects"""
@@ -79,79 +81,75 @@ def mobile_control_list(request):
     return render(request, "mobile_control.html", context)
 
 def add_mobile_control(request):
-    """Add mobile control"""
     projects = MobileProject.objects.all()
-    shops = Shop.objects.all()  # get all shops
+    shops = Shop.objects.all()
+    packages = Package.objects.all()  # load all packages
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
         shop_id = request.POST.get('shop')
+        package_id = request.POST.get('package')
         login_limit = request.POST.get('login_limit', '1').strip()
 
-        if not project_id or not shop_id:
-            messages.error(request, 'Project and Shop are required.')
-            return render(request, "add_mobile_control.html", {'projects': projects, 'shops': shops})
+        if not project_id or not shop_id or not package_id:
+            messages.error(request, 'Project, Shop and Package are required.')
+            return render(request, "add_mobile_control.html", {
+                'projects': projects,
+                'shops': shops,
+                'packages': packages
+            })
 
         project = get_object_or_404(MobileProject, pk=project_id)
         shop = get_object_or_404(Shop, pk=shop_id)
-
-        try:
-            login_limit_val = int(login_limit)
-            if login_limit_val < 0:
-                raise ValueError()
-        except ValueError:
-            messages.error(request, 'Login limit must be a non-negative integer.')
-            return render(request, "add_mobile_control.html", {'projects': projects, 'shops': shops})
+        package = get_object_or_404(Package, pk=package_id)
 
         MobileControl.objects.create(
             project=project,
             customer_name=shop.name,
-            client_id=shop.client_id,  # auto-fill from selected shop
-            login_limit=login_limit_val
+            client_id=shop.client_id,
+            login_limit=int(login_limit),
+            package=package                       # ✅ SAVE PACKAGE
         )
 
         messages.success(request, 'Mobile control saved successfully!')
         return redirect('MobileApp:mobile_control')
 
-    return render(request, "add_mobile_control.html", {'projects': projects, 'shops': shops})
+    return render(request, "add_mobile_control.html", {
+        'projects': projects,
+        'shops': shops,
+        'packages': packages
+    })
+
 
 
 def edit_mobile_control(request, pk):
-    """Edit mobile control"""
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
+    packages = Package.objects.all()
 
     if request.method == 'POST':
-        project_id = request.POST.get('project')
-        shop_id = request.POST.get('shop')
-        login_limit = request.POST.get('login_limit', '1').strip()
-
-        if not project_id or not shop_id:
-            messages.error(request, 'Project and Shop are required.')
-            return render(request, "edit_mobile_control.html", {'control': control, 'projects': projects, 'shops': shops})
-
-        project = get_object_or_404(MobileProject, pk=project_id)
-        shop = get_object_or_404(Shop, pk=shop_id)
-
-        try:
-            login_limit_val = int(login_limit)
-            if login_limit_val < 0:
-                raise ValueError()
-        except ValueError:
-            messages.error(request, 'Login limit must be a non-negative integer.')
-            return render(request, "edit_mobile_control.html", {'control': control, 'projects': projects, 'shops': shops})
+        project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
+        shop = get_object_or_404(Shop, pk=request.POST.get('shop'))
+        package = get_object_or_404(Package, pk=request.POST.get('package'))
 
         control.project = project
         control.customer_name = shop.name
         control.client_id = shop.client_id
-        control.login_limit = login_limit_val
+        control.package = package       # ✔ update package
+        control.login_limit = int(request.POST.get('login_limit'))
         control.save()
 
         messages.success(request, 'Mobile control updated successfully!')
         return redirect('MobileApp:mobile_control')
 
-    return render(request, "edit_mobile_control.html", {'control': control, 'projects': projects, 'shops': shops})
+    return render(request, "edit_mobile_control.html", {
+        'control': control,
+        'projects': projects,
+        'shops': shops,
+        'packages': packages
+    })
+
 
 
 def delete_mobile_control(request, pk):
@@ -253,11 +251,10 @@ def api_post_logout(request, endpoint):
 
 
 
-
 @require_http_methods(["GET"])
 def api_get_project_data(request, endpoint):
     """
-    GET API: Returns all customers with login data + active devices list
+    GET API: Returns all customers with login data + package + modules + active devices
     """
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
@@ -265,14 +262,29 @@ def api_get_project_data(request, endpoint):
 
         customers_data = []
         for control in controls:
+            # active devices list
             active_devices = list(control.active_devices.values(
                 'device_id', 'ip_address', 'logged_in_at'
             ))
 
+            # append full data
             customers_data.append({
                 'customer_name': control.customer_name,
                 'client_id': control.client_id,
                 'login_limit': control.login_limit,
+
+                # PACKAGE NAME
+                'package': control.package.package_name if control.package else None,
+
+                # MODULES INSIDE PACKAGE
+                'modules': [
+                    {
+                        "module_name": m.module_name,
+                        "module_code": m.module_code
+                    } for m in control.package.modules.all()
+                ] if control.package else [],
+
+                # LOGGED / ACTIVE
                 'logged_count': len(active_devices),
                 'active_devices': active_devices,
             })
@@ -285,3 +297,4 @@ def api_get_project_data(request, endpoint):
 
     except MobileProject.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+
