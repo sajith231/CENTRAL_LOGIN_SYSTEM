@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 # -------------------- Paths --------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv()  # <-- ensure .env is loaded
+load_dotenv() 
 
 # -------------------- Core ---------------------
 SECRET_KEY = 'django-insecure-c_%uwi0@g9fzwpollp#n1i3q-a=h+_4c(!z51fnj1ljm(zyg$$'
@@ -32,38 +32,47 @@ INSTALLED_APPS = [
     'ModuleAndPackage',
 ]
 
-# -------------------- Media (defaults: local) ---
-# These are used when R2 is disabled
-
-
 # ------------------------------------------------------------------
 # Cloudflare R2 (S3-compatible) – controlled by CLOUDFLARE_R2_ENABLED
 # ------------------------------------------------------------------
 CLOUDFLARE_R2_ENABLED = os.getenv("CLOUDFLARE_R2_ENABLED", "false").lower() == "true"
 
 if CLOUDFLARE_R2_ENABLED:
-    # Tell Django to use S3 for everything flagged as FileField / ImageField
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    # (optional) serve static files from R2 as well
-    # STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
-
-    # AWS_* vars are what boto3 looks for – map them to your R2 secrets
-    AWS_ACCESS_KEY_ID = os.getenv("CLOUDFLARE_R2_ACCESS_KEY")
-    AWS_SECRET_ACCESS_KEY = os.getenv("CLOUDFLARE_R2_SECRET_KEY")
-
-    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET")
-    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT")  # https://<account-id>.r2.cloudflarestorage.com
-    AWS_S3_REGION_NAME = "auto"  # R2 requirement
-    AWS_S3_SIGNATURE_VERSION = "s3v4"  # R2 requirement
-    AWS_S3_FILE_OVERWRITE = False  # keep duplicate uploads unique
-    AWS_DEFAULT_ACL = None  # R2 ignores ACLs, but this suppresses warnings
-    AWS_QUERYSTRING_AUTH = False  # generate public URLs instead of signed ones
-
-    # Public-facing base URL for user-uploaded media (must end with /)
+    # Django 4.2+ uses STORAGES dict instead of DEFAULT_FILE_STORAGE
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": os.getenv("CLOUDFLARE_R2_ACCESS_KEY"),
+                "secret_key": os.getenv("CLOUDFLARE_R2_SECRET_KEY"),
+                "bucket_name": os.getenv("CLOUDFLARE_R2_BUCKET"),
+                "endpoint_url": os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
+                "region_name": "auto",
+                "signature_version": "s3v4",
+                "file_overwrite": False,
+                "default_acl": None,
+                "querystring_auth": False,
+                "custom_domain": os.getenv("CLOUDFLARE_R2_PUBLIC_URL", "").replace("https://", "").replace("http://", ""),
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    
+    # Public-facing base URL for user-uploaded media
     MEDIA_URL = os.getenv("CLOUDFLARE_R2_PUBLIC_URL", "").rstrip("/") + "/"
 
 else:
-    # Fall back to local disk
+    # Fall back to local disk storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
     MEDIA_ROOT = BASE_DIR / "media"
     MEDIA_URL = "/media/"
 
