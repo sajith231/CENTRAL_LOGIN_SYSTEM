@@ -36,26 +36,34 @@ INSTALLED_APPS = [
 # These are used when R2 is disabled
 
 
-# -------------------- Cloudflare R2 -------------
+# ------------------------------------------------------------------
+# Cloudflare R2 (S3-compatible) – controlled by CLOUDFLARE_R2_ENABLED
+# ------------------------------------------------------------------
 CLOUDFLARE_R2_ENABLED = os.getenv("CLOUDFLARE_R2_ENABLED", "false").lower() == "true"
 
 if CLOUDFLARE_R2_ENABLED:
+    # Tell Django to use S3 for everything flagged as FileField / ImageField
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    # (optional) serve static files from R2 as well
+    # STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
 
+    # AWS_* vars are what boto3 looks for – map them to your R2 secrets
     AWS_ACCESS_KEY_ID = os.getenv("CLOUDFLARE_R2_ACCESS_KEY")
     AWS_SECRET_ACCESS_KEY = os.getenv("CLOUDFLARE_R2_SECRET_KEY")
-    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET")
-    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT")
-    AWS_S3_REGION_NAME = "auto"
-    AWS_S3_SIGNATURE_VERSION = "s3v4"
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = None
-    AWS_QUERYSTRING_AUTH = False
 
-    # PUBLIC R2 URL — must end with /
-    MEDIA_URL = os.getenv("CLOUDFLARE_R2_PUBLIC_URL").rstrip("/") + "/"
+    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET")
+    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT")  # https://<account-id>.r2.cloudflarestorage.com
+    AWS_S3_REGION_NAME = "auto"  # R2 requirement
+    AWS_S3_SIGNATURE_VERSION = "s3v4"  # R2 requirement
+    AWS_S3_FILE_OVERWRITE = False  # keep duplicate uploads unique
+    AWS_DEFAULT_ACL = None  # R2 ignores ACLs, but this suppresses warnings
+    AWS_QUERYSTRING_AUTH = False  # generate public URLs instead of signed ones
+
+    # Public-facing base URL for user-uploaded media (must end with /)
+    MEDIA_URL = os.getenv("CLOUDFLARE_R2_PUBLIC_URL", "").rstrip("/") + "/"
 
 else:
+    # Fall back to local disk
     MEDIA_ROOT = BASE_DIR / "media"
     MEDIA_URL = "/media/"
 
