@@ -34,35 +34,30 @@ INSTALLED_APPS = [
 
 # -------------------- Media (defaults: local) ---
 # These are used when R2 is disabled
-MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "/media/"
+
 
 # -------------------- Cloudflare R2 -------------
 CLOUDFLARE_R2_ENABLED = os.getenv("CLOUDFLARE_R2_ENABLED", "false").lower() == "true"
 
 if CLOUDFLARE_R2_ENABLED:
-    # Use S3 storage instead of local filesystem
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT")  # https://<account>.r2.cloudflarestorage.com
     AWS_ACCESS_KEY_ID = os.getenv("CLOUDFLARE_R2_ACCESS_KEY")
     AWS_SECRET_ACCESS_KEY = os.getenv("CLOUDFLARE_R2_SECRET_KEY")
-    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET")       # e.g. licensingcentralloginsystem
+    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET")
+    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT")
     AWS_S3_REGION_NAME = "auto"
-    AWS_S3_ADDRESSING_STYLE = "virtual"
     AWS_S3_SIGNATURE_VERSION = "s3v4"
-
-    # Public bucket settings
-    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
 
-    # Use your r2.dev public domain (HOST ONLY)
-    _public_url = (os.getenv("CLOUDFLARE_R2_PUBLIC_URL") or "").strip()
-    if _public_url:
-        AWS_S3_CUSTOM_DOMAIN = _public_url.replace("https://", "").replace("http://", "").strip("/")
-        AWS_S3_URL_PROTOCOL = "https:"
-        # IMPORTANT: override MEDIA_URL for templates like {{ file.url }}
-        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    # PUBLIC R2 URL — must end with /
+    MEDIA_URL = os.getenv("CLOUDFLARE_R2_PUBLIC_URL").rstrip("/") + "/"
+
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
+    MEDIA_URL = "/media/"
 
 # -------------------- Middleware ----------------
 MIDDLEWARE = [
