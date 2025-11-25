@@ -8,12 +8,12 @@ from dotenv import load_dotenv
 
 # -------------------- Paths --------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")  # <-- ensure .env is loaded
+load_dotenv()  # <-- ensure .env is loaded
 
 # -------------------- Core ---------------------
 SECRET_KEY = 'django-insecure-c_%uwi0@g9fzwpollp#n1i3q-a=h+_4c(!z51fnj1ljm(zyg$$'
 DEBUG = True
-ALLOWED_HOSTS: list[str] = ['activate.imcbs.com','www.activate.imcbs.com']
+ALLOWED_HOSTS: list[str] = ['activate.imcbs.com','www.activate.imcbs.com',"*"]
 
 # -------------------- Apps ---------------------
 INSTALLED_APPS = [
