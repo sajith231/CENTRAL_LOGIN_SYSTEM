@@ -73,8 +73,9 @@
         required 
         style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
       >
+        <option value="" disabled {% if not u.branch %}selected{% endif %}>-- select branch --</option>
         {% for b in branches %}
-          <option value="{{ b }}" {% if u.branch == b %}selected{% endif %}>{{ b }}</option>
+          <option value="{{ b.id }}" {% if u.branch and u.branch.id == b.id %}selected{% endif %}>{{ b.name }}{% if b.place %} - {{ b.place }}{% endif %}</option>
         {% endfor %}
       </select>
 

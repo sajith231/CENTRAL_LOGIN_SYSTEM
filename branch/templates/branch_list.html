@@ -12,11 +12,9 @@
               padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
     <h2 style="margin:0;">Branches</h2>
 
-    <div style="display:flex; justify-content:space-between; align-items:center;
-              padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
-    
-    <a href="{% url 'add_branch' %}" class="btn btn-success">Add New</a>
-</div>
+    <div>
+      <a href="{% url 'add_branch' %}" class="btn btn-success">Add New</a>
+    </div>
   </div>
 
   <!-- Table Section -->
@@ -28,6 +26,9 @@
           <tr style="background: var(--hover);">
             <th style="padding:12px; text-align:left;">#</th>
             <th style="padding:12px; text-align:left;">Branch Name</th>
+            <th style="padding:12px; text-align:left;">Place</th>
+            <th style="padding:12px; text-align:left;">Country</th>
+            <th style="padding:12px; text-align:left;">Currency</th>
             <th style="padding:12px; text-align:left;">Edit</th>
             <th style="padding:12px; text-align:left;">Delete</th>
           </tr>
@@ -41,6 +42,18 @@
 
               <td style="padding:12px;">
                 {{ br.name }}
+              </td>
+
+              <td style="padding:12px;">
+                {{ br.place }}
+              </td>
+
+              <td style="padding:12px;">
+                {{ br.country }}
+              </td>
+
+              <td style="padding:12px; font-family:monospace; color:#00ff9d;">
+                {{ br.currency_code }}
               </td>
 
               <!-- Edit Button -->
@@ -81,7 +94,7 @@
             </tr>
           {% empty %}
             <tr style="background:#0f1b31;">
-              <td colspan="4" style="padding:14px;">No branches yet.</td>
+              <td colspan="7" style="padding:14px;">No branches yet.</td>
             </tr>
           {% endfor %}
         </tbody>

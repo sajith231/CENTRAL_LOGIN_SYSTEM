@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 
-from .models import Users, BRANCH_CHOICES, LEVEL_CHOICES
+from .models import Users, LEVEL_CHOICES
 
 def login_view(request):
     # If already logged in
@@ -35,7 +35,7 @@ def login_view(request):
                 request.session['custom_user_id'] = custom_user.id
                 request.session['custom_user_name'] = custom_user.name
                 request.session['custom_user_email'] = custom_user.email
-                request.session['custom_user_branch'] = custom_user.branch
+                request.session['custom_user_branch'] = custom_user.branch.name if custom_user.branch else None
                 request.session['custom_user_role'] = custom_user.user_role
                 request.session['custom_user_level'] = custom_user.level
                 messages.success(request, f"Welcome, {custom_user.name}!")
@@ -120,7 +120,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 
-from .models import Users, BRANCH_CHOICES, LEVEL_CHOICES
+from .models import Users, LEVEL_CHOICES
+from branch.models import Branch
 
 # Helper to check whether either Django user or custom session user is logged in
 def is_any_user_logged_in(request):
@@ -137,12 +138,12 @@ def add_user(request):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        branch = request.POST.get("branch", "")
+        branch_id = request.POST.get("branch", "")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
         image_file = request.FILES.get("profile_image")  # NEW
 
-        if not all([name, email, password, branch, user_role, level]):
+        if not all([name, email, password, branch_id, user_role, level]):
             messages.error(request, "Please fill in all fields.")
             return redirect("add_user")
 
@@ -150,11 +151,17 @@ def add_user(request):
             messages.error(request, "A user with this email already exists.")
             return redirect("add_user")
 
+        try:
+            branch_obj = Branch.objects.get(id=branch_id)
+        except Branch.DoesNotExist:
+            messages.error(request, "Invalid branch selected.")
+            return redirect("add_user")
+
         u = Users(
             name=name,
             email=email,
             password=password,  # NOTE: still plain text in your schema
-            branch=branch,
+            branch=branch_obj,
             user_role=user_role,
             level=level,
         )
@@ -165,7 +172,7 @@ def add_user(request):
         messages.success(request, f"User '{name}' saved.")
         return redirect("users_table")
 
-    branches = [b[0] for b in BRANCH_CHOICES]
+    branches = Branch.objects.all().order_by('name')
     levels = [l[0] for l in LEVEL_CHOICES]
     return render(request, "add_user.html", {"branches": branches, "levels": levels})
 
@@ -183,12 +190,12 @@ def edit_user(request, pk):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        branch = request.POST.get("branch", "")
+        branch_id = request.POST.get("branch", "")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
         image_file = request.FILES.get("profile_image")  # ✅ handle image update
 
-        if not all([name, email, branch, user_role, level]):
+        if not all([name, email, branch_id, user_role, level]):
             messages.error(request, "Please fill in all required fields.")
             return redirect("edit_user", pk=pk)
 
@@ -196,10 +203,16 @@ def edit_user(request, pk):
             messages.error(request, "A user with this email already exists.")
             return redirect("edit_user", pk=pk)
 
+        try:
+            branch_obj = Branch.objects.get(id=branch_id)
+        except Branch.DoesNotExist:
+            messages.error(request, "Invalid branch selected.")
+            return redirect("edit_user", pk=pk)
+
         # Update fields
         u.name = name
         u.email = email
-        u.branch = branch
+        u.branch = branch_obj
         u.user_role = user_role
         u.level = level
         if password:
@@ -218,7 +231,7 @@ def edit_user(request, pk):
         messages.success(request, "User updated successfully.")
         return redirect("users_table")
 
-    branches = [b[0] for b in BRANCH_CHOICES]
+    branches = Branch.objects.all().order_by('name')
     levels = [l[0] for l in LEVEL_CHOICES]
     return render(request, "edit_user.html", {"u": u, "branches": branches, "levels": levels})
 

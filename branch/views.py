@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Branch
 
@@ -11,7 +8,14 @@ def branch_list(request):
 def add_branch(request):
     if request.method == "POST":
         name = request.POST.get("name")
-        Branch.objects.create(name=name)
+        place = request.POST.get("place")
+        country = request.POST.get("country")
+
+        Branch.objects.create(
+            name=name,
+            place=place,
+            country=country
+        )
         return redirect("branch_list")
     return render(request, "add_branch.html")
 
@@ -19,6 +23,8 @@ def edit_branch(request, id):
     branch = get_object_or_404(Branch, id=id)
     if request.method == "POST":
         branch.name = request.POST.get("name")
+        branch.place = request.POST.get("place")
+        branch.country = request.POST.get("country")
         branch.save()
         return redirect("branch_list")
     return render(request, "edit_branch.html", {"branch": branch})

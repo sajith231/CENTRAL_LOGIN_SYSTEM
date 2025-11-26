@@ -62,7 +62,7 @@
       >
         <option value="" disabled selected>-- select branch --</option>
         {% for b in branches %}
-          <option value="{{ b }}">{{ b }}</option>
+          <option value="{{ b.id }}">{{ b.name }}{% if b.place %} - {{ b.place }}{% endif %}</option>
         {% endfor %}
       </select>
 
