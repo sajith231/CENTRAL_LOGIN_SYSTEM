@@ -4,7 +4,7 @@ from django.db import models
 class Module(models.Model):
     project = models.ForeignKey("MobileApp.MobileProject", on_delete=models.CASCADE, related_name="modules")
     module_name = models.CharField(max_length=200)
-    module_code = models.CharField(max_length=20, unique=True, editable=False)
+    module_code = models.CharField(max_length=255, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
