@@ -257,19 +257,7 @@
                 class="fa-solid fa-sliders"></i> Mobile Licensing</a>
             <a href="{% url 'MobileApp:mobileapp_list' %}" class="{% block active_mobile_app_list %}{% endblock %}"><i
                 class="fa-solid fa-list-check"></i> Mobile App List</a>
-          </div>
-        </li>
-
-
-        <li>
-          <button class="menu-toggle" aria-expanded="false" data-target="submenu-module-package">
-            <i class="fa-solid fa-boxes-stacked"></i>
-            <span>Module & Package</span>
-            <i class="fa-solid fa-chevron-right chev"></i>
-          </button>
-
-          <div id="submenu-module-package" class="submenu">
-            <a href="{% url 'ModuleAndPackage:module_list' %}">
+                <a href="{% url 'ModuleAndPackage:module_list' %}">
                 <i class="fa-solid fa-puzzle-piece"></i> Module
             </a>
 
@@ -278,6 +266,9 @@
             </a>
           </div>
         </li>
+
+
+       
 
 
 

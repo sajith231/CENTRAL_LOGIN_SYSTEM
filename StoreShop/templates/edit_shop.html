@@ -1,11 +1,28 @@
 {% extends 'base.html' %}
-{% block content %}
+{% block title %}Edit Shop{% endblock %}
+{% block header_title %}<strong>Shop</strong><span class="muted"> / edit</span>{% endblock %}
+{% block active_shop %}active{% endblock %}
 
+{% block content %}
 <div class="card" style="padding:20px;">
     <h2 style="color:white;">Edit Shop</h2>
 
     <form method="POST">
         {% csrf_token %}
+
+        <!-- Store -->
+        <div class="mb-3">
+            <label>Store</label>
+            <select name="store" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for store in stores %}
+                <option value="{{ store.id }}"
+                        {% if store.id == shop.store.id %}selected{% endif %}>
+                    {{ store.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
         <!-- Shop Name -->
         <div class="mb-3">
@@ -14,40 +31,17 @@
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
-        <!-- Store Dropdown -->
-        <div class="mb-3">
-            <label>Store</label>
-            <select name="store" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
-                {% for store in stores %}
-                    <option value="{{ store.id }}"
-                            {% if store.id == shop.store.id %}selected{% endif %}
-                            style="background:#0f1b31; color:white;">
-                        {{ store.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Branch Dropdown -->
-        <div class="mb-3">
-            <label>Branch</label>
-            <select name="branch" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
-                {% for branch in branches %}
-                    <option value="{{ branch.id }}"
-                            {% if shop.branch.id == branch.id %}selected{% endif %}
-                            style="background:#0f1b31; color:white;">
-                        {{ branch.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
         <!-- Place -->
         <div class="mb-3">
             <label>Place</label>
             <input type="text" name="place" value="{{ shop.place }}" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Contact No -->
+        <div class="mb-3">
+            <label>Contact Number</label>
+            <input type="text" name="contact_no" value="{{ shop.contact_no }}" class="form-control" required
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
@@ -58,15 +52,21 @@
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
-        <!-- Contact No -->
+        <!-- Branch -->
         <div class="mb-3">
-            <label>Contact No</label>
-            <input type="text" name="contact_no" value="{{ shop.contact_no }}" class="form-control" required
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <label>Branch</label>
+            <select name="branch" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for branch in branches %}
+                <option value="{{ branch.id }}"
+                        {% if shop.branch.id == branch.id %}selected{% endif %}>
+                    {{ branch.name }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
 
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
 </div>
-
 {% endblock %}

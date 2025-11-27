@@ -32,23 +32,51 @@ class MobileProject(models.Model):
         return f"/api/project/{self.api_endpoint}/login/"
 
 
+from StoreShop.models import Store, Shop
+
+from django.utils import timezone
+
+from django.db import models
+from StoreShop.models import Store, Shop
+from ModuleAndPackage.models import Package
+import random, string
+
+
 class MobileControl(models.Model):
-    project = models.ForeignKey(MobileProject, on_delete=models.CASCADE, related_name='controls')
+    project = models.ForeignKey('MobileProject', on_delete=models.CASCADE, related_name='controls')
+    store = models.ForeignKey(Store, on_delete=models.SET_NULL, null=True, blank=True)
+    shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True)
+
     customer_name = models.CharField(max_length=255)
     client_id = models.CharField(max_length=200)
-    login_limit = models.PositiveIntegerField(default=1)
- 
-    package = models.ForeignKey("ModuleAndPackage.Package", on_delete=models.SET_NULL, null=True, blank=True)
 
-    created_date = models.DateTimeField(auto_now_add=True)
+    # Unique License Key – NOT tied to project or client anymore
+    license_key = models.CharField(max_length=10, unique=True, null=True, blank=True, editable=False)
+
+    login_limit = models.PositiveIntegerField(default=1)
+    package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
+
+    created_date = models.DateTimeField(auto_now_add=True)   # ✔️ include created date
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_date']
-        unique_together = ['project', 'client_id']  # Each client_id unique per project
+
+    def save(self, *args, **kwargs):
+        if not self.license_key:
+            chars = string.ascii_uppercase + string.digits
+            key = ''.join(random.choices(chars, k=10))
+
+            while MobileControl.objects.filter(license_key=key).exists():
+                key = ''.join(random.choices(chars, k=10))
+
+            self.license_key = key
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.customer_name} — {self.project.project_name}"
+        return f"{self.customer_name} - {self.license_key}"
+
     
     
 

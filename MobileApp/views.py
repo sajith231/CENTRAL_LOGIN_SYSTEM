@@ -80,35 +80,38 @@ def mobile_control_list(request):
     context = {'controls': controls}
     return render(request, "mobile_control.html", context)
 
+from StoreShop.models import Store
+
 def add_mobile_control(request):
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
-    packages = Package.objects.all()  # load all packages
+    stores = Store.objects.all()  # ➕ Store list added
+    packages = Package.objects.all()
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
         shop_id = request.POST.get('shop')
+        store_id = request.POST.get('store')
         package_id = request.POST.get('package')
         login_limit = request.POST.get('login_limit', '1').strip()
 
-        if not project_id or not shop_id or not package_id:
-            messages.error(request, 'Project, Shop and Package are required.')
-            return render(request, "add_mobile_control.html", {
-                'projects': projects,
-                'shops': shops,
-                'packages': packages
-            })
+        if not project_id or not shop_id or not store_id or not package_id:
+            messages.error(request, 'All fields are required.')
+            return redirect("MobileApp:add_mobile_control")
 
         project = get_object_or_404(MobileProject, pk=project_id)
         shop = get_object_or_404(Shop, pk=shop_id)
+        store = get_object_or_404(Store, pk=store_id)
         package = get_object_or_404(Package, pk=package_id)
 
         MobileControl.objects.create(
             project=project,
+            store=store,
+            shop=shop,
             customer_name=shop.name,
             client_id=shop.client_id,
             login_limit=int(login_limit),
-            package=package                       # ✅ SAVE PACKAGE
+            package=package
         )
 
         messages.success(request, 'Mobile control saved successfully!')
@@ -117,6 +120,7 @@ def add_mobile_control(request):
     return render(request, "add_mobile_control.html", {
         'projects': projects,
         'shops': shops,
+        'stores': stores,  # ➕ send store list
         'packages': packages
     })
 
@@ -126,17 +130,21 @@ def edit_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
+    stores = Store.objects.all()  # ➕ Store list
     packages = Package.objects.all()
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
         shop = get_object_or_404(Shop, pk=request.POST.get('shop'))
+        store = get_object_or_404(Store, pk=request.POST.get('store'))
         package = get_object_or_404(Package, pk=request.POST.get('package'))
 
         control.project = project
+        control.shop = shop  # ➕ Save shop
+        control.store = store  # ➕ Save store
         control.customer_name = shop.name
         control.client_id = shop.client_id
-        control.package = package       # ✔ update package
+        control.package = package
         control.login_limit = int(request.POST.get('login_limit'))
         control.save()
 
@@ -147,8 +155,10 @@ def edit_mobile_control(request, pk):
         'control': control,
         'projects': projects,
         'shops': shops,
+        'stores': stores,
         'packages': packages
     })
+
 
 
 

@@ -8,12 +8,12 @@
 <div class="card">
     <!-- Header Section -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0; font-size:20px;">Mobile Control</h2>
+        <h2 style="margin:0; font-size:20px;">Add Licensing</h2>
 
         <!-- Add Control Button -->
         <a href="{% url 'MobileApp:add_mobile_control' %}" class="btn"
            style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
-            <i class="fa-solid fa-sliders"></i> Control
+            <i class="fa-solid fa-sliders"></i> Add Licensing
         </a>
     </div>
 
@@ -59,11 +59,13 @@
                     <th style="padding:12px; text-align:left;">No</th>
                     <th style="padding:12px; text-align:left;">Created</th>
                     <th style="padding:12px; text-align:left;">Project</th>
+                    <th style="padding:12px; text-align:left;">Store</th>
                     <th style="padding:12px; text-align:left;">Shop</th>
                     <th style="padding:12px; text-align:left;">Client ID</th>
                     <th style="padding:12px; text-align:left;">Package</th>
-<th style="padding:12px; text-align:left;">Modules</th>
-                    <th style="padding:12px; text-align:center;">Login Limit</th>
+                    <th style="padding:12px; text-align:left;">Modules</th>
+                    <th style="padding:12px; text-align:center;">Number of users</th>
+                    <th style="padding:12px;">License Key</th>
                     <th style="padding:12px; text-align:center;">Actions</th>
                 </tr>
             </thead>
@@ -72,8 +74,9 @@
                 {% for c in controls %}
                 <tr style="border-bottom:1px solid #1e293b; background:#0f172a;">
                     <td style="padding:12px;">{{ forloop.counter }}</td>
-                    <td style="padding:12px;">{{ c.created_date|date:"d/m/Y H:i" }}</td>
+                    <td style="padding:12px;">{{ c.created_date|date:"Y-m-d" }}</td>
                     <td style="padding:12px;"><strong>{{ c.project.project_name }}</strong></td>
+                    <td style="padding:12px;">{{ c.store.name }}</td>
                     <td style="padding:12px;">{{ c.customer_name }}</td>
                     <td style="padding:12px;">
                         <span style="background:#16a34a33; padding:4px 8px; border-radius:6px; font-weight:600; color:#16a34a;">
@@ -108,6 +111,11 @@
 
                     
                     <td style="padding:12px; text-align:center;">{{ c.login_limit }}</td>
+                    <td style="padding:12px;">
+    <span id="license_{{ c.id }}">{{ c.license_key }}</span>
+    <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm btn-secondary">Copy</button>
+</td>
+
                     <td style="padding:12px; text-align:center;">
                         <!-- Edit Button -->
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}"
@@ -167,5 +175,13 @@
         </div>
     </div>
 </div>
+<script>
+function copyLicense(id) {
+    var text = document.getElementById("license_" + id).innerText;
+    navigator.clipboard.writeText(text);
+    alert("Copied: " + text);
+}
+</script>
+
 {% endfor %}
 {% endblock %}
