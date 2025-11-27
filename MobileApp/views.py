@@ -1,4 +1,3 @@
-from importlib.resources import Package
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
@@ -7,8 +6,6 @@ from django.views.decorators.http import require_http_methods
 import json
 from .models import ActiveDevice, MobileProject, MobileControl, LoginLog
 from StoreShop.models import Shop
-from django.shortcuts import render
-from .models import MobileProject
 from ModuleAndPackage.models import Package
 
 def mobile_home(request):
@@ -173,91 +170,187 @@ def delete_mobile_control(request, pk):
 
 # ==================== API VIEWS ====================
 
+def _get_client_ip(request):
+    """Resolve client IP irrespective of reverse proxies."""
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def _device_payload(control):
+    """Reusable formatter for registered devices."""
+    return list(
+        control.active_devices.values(
+            'device_id',
+            'ip_address',
+            'logged_in_at',
+        ).order_by('device_id')
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_register_license(request, endpoint):
+    """
+    POST API: Registers a device against a license BEFORE login.
+    Body: {"license_key": "ABC123", "device_id": "DEVICE-001"}
+    """
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    license_key = payload.get('license_key', '').strip()
+    device_id = payload.get('device_id', '').strip()
+
+    if not license_key or not device_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'license_key and device_id are required'
+        }, status=400)
+
+    try:
+        project = MobileProject.objects.get(api_endpoint=endpoint)
+        control = MobileControl.objects.get(project=project, license_key=license_key)
+    except MobileProject.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+    except MobileControl.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+
+    registered_count = control.active_devices.count()
+    device_exists = control.active_devices.filter(device_id=device_id).exists()
+
+    if device_exists:
+        return JsonResponse({
+            'success': True,
+            'message': 'Device already registered',
+            'license_key': license_key,
+            'registered_devices': _device_payload(control),
+            'registered_count': registered_count,
+            'max_devices': control.login_limit,
+        }, status=200)
+
+    if registered_count >= control.login_limit:
+        return JsonResponse({
+            'success': False,
+            'error': 'License limit reached',
+            'max_devices': control.login_limit,
+            'registered_count': registered_count
+        }, status=403)
+
+    ActiveDevice.objects.create(
+        control=control,
+        device_id=device_id,
+        ip_address=_get_client_ip(request),
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Device registered successfully',
+        'license_key': license_key,
+        'registered_devices': _device_payload(control),
+        'registered_count': control.active_devices.count(),
+        'max_devices': control.login_limit,
+    }, status=201)
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_post_login(request, endpoint):
     """
-    POST API: Logs in a device if under limit
-    Body: {"client_id": "xxx", "device_id": "yyy"}
+    POST API: Logs in a device after it has been registered.
+    Body: {"license_key": "ABC123", "device_id": "DEVICE-001"}
     """
     try:
         data = json.loads(request.body)
-        client_id = data.get('client_id', '').strip()
-        device_id = data.get('device_id', '').strip()
-
-        if not client_id or not device_id:
-            return JsonResponse({'success': False, 'error': 'client_id and device_id are required'}, status=400)
-
-        project = MobileProject.objects.get(api_endpoint=endpoint)
-        control = MobileControl.objects.get(project=project, client_id=client_id)
-
-        # Count currently logged in devices
-        active_count = ActiveDevice.objects.filter(control=control).count()
-        if active_count >= control.login_limit:
-            return JsonResponse({
-                'success': False,
-                'error': 'Login limit reached',
-                'login_limit': control.login_limit,
-                'active_devices': active_count
-            }, status=403)
-
-        # Check if already logged in
-        if ActiveDevice.objects.filter(control=control, device_id=device_id).exists():
-            return JsonResponse({'success': True, 'message': 'Already logged in'}, status=200)
-
-        # Register new device
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
-        ActiveDevice.objects.create(control=control, device_id=device_id, ip_address=ip)
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Login successful',
-            'device_id': device_id,
-            'active_devices': ActiveDevice.objects.filter(control=control).count(),
-            'login_limit': control.login_limit
-        }, status=200)
-
-    except MobileProject.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
-    except MobileControl.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Client ID not found for this project'}, status=404)
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
 
+    license_key = data.get('license_key', '').strip()
+    device_id = data.get('device_id', '').strip()
 
+    if not license_key or not device_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'license_key and device_id are required'
+        }, status=400)
+
+    try:
+        project = MobileProject.objects.get(api_endpoint=endpoint)
+        control = MobileControl.objects.get(project=project, license_key=license_key)
+    except MobileProject.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+    except MobileControl.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+
+    is_registered = control.active_devices.filter(device_id=device_id).exists()
+    if not is_registered:
+        return JsonResponse({
+            'success': False,
+            'error': 'Device is not registered for this license',
+            'license_key': license_key
+        }, status=403)
+
+    LoginLog.objects.create(
+        control=control,
+        client_id=device_id,
+        ip_address=_get_client_ip(request)
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Login successful',
+        'license_key': license_key,
+        'device_id': device_id
+    }, status=200)
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_post_logout(request, endpoint):
     """
-    POST API: Logs out a specific device
-    Body: {"client_id": "xxx", "device_id": "yyy"}
+    POST API: Unregisters a specific device from a license key.
+    Body: {"license_key": "ABC123", "device_id": "DEVICE-001"}
     """
     try:
         data = json.loads(request.body)
-        client_id = data.get('client_id', '').strip()
-        device_id = data.get('device_id', '').strip()
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
 
-        if not client_id or not device_id:
-            return JsonResponse({'success': False, 'error': 'client_id and device_id are required'}, status=400)
+    license_key = data.get('license_key', '').strip()
+    device_id = data.get('device_id', '').strip()
 
+    if not license_key or not device_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'license_key and device_id are required'
+        }, status=400)
+
+    try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
-        control = MobileControl.objects.get(project=project, client_id=client_id)
-
-        deleted, _ = ActiveDevice.objects.filter(control=control, device_id=device_id).delete()
-        if deleted:
-            return JsonResponse({'success': True, 'message': 'Logged out successfully'}, status=200)
-        else:
-            return JsonResponse({'success': False, 'error': 'Device not found or already logged out'}, status=404)
-
+        control = MobileControl.objects.get(project=project, license_key=license_key)
     except MobileProject.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Client ID not found for this project'}, status=404)
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+        return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+
+    deleted, _ = control.active_devices.filter(device_id=device_id).delete()
+    if deleted:
+        remaining = _device_payload(control)
+        return JsonResponse({
+            'success': True,
+            'message': 'Device removed from license',
+            'license_key': license_key,
+            'registered_devices': remaining,
+            'registered_count': len(remaining),
+            'max_devices': control.login_limit,
+        }, status=200)
+
+    return JsonResponse({
+        'success': False,
+        'error': 'Device not found for this license'
+    }, status=404)
 
 
 
@@ -272,31 +365,24 @@ def api_get_project_data(request, endpoint):
 
         customers_data = []
         for control in controls:
-            # active devices list
-            active_devices = list(control.active_devices.values(
-                'device_id', 'ip_address', 'logged_in_at'
-            ))
+            registered_devices = _device_payload(control)
 
-            # append full data
             customers_data.append({
                 'customer_name': control.customer_name,
                 'client_id': control.client_id,
-                'login_limit': control.login_limit,
-
-                # PACKAGE NAME
+                'license_key': control.license_key,
                 'package': control.package.package_name if control.package else None,
-
-                # MODULES INSIDE PACKAGE
                 'modules': [
                     {
                         "module_name": m.module_name,
                         "module_code": m.module_code
                     } for m in control.package.modules.all()
                 ] if control.package else [],
-
-                # LOGGED / ACTIVE
-                'logged_count': len(active_devices),
-                'active_devices': active_devices,
+                'license_summary': {
+                    'registered_count': len(registered_devices),
+                    'max_devices': control.login_limit,
+                },
+                'registered_devices': registered_devices,
             })
 
         return JsonResponse({
@@ -308,3 +394,16 @@ def api_get_project_data(request, endpoint):
     except MobileProject.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
 
+
+
+
+
+# http://127.0.0.1:8000/mobileapp/api/project/project1/license/register/
+# http://127.0.0.1:8000/mobileapp/api/project/project1/logout/
+
+
+
+# {
+#   "license_key": "2LQ45VS8KM",
+#   "device_id": "DEVICE-002"
+# }

@@ -19,6 +19,7 @@ urlpatterns = [
     # API routes
     # GET: Retrieve all customers data for a project
     path("api/project/<str:endpoint>/", views.api_get_project_data, name="api_get_project"),
+    path("api/project/<str:endpoint>/license/register/", views.api_register_license, name="api_register_license"),
     # POST: Log a login attempt
     path("api/project/<str:endpoint>/login/", views.api_post_login, name="api_post_login"),
     path("api/project/<str:endpoint>/logout/", views.api_post_logout, name="api_post_logout"),

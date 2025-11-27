@@ -155,10 +155,10 @@
             <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
         </p>
 
-        <!-- Client ID -->
+        <!-- License Key -->
         <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">Client ID:</strong>
-            <code style="color:#fbbf24;">{{ control.client_id }}</code>
+            <strong style="color:#e5e7eb;">License Key:</strong>
+            <code style="color:#fbbf24;">{{ control.license_key }}</code>
         </p>
 
         <!-- Package -->
@@ -193,12 +193,12 @@
             {% endif %}
         </div>
 
-        <!-- Login info -->
+        <!-- License info -->
         <p style="margin-top:8px; font-size:14px;">
-            <strong style="color:#e5e7eb;">Login Limit:</strong> {{ control.login_limit }}
+            <strong style="color:#e5e7eb;">Max Devices:</strong> {{ control.login_limit }}
         </p>
         <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">Logged Count:</strong>
+            <strong style="color:#e5e7eb;">Registered Devices:</strong>
             <span style="color:#10b981;">{{ control.active_devices.count }}</span>
         </p>
 
@@ -231,18 +231,25 @@
 
                         let html = '';
                         for (const c of data.customers) {
-                        html += `<h5 style="margin-top:10px; color:#facc15;">${c.customer_name} (${c.client_id})</h5>`;
-                        if (c.active_devices.length === 0) {
-                            html += `<p style="color:#9ca3af;">No active devices</p>`;
+                        const devices = c.registered_devices || [];
+                        const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
+
+                        html += `<div style="margin-top:10px;">
+                            <h5 style="color:#facc15;">${c.customer_name} - License ${c.license_key || '-'}</h5>
+                            <p style="margin:0; color:#e5e7eb;">Registered ${summary.registered_count}/${summary.max_devices}</p>
+                        </div>`;
+
+                        if (devices.length === 0) {
+                            html += `<p style="color:#9ca3af;">No registered devices</p>`;
                         } else {
                             html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-                            <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Login Time</th><th></th></tr>`;
-                            for (const d of c.active_devices) {
+                            <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Registered At</th><th></th></tr>`;
+                            for (const d of devices) {
                             html += `<tr style="border-bottom:1px solid #1e293b;">
                                 <td>${d.device_id}</td>
                                 <td>${d.ip_address || '-'}</td>
-                                <td>${new Date(d.logged_in_at).toLocaleString()}</td>
-                                <td><button onclick="removeDevice('${endpoint}','${c.client_id}','${d.device_id}', ${projectId})"
+                                <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
+                                <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
                                         style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
                                         Remove
                                     </button></td>
@@ -258,10 +265,10 @@
                     }
                     }
 
-                    async function removeDevice(endpoint, client_id, device_id, projectId) {
+                    async function removeDevice(endpoint, license_key, device_id, projectId) {
                     if (!confirm('Remove this device?')) return;
                     const logoutUrl = endpoint + 'logout/';
-                    const body = JSON.stringify({ client_id, device_id });
+                    const body = JSON.stringify({ license_key, device_id });
 
                     const res = await fetch(logoutUrl, {
                         method: 'POST',
@@ -293,14 +300,31 @@
         <div class="modal-content" style="background:#1e293b; color:white;">
             <div class="modal-header" style="border-bottom:1px solid #334155;">
                 <h5 class="modal-title">
-                    <i class="fa-solid fa-paper-plane"></i> POST API - {{ project.project_name }}
+                    <i class="fa-solid fa-paper-plane"></i> License APIs - {{ project.project_name }}
                 </h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Register endpoint -->
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <strong style="color:#10b981;">Register Endpoint:</strong>
+                    <code id="register-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+                        {{ base_url }}{% url 'MobileApp:api_register_license' project.api_endpoint %}
+                    </code>
+                    <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
+                            onclick="copyText('register-endpoint-{{ project.id }}')">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+
+                    <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
+                            onclick="tryRegister('{{ project.id }}')">
+                        <i class="fa-solid fa-play"></i> Try Register
+                    </button>
+                </div>
+
                 <!-- Full absolute POST endpoint (not clickable) -->
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <strong style="color:#f97316;">Endpoint:</strong>
+                    <strong style="color:#f97316;">Login Endpoint:</strong>
                     <code id="post-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
                         {{ base_url }}{% url 'MobileApp:api_post_login' project.api_endpoint %}
                     </code>
@@ -311,36 +335,45 @@
 
                     <!-- Try POST (in-browser tester) -->
                     <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
-                            onclick="tryPost('{{ project.id }}')">
-                        <i class="fa-solid fa-play"></i> Try POST
+                            onclick="tryLogin('{{ project.id }}')">
+                        <i class="fa-solid fa-play"></i> Try Login
                     </button>
                 </div>
 
-                <h6 style="color:#f97316; margin-bottom:10px;">Request Body (JSON):</h6>
+                <h6 style="color:#10b981; margin-bottom:10px;">Register Body (JSON):</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
                     <pre style="color:#e5e7eb; margin:0; font-size:13px;">
 {
-  "client_id": "your_client_id_here",
-  "device_id": "your_device_id_here"
+  "license_key": "YOUR_LICENSE_KEY",
+  "device_id": "DEVICE-001"
 }</pre>
                 </div>
 
-                <h6 style="color:#f97316; margin-bottom:10px;">Available Client IDs:</h6>
+                <h6 style="color:#f97316; margin-bottom:10px;">Login Body (JSON):</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">
+{
+  "license_key": "YOUR_LICENSE_KEY",
+  "device_id": "DEVICE-001"
+}</pre>
+                </div>
+
+                <h6 style="color:#f97316; margin-bottom:10px;">Active Licenses:</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
                     <table style="width:100%; color:#e5e7eb; font-size:13px;">
                         <thead>
                             <tr style="border-bottom:1px solid #334155;">
                                 <th style="padding:8px; text-align:left;">Customer Name</th>
-                                <th style="padding:8px; text-align:left;">Client ID</th>
-                                <th style="padding:8px; text-align:center;">Login Limit</th>
-                                <th style="padding:8px; text-align:center;">Current Logins</th>
+                                <th style="padding:8px; text-align:left;">License Key</th>
+                                <th style="padding:8px; text-align:center;">Max Devices</th>
+                                <th style="padding:8px; text-align:center;">Registered Devices</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for control in project.controls.all %}
                             <tr style="border-bottom:1px solid #1e293b;">
                                 <td style="padding:8px;">{{ control.customer_name }}</td>
-                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.client_id }}</code></td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code></td>
                                 <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
                                 <td style="padding:8px; text-align:center;">
                                     <span style="color:#10b981;">{{ control.active_devices.count }}</span>
@@ -358,7 +391,7 @@
                 </div>
 
                 <div style="margin-top:15px; padding:12px; background:#7c2d12; border-radius:8px;">
-                    <strong>Note:</strong> Send a POST request with client_id and device_id to log a login attempt. The API tracks each login.
+                    <strong>Note:</strong> Register each device with its license before login. When the registered count hits the limit, additional devices are blocked automatically.
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid #334155;">
@@ -466,37 +499,37 @@ function getCookie(name) {
 }
 
 /**
- * Try POST from the browser. Prompts for client_id and device_id, posts JSON, shows response.
- * Uses CSRF token from cookie (Django default).
+ * Register/login helpers triggered from buttons.
  */
-async function tryPost(projectId) {
-  const elId = 'post-endpoint-' + projectId;
-  const el = document.getElementById(elId);
-  if (!el) { alert('Endpoint not found: ' + elId); return; }
+async function tryRegister(projectId) {
+  await postLicenseAction(projectId, 'register');
+}
+
+async function tryLogin(projectId) {
+  await postLicenseAction(projectId, 'login');
+}
+
+async function postLicenseAction(projectId, action) {
+  const endpointId = action === 'register' ? 'register-endpoint-' + projectId : 'post-endpoint-' + projectId;
+  const el = document.getElementById(endpointId);
+  if (!el) { alert('Endpoint not found: ' + endpointId); return; }
   const endpoint = el.innerText.trim();
 
-  // prompt for client_id and device_id (quick and explicit)
-  const client_id = prompt('Enter client_id to send (example: abc123):', '');
-  if (client_id === null) {
-    // user cancelled
-    return;
-  }
-  if (client_id.trim() === '') {
-    alert('client_id cannot be empty');
+  const license_key = prompt('Enter license key:', '');
+  if (license_key === null) return;
+  if (license_key.trim() === '') {
+    alert('license_key cannot be empty');
     return;
   }
 
-  const device_id = prompt('Enter device_id to send (example: device123):', '');
-  if (device_id === null) {
-    // user cancelled
-    return;
-  }
+  const device_id = prompt('Enter device ID (ex: DEVICE-001):', '');
+  if (device_id === null) return;
   if (device_id.trim() === '') {
     alert('device_id cannot be empty');
     return;
   }
 
-  const payload = { client_id: client_id.trim(), device_id: device_id.trim() };
+  const payload = { license_key: license_key.trim(), device_id: device_id.trim() };
   const csrftoken = getCookie('csrftoken');
 
   try {
@@ -519,9 +552,9 @@ async function tryPost(projectId) {
       bodyText = await res.text();
     }
 
-    alert('Status: ' + res.status + '\n\n' + bodyText.slice(0, 2000));
+    alert(`[${action.toUpperCase()}] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
   } catch (err) {
-    alert('POST failed: ' + err);
+    alert(action.toUpperCase() + ' failed: ' + err);
   }
 }
 </script>
