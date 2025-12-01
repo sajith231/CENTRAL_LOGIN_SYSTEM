@@ -40,18 +40,19 @@ class Shop(models.Model):
     client_id = models.CharField(max_length=50, unique=True, editable=False)
 
     def save(self, *args, **kwargs):
-        # Generate Client ID only when creating a new shop
+        """
+        Auto-generate a 10-character client_id (A–Z, 0–9) on first save.
+        Example: 7G2K9Q4MBD
+        """
         if not self.client_id:
-            base_name = ''.join(e for e in self.name.upper() if e.isalnum())  # remove spaces/symbols
-            random_number = ''.join(random.choices(string.digits, k=3))
-            generated_id = f"{base_name}{random_number}"
+            characters = string.ascii_uppercase + string.digits
+            client_id = ''.join(random.choices(characters, k=10))
 
-            # Ensure it's unique (avoid duplicate random numbers)
-            while Shop.objects.filter(client_id=generated_id).exists():
-                random_number = ''.join(random.choices(string.digits, k=3))
-                generated_id = f"{base_name}{random_number}"
+            # ensure uniqueness
+            while Shop.objects.filter(client_id=client_id).exists():
+                client_id = ''.join(random.choices(characters, k=10))
 
-            self.client_id = generated_id
+            self.client_id = client_id
 
         super().save(*args, **kwargs)
 
