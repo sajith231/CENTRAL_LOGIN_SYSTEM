@@ -31,6 +31,7 @@
   </script>
 
   <div style="padding:0 20px 20px;">
+    <div style="overflow: scroll;">
     <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
       <thead>
         <tr style="background: var(--hover);">
@@ -46,7 +47,8 @@
             <th style="padding:12px;">Delete</th>
         </tr>
         </thead>
-      <tbody>
+        
+      <tbody >
         {% for shop in shops %}
         <tr style="background:#0f1b31;">
           <td style="padding:12px;">{{ forloop.counter }}</td>
@@ -70,8 +72,9 @@
         {% empty %}
         <tr><td colspan="8" style="padding:12px;">No shops yet.</td></tr>
         {% endfor %}
+        </div>
       </tbody>
-    </table>
+    </table></div>
   </div>
 </div>
 {% endblock %}
