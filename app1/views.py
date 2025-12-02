@@ -7,6 +7,11 @@ from django.urls import reverse_lazy
 
 from .models import Users, LEVEL_CHOICES
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Users, LEVEL_CHOICES
+
 def login_view(request):
     # If already logged in
     if request.user.is_authenticated:
@@ -20,16 +25,16 @@ def login_view(request):
         username_or_email = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
 
-        # First, try Django superuser authentication
+        # 1) Try Django superuser auth
         user = authenticate(request, username=username_or_email, password=password)
         if user is not None and user.is_superuser:
             login(request, user)
+            # superuser can see all menus (no restriction)
             return redirect("admin_dashboard")
         
-        # Then, try custom Users model authentication (email + plain password)
+        # 2) Try custom Users auth
         try:
             custom_user = Users.objects.get(email=username_or_email.lower())
-            # ⚠️ PLAIN TEXT PASSWORD COMPARISON - INSECURE!
             if custom_user.password == password:
                 # Store user info in session
                 request.session['custom_user_id'] = custom_user.id
@@ -38,6 +43,10 @@ def login_view(request):
                 request.session['custom_user_branch'] = custom_user.branch.name if custom_user.branch else None
                 request.session['custom_user_role'] = custom_user.user_role
                 request.session['custom_user_level'] = custom_user.level
+
+                # 🔴 IMPORTANT: put allowed menus into session
+                request.session['allowed_menus'] = custom_user.allowed_menus or []
+
                 messages.success(request, f"Welcome, {custom_user.name}!")
                 return redirect("admin_dashboard")
         except Users.DoesNotExist:
@@ -46,6 +55,7 @@ def login_view(request):
         messages.error(request, "Invalid credentials.")
 
     return render(request, "login.html")
+
 
 # Middleware-style decorator for custom users
 def custom_login_required(view_func):
