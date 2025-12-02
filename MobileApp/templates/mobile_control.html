@@ -64,7 +64,7 @@
                     <th style="padding:12px; text-align:left;">Client ID</th>
                     <th style="padding:12px; text-align:left;">Package</th>
                     <th style="padding:12px; text-align:left;">Modules</th>
-                    <th style="padding:12px; text-align:center;">Number of users</th>
+                    <th style="padding:12px; text-align:center;white-space: nowrap;">Number of users</th>
                     <th style="padding:12px;">License Key</th>
                     <th style="padding:12px; text-align:center;">Actions</th>
                 </tr>
@@ -73,12 +73,12 @@
             <tbody>
                 {% for c in controls %}
                 <tr style="border-bottom:1px solid #1e293b; background:#0f172a;">
-                    <td style="padding:12px;">{{ forloop.counter }}</td>
-                    <td style="padding:12px;">{{ c.created_date|date:"Y-m-d" }}</td>
-                    <td style="padding:12px;"><strong>{{ c.project.project_name }}</strong></td>
-                    <td style="padding:12px;">{{ c.store.name }}</td>
-                    <td style="padding:12px;">{{ c.customer_name }}</td>
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap;">{{ forloop.counter }}</td>
+                    <td style="padding:12px;white-space: nowrap;">{{ c.created_date|date:"Y-m-d" }}</td>
+                    <td style="padding:12px;white-space: nowrap;"><strong>{{ c.project.project_name }}</strong></td>
+                    <td style="padding:12px;white-space: nowrap;">{{ c.store.name }}</td>
+                    <td style="padding:12px;white-space: nowrap;">{{ c.customer_name }}</td>
+                    <td style="padding:12px;white-space: nowrap;">
                         <span style="background:#16a34a33; padding:4px 8px; border-radius:6px; font-weight:600; color:#16a34a;">
                             {{ c.client_id }}
                         </span>
@@ -116,7 +116,7 @@
     <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm btn-secondary">Copy</button>
 </td>
 
-                    <td style="padding:12px; text-align:center;">
+                    <td style="padding:12px; text-align:center;display: flex;gap: 2%;">
                         <!-- Edit Button -->
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}"
                            class="btn" style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">

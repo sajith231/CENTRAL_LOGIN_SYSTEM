@@ -14,22 +14,22 @@
 
         <a href="{% url 'MobileApp:mobileproject_create' %}" class="btn"
             style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
-                <i class="fa-solid fa-plus"></i> Add New
-            </a>
+            <i class="fa-solid fa-plus"></i> Add New
+        </a>
     </div>
 
     <div style="margin-bottom:15px; display:flex; gap:10px;">
-    <input type="text" id="searchProject" placeholder="Search Project..."
-           style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
-</div>
+        <input type="text" id="searchProject" placeholder="Search Project..."
+            style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+    </div>
 
     <!-- Messages -->
     {% if messages %}
-        {% for message in messages %}
-            <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-                {{ message }}
-            </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+        {{ message }}
+    </div>
+    {% endfor %}
     {% endif %}
 
     <!-- Table -->
@@ -38,40 +38,40 @@
         <table style="width:100%; border-collapse:collapse;">
             <thead>
                 <tr style="background:#1e293b;">
-                    <th style="padding:12px; text-align:left;">No</th>
-                    <th style="padding:12px; text-align:left;">Created Date</th>
-                    <th style="padding:12px; text-align:left;">Project Name</th>
-                    <th style="padding:12px; text-align:left;">GET API</th>
-                    <th style="padding:12px; text-align:left;">POST API</th>
-                    <th style="padding:12px; text-align:center;">Description</th>
-                    <th style="padding:12px; text-align:left;">Actions</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">No</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Created Date</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Project Name</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">GET API</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">POST API</th>
+                    <th style="padding:12px; text-align:center;white-space: nowrap;">Description</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for project in projects %}
                 <tr style="border-bottom:1px solid #1e293b;">
-                    <td style="padding:12px;">{{ forloop.counter }}</td>
+                    <td style="padding:12px;white-space: nowrap;">{{ forloop.counter }}</td>
 
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap;">
                         {{ project.created_date|date:"d/m/Y" }}
                     </td>
 
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap;">
                         <strong>{{ project.project_name }}</strong>
                     </td>
 
                     <td style="padding:12px;">
-                        <button class="btn" style="background:#065f46; font-size:12px;"
-                                data-bs-toggle="modal" data-bs-target="#getApiModal{{ project.id }}"
-                                onclick="loadActiveDevices({{ project.id }}, '{{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}')">
+                        <button class="btn" style="background:#065f46; font-size:12px;" data-bs-toggle="modal"
+                            data-bs-target="#getApiModal{{ project.id }}"
+                            onclick="loadActiveDevices({{ project.id }}, '{{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}')">
                             <i class="fa-solid fa-code"></i> GET
                         </button>
                     </td>
 
                     <td style="padding:12px;">
-                        <button class="btn" style="background:#7c2d12; font-size:12px;"
-                                data-bs-toggle="modal" data-bs-target="#postApiModal{{ project.id }}">
+                        <button class="btn" style="background:#7c2d12; font-size:12px;" data-bs-toggle="modal"
+                            data-bs-target="#postApiModal{{ project.id }}">
                             <i class="fa-solid fa-paper-plane"></i> POST
                         </button>
                     </td>
@@ -86,16 +86,17 @@
                         {% endif %}
                     </td>
 
-                    <td style="padding:12px;">
-                        <a href="{% url 'MobileApp:mobileproject_edit' project.id %}"
-                            class="btn" style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
-                                <i class="fa-solid fa-pen-to-square"></i> Edit
-                            </a>
+                    <td style="padding:12px;display: flex;gap: 2%;">
+                        <a href="{% url 'MobileApp:mobileproject_edit' project.id %}" class="btn"
+                            style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </a>
 
-                            <button class="btn" style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;"
-                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
-                                <i class="fa-solid fa-trash"></i> Delete
-                            </button>
+                        <button class="btn"
+                            style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
 
                     </td>
                 </tr>
@@ -138,114 +139,117 @@
                         {{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}
                     </code>
                     <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
-                            onclick="copyText('get-endpoint-{{ project.id }}')">
+                        onclick="copyText('get-endpoint-{{ project.id }}')">
                         <i class="fa-solid fa-copy"></i> Copy
                     </button>
                 </div>
 
                 <h6 style="color:#10b981; margin-bottom:10px;">Response Data:</h6>
 
-<div style="background:#0f172a; padding:15px; border-radius:8px;">
+                <div style="background:#0f172a; padding:15px; border-radius:8px;">
 
-    {% for control in project.controls.all %}
-    <div style="padding:10px; border-bottom:1px solid #334155; margin-bottom:12px;">
+                    {% for control in project.controls.all %}
+                    <div style="padding:10px; border-bottom:1px solid #334155; margin-bottom:12px;">
 
-        <!-- Customer -->
-        <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
-        </p>
+                        <!-- Customer -->
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
+                        </p>
 
-        <!-- License Key -->
-        <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">License Key:</strong>
-            <code style="color:#fbbf24;">{{ control.license_key }}</code>
-        </p>
+                        <!-- License Key -->
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">License Key:</strong>
+                            <code style="color:#fbbf24;">{{ control.license_key }}</code>
+                        </p>
 
-        <!-- Package -->
-        <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">Package:</strong>
-            {% if control.package %}
-                <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;">
-                    {{ control.package.package_name }}
-                </span>
-            {% else %}
-                <span style="color:#9ca3af;">None</span>
-            {% endif %}
-        </p>
+                        <!-- Package -->
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Package:</strong>
+                            {% if control.package %}
+                            <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;">
+                                {{ control.package.package_name }}
+                            </span>
+                            {% else %}
+                            <span style="color:#9ca3af;">None</span>
+                            {% endif %}
+                        </p>
 
-        <!-- MODULES LIST -->
-        <div style="margin-top:5px;">
-            <strong style="color:#e5e7eb;">Modules:</strong>
+                        <!-- MODULES LIST -->
+                        <div style="margin-top:5px;">
+                            <strong style="color:#e5e7eb;">Modules:</strong>
 
-            {% if control.package %}
-                {% for m in control.package.modules.all %}
-                    <div style="margin-top:4px;">
-                        <span style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
-                            {{ m.module_name }}
-                        </span>
-                        <span style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
-                            {{ m.module_code }}
-                        </span>
+                            {% if control.package %}
+                            {% for m in control.package.modules.all %}
+                            <div style="margin-top:4px;">
+                                <span
+                                    style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
+                                    {{ m.module_name }}
+                                </span>
+                                <span
+                                    style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
+                                    {{ m.module_code }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p style="color:#9ca3af; font-size:13px;">No modules</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- License info -->
+                        <p style="margin-top:8px; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Max Devices:</strong> {{ control.login_limit }}
+                        </p>
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Registered Devices:</strong>
+                            <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+                        </p>
+
                     </div>
-                {% endfor %}
-            {% else %}
-                <p style="color:#9ca3af; font-size:13px;">No modules</p>
-            {% endif %}
-        </div>
-
-        <!-- License info -->
-        <p style="margin-top:8px; font-size:14px;">
-            <strong style="color:#e5e7eb;">Max Devices:</strong> {{ control.login_limit }}
-        </p>
-        <p style="margin:0; font-size:14px;">
-            <strong style="color:#e5e7eb;">Registered Devices:</strong>
-            <span style="color:#10b981;">{{ control.active_devices.count }}</span>
-        </p>
-
-    </div>
-    {% empty %}
-       <p style="color:#9ca3af; text-align:center;">No customers added yet</p>
-    {% endfor %}
-</div>
+                    {% empty %}
+                    <p style="color:#9ca3af; text-align:center;">No customers added yet</p>
+                    {% endfor %}
+                </div>
 
 
 
                 <h6 style="color:#10b981; margin-top:20px;">Active Devices:</h6>
-                    <div id="active-devices-{{ project.id }}" style="background:#0f172a; padding:15px; border-radius:8px; color:#e5e7eb; font-size:13px;">
-                        <em>Loading active devices...</em>
-                    </div>
+                <div id="active-devices-{{ project.id }}"
+                    style="background:#0f172a; padding:15px; border-radius:8px; color:#e5e7eb; font-size:13px;">
+                    <em>Loading active devices...</em>
+                </div>
 
-                    <script>
+                <script>
                     async function loadActiveDevices(projectId, endpoint) {
-                    const container = document.getElementById('active-devices-' + projectId);
-                    if (!container) return;
+                        const container = document.getElementById('active-devices-' + projectId);
+                        if (!container) return;
 
-                    try {
-                        const res = await fetch(endpoint);
-                        const data = await res.json();
+                        try {
+                            const res = await fetch(endpoint);
+                            const data = await res.json();
 
-                        if (!data.success) {
-                        container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
-                        return;
-                        }
+                            if (!data.success) {
+                                container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
+                                return;
+                            }
 
-                        let html = '';
-                        for (const c of data.customers) {
-                        const devices = c.registered_devices || [];
-                        const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
+                            let html = '';
+                            for (const c of data.customers) {
+                                const devices = c.registered_devices || [];
+                                const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
 
-                        html += `<div style="margin-top:10px;">
+                                html += `<div style="margin-top:10px;">
                             <h5 style="color:#facc15;">${c.customer_name} - License ${c.license_key || '-'}</h5>
                             <p style="margin:0; color:#e5e7eb;">Registered ${summary.registered_count}/${summary.max_devices}</p>
                         </div>`;
 
-                        if (devices.length === 0) {
-                            html += `<p style="color:#9ca3af;">No registered devices</p>`;
-                        } else {
-                            html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+                                if (devices.length === 0) {
+                                    html += `<p style="color:#9ca3af;">No registered devices</p>`;
+                                } else {
+                                    html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
                             <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Registered At</th><th></th></tr>`;
-                            for (const d of devices) {
-                            html += `<tr style="border-bottom:1px solid #1e293b;">
+                                    for (const d of devices) {
+                                        html += `<tr style="border-bottom:1px solid #1e293b;">
                                 <td>${d.device_id}</td>
                                 <td>${d.ip_address || '-'}</td>
                                 <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
@@ -254,33 +258,33 @@
                                         Remove
                                     </button></td>
                             </tr>`;
+                                    }
+                                    html += `</table>`;
+                                }
                             }
-                            html += `</table>`;
-                        }
-                        }
 
-                        container.innerHTML = html;
-                    } catch (err) {
-                        container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
-                    }
+                            container.innerHTML = html;
+                        } catch (err) {
+                            container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
+                        }
                     }
 
                     async function removeDevice(endpoint, license_key, device_id, projectId) {
-                    if (!confirm('Remove this device?')) return;
-                    const logoutUrl = endpoint + 'logout/';
-                    const body = JSON.stringify({ license_key, device_id });
+                        if (!confirm('Remove this device?')) return;
+                        const logoutUrl = endpoint + 'logout/';
+                        const body = JSON.stringify({ license_key, device_id });
 
-                    const res = await fetch(logoutUrl, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body
-                    });
+                        const res = await fetch(logoutUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body
+                        });
 
-                    const data = await res.json();
-                    alert(data.message || data.error);
-                    loadActiveDevices(projectId, endpoint); // refresh list
+                        const data = await res.json();
+                        alert(data.message || data.error);
+                        loadActiveDevices(projectId, endpoint); // refresh list
                     }
-                    </script>
+                </script>
 
 
                 <div style="margin-top:15px; padding:12px; background:#065f46; border-radius:8px;">
@@ -312,33 +316,33 @@
                         {{ base_url }}{% url 'MobileApp:api_register_license' project.api_endpoint %}
                     </code>
                     <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
-                            onclick="copyText('register-endpoint-{{ project.id }}')">
+                        onclick="copyText('register-endpoint-{{ project.id }}')">
                         <i class="fa-solid fa-copy"></i> Copy
                     </button>
 
                     <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
-                            onclick="tryRegister('{{ project.id }}')">
+                        onclick="tryRegister('{{ project.id }}')">
                         <i class="fa-solid fa-play"></i> Try Register
                     </button>
                 </div>
 
                 <!-- Full absolute POST endpoint (not clickable) -->
-                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                <!-- <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
                     <strong style="color:#f97316;">Login Endpoint:</strong>
                     <code id="post-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
                         {{ base_url }}{% url 'MobileApp:api_post_login' project.api_endpoint %}
                     </code>
                     <button class="btn btn-sm" style="background:#7c2d12; margin-left:10px;"
-                            onclick="copyText('post-endpoint-{{ project.id }}')">
+                        onclick="copyText('post-endpoint-{{ project.id }}')">
                         <i class="fa-solid fa-copy"></i> Copy
                     </button>
 
-                    <!-- Try POST (in-browser tester) -->
+                    
                     <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
-                            onclick="tryLogin('{{ project.id }}')">
+                        onclick="tryLogin('{{ project.id }}')">
                         <i class="fa-solid fa-play"></i> Try Login
                     </button>
-                </div>
+                </div> -->
 
                 <h6 style="color:#10b981; margin-bottom:10px;">Register Body (JSON):</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
@@ -347,7 +351,7 @@
   "license_key": "YOUR_LICENSE_KEY",
   "device_id": "DEVICE-001"
 }</pre>
-                </div>
+                <!-- </div>
 
                 <h6 style="color:#f97316; margin-bottom:10px;">Login Body (JSON):</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
@@ -356,7 +360,7 @@
   "license_key": "YOUR_LICENSE_KEY",
   "device_id": "DEVICE-001"
 }</pre>
-                </div>
+                </div> -->
 
                 <h6 style="color:#f97316; margin-bottom:10px;">Active Licenses:</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
@@ -373,7 +377,8 @@
                             {% for control in project.controls.all %}
                             <tr style="border-bottom:1px solid #1e293b;">
                                 <td style="padding:8px;">{{ control.customer_name }}</td>
-                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code></td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code>
+                                </td>
                                 <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
                                 <td style="padding:8px; text-align:center;">
                                     <span style="color:#10b981;">{{ control.active_devices.count }}</span>
@@ -391,7 +396,8 @@
                 </div>
 
                 <div style="margin-top:15px; padding:12px; background:#7c2d12; border-radius:8px;">
-                    <strong>Note:</strong> Register each device with its license before login. When the registered count hits the limit, additional devices are blocked automatically.
+                    <strong>Note:</strong> Register each device with its license before login. When the registered count
+                    hits the limit, additional devices are blocked automatically.
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid #334155;">
@@ -443,8 +449,7 @@
 
             <div class="modal-footer" style="border-top:1px solid #334155;">
                 <button class="btn" data-bs-dismiss="modal">Cancel</button>
-                <a href="{% url 'MobileApp:mobileproject_delete' project.id %}"
-                   class="btn" style="background:#b91c1c;">
+                <a href="{% url 'MobileApp:mobileproject_delete' project.id %}" class="btn" style="background:#b91c1c;">
                     Yes, Delete
                 </a>
             </div>
@@ -457,120 +462,120 @@
 
 <!-- JS helpers: copy & tryPost (CSRF-aware) -->
 <script>
-/**
- * Copy text from an element (by id) to clipboard.
- */
-function copyText(elementId) {
-  try {
-    const el = document.getElementById(elementId);
-    if (!el) { alert('Element not found: ' + elementId); return; }
-    const text = el.innerText.trim();
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        // lightweight feedback
-        const short = text.length > 120 ? text.slice(0, 120) + '…' : text;
-        alert('Copied URL:\n' + short);
-      })
-      .catch(err => {
-        alert('Copy failed: ' + err);
-      });
-  } catch (err) {
-    alert('Copy error: ' + err);
-  }
-}
-
-/**
- * Read a cookie (for CSRF)
- */
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      // Does this cookie string begin with the name we want?
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
-/**
- * Register/login helpers triggered from buttons.
- */
-async function tryRegister(projectId) {
-  await postLicenseAction(projectId, 'register');
-}
-
-async function tryLogin(projectId) {
-  await postLicenseAction(projectId, 'login');
-}
-
-async function postLicenseAction(projectId, action) {
-  const endpointId = action === 'register' ? 'register-endpoint-' + projectId : 'post-endpoint-' + projectId;
-  const el = document.getElementById(endpointId);
-  if (!el) { alert('Endpoint not found: ' + endpointId); return; }
-  const endpoint = el.innerText.trim();
-
-  const license_key = prompt('Enter license key:', '');
-  if (license_key === null) return;
-  if (license_key.trim() === '') {
-    alert('license_key cannot be empty');
-    return;
-  }
-
-  const device_id = prompt('Enter device ID (ex: DEVICE-001):', '');
-  if (device_id === null) return;
-  if (device_id.trim() === '') {
-    alert('device_id cannot be empty');
-    return;
-  }
-
-  const payload = { license_key: license_key.trim(), device_id: device_id.trim() };
-  const csrftoken = getCookie('csrftoken');
-
-  try {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrftoken || ''
-      },
-      body: JSON.stringify(payload)
-    });
-
-    let bodyText;
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const json = await res.json();
-      bodyText = JSON.stringify(json, null, 2);
-    } else {
-      bodyText = await res.text();
+    /**
+     * Copy text from an element (by id) to clipboard.
+     */
+    function copyText(elementId) {
+        try {
+            const el = document.getElementById(elementId);
+            if (!el) { alert('Element not found: ' + elementId); return; }
+            const text = el.innerText.trim();
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    // lightweight feedback
+                    const short = text.length > 120 ? text.slice(0, 120) + '…' : text;
+                    alert('Copied URL:\n' + short);
+                })
+                .catch(err => {
+                    alert('Copy failed: ' + err);
+                });
+        } catch (err) {
+            alert('Copy error: ' + err);
+        }
     }
 
-    alert(`[${action.toUpperCase()}] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
-  } catch (err) {
-    alert(action.toUpperCase() + ' failed: ' + err);
-  }
-}
+    /**
+     * Read a cookie (for CSRF)
+     */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /**
+     * Register/login helpers triggered from buttons.
+     */
+    async function tryRegister(projectId) {
+        await postLicenseAction(projectId, 'register');
+    }
+
+    async function tryLogin(projectId) {
+        await postLicenseAction(projectId, 'login');
+    }
+
+    async function postLicenseAction(projectId, action) {
+        const endpointId = action === 'register' ? 'register-endpoint-' + projectId : 'post-endpoint-' + projectId;
+        const el = document.getElementById(endpointId);
+        if (!el) { alert('Endpoint not found: ' + endpointId); return; }
+        const endpoint = el.innerText.trim();
+
+        const license_key = prompt('Enter license key:', '');
+        if (license_key === null) return;
+        if (license_key.trim() === '') {
+            alert('license_key cannot be empty');
+            return;
+        }
+
+        const device_id = prompt('Enter device ID (ex: DEVICE-001):', '');
+        if (device_id === null) return;
+        if (device_id.trim() === '') {
+            alert('device_id cannot be empty');
+            return;
+        }
+
+        const payload = { license_key: license_key.trim(), device_id: device_id.trim() };
+        const csrftoken = getCookie('csrftoken');
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || ''
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let bodyText;
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const json = await res.json();
+                bodyText = JSON.stringify(json, null, 2);
+            } else {
+                bodyText = await res.text();
+            }
+
+            alert(`[${action.toUpperCase()}] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
+        } catch (err) {
+            alert(action.toUpperCase() + ' failed: ' + err);
+        }
+    }
 </script>
 
 <script>
-function filterProjectList() {
-    let input = document.getElementById("searchProject").value.toLowerCase();
-    let rows = document.querySelectorAll("table tbody tr");
+    function filterProjectList() {
+        let input = document.getElementById("searchProject").value.toLowerCase();
+        let rows = document.querySelectorAll("table tbody tr");
 
-    rows.forEach(row => {
-        let name = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
-        row.style.display = name.includes(input) ? "" : "none";
-    });
-}
+        rows.forEach(row => {
+            let name = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+            row.style.display = name.includes(input) ? "" : "none";
+        });
+    }
 
-document.getElementById("searchProject").addEventListener("keyup", filterProjectList);
+    document.getElementById("searchProject").addEventListener("keyup", filterProjectList);
 </script>
 
 {% endblock %}
