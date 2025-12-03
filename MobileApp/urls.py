@@ -15,6 +15,7 @@ urlpatterns = [
     path("mobile_control/add/", views.add_mobile_control, name="add_mobile_control"),
     path("mobile_control/edit/<int:pk>/", views.edit_mobile_control, name="edit_mobile_control"),
     path("mobile_control/delete/<int:pk>/", views.delete_mobile_control, name="delete_mobile_control"),
+    path("mobile_control/toggle-status/<int:pk>/", views.toggle_mobile_control_status, name="toggle_mobile_control_status"),
     
     # API routes
     # GET: Retrieve all customers data for a project

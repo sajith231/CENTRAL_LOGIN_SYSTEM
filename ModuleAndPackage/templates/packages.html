@@ -19,6 +19,7 @@
           <th style="padding:12px;">Package Name</th>
           <th style="padding:12px;">Project</th>
           <th style="padding:12px;">Modules</th>
+          <th style="padding:12px;">Days Limit</th>
           <th style="padding:12px;">Edit</th>
           <th style="padding:12px;">Delete</th>
         </tr>
@@ -41,6 +42,14 @@
           </td>
 
           <td style="padding:12px;">
+              {% if p.days_limit == 0 %}
+                <span style="color:#9ca3af;">Unlimited</span>
+              {% else %}
+                <span style="color:#fbbf24;">{{ p.days_limit }} days</span>
+              {% endif %}
+          </td>
+
+          <td style="padding:12px;">
               <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
 
@@ -53,7 +62,7 @@
 
         {% empty %}
         <tr style="background:#0f1b31;">
-          <td colspan="6" style="padding:12px;">No packages yet.</td>
+          <td colspan="7" style="padding:12px;">No packages yet.</td>
         </tr>
         {% endfor %}
       </tbody>

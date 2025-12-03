@@ -42,6 +42,16 @@
             </select>
         </div>
 
+        <!-- Days Limit -->
+        <div class="mb-3">
+            <label>Number of Days Limit</label>
+            <input type="number" name="days_limit" class="form-control" 
+                   value="{{ package.days_limit }}" min="0"
+                   placeholder="0 = Unlimited"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <small style="color:#9ca3af;">Enter number of days before auto-deactivation. 0 means unlimited.</small>
+        </div>
+
         <button class="btn btn-primary">Update</button>
     </form>
 </div>

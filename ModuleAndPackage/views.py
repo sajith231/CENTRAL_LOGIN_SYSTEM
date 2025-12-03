@@ -79,10 +79,15 @@ def save_package(request):
     if request.method == "POST":
         project_id = request.POST.get("project")
         package_name = request.POST.get("package_name")
+        days_limit = request.POST.get("days_limit", "0")
         selected_modules = request.POST.getlist("modules")
 
         project = MobileProject.objects.get(id=project_id)
-        package = Package.objects.create(project=project, package_name=package_name)
+        package = Package.objects.create(
+            project=project, 
+            package_name=package_name,
+            days_limit=int(days_limit) if days_limit else 0
+        )
 
         # Add multiple modules
         package.modules.set(selected_modules)
@@ -100,8 +105,10 @@ def edit_package(request, pk):
 
     if request.method == "POST":
         package.package_name = request.POST.get("package_name")
+        days_limit = request.POST.get("days_limit", "0")
         selected_modules = request.POST.getlist("modules")
 
+        package.days_limit = int(days_limit) if days_limit else 0
         package.modules.set(selected_modules)
         package.save()
 

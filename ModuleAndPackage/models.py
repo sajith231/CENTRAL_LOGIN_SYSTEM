@@ -35,6 +35,7 @@ class Package(models.Model):
     project = models.ForeignKey("MobileApp.MobileProject", on_delete=models.CASCADE)
     modules = models.ManyToManyField(Module)
     package_name = models.CharField(max_length=200)
+    days_limit = models.PositiveIntegerField(default=0, help_text="Number of days before auto-deactivation (0 = unlimited)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

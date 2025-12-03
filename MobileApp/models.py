@@ -55,6 +55,9 @@ class MobileControl(models.Model):
 
     login_limit = models.PositiveIntegerField(default=1)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Status field: True = Active, False = Inactive
+    status = models.BooleanField(default=True)
 
     created_date = models.DateTimeField(auto_now_add=True)   # ✔️ include created date
     updated_date = models.DateTimeField(auto_now=True)

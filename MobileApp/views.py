@@ -71,11 +71,52 @@ def mobileproject_delete(request, pk):
 
 
 # MOBILE CONTROL VIEWS
+from django.utils import timezone
+from datetime import timedelta
+
 def mobile_control_list(request):
     """Shows table of MobileControl entries"""
-    controls = MobileControl.objects.select_related('project').all()
+    controls = MobileControl.objects.select_related('project', 'package').all()
+
+    for control in controls:
+        control.registered_count = control.active_devices.count()
+        control.balance_count = control.login_limit - control.registered_count
+        
+        # Calculate remaining days and check expiration
+        if control.package and control.package.days_limit > 0:
+            days_limit = control.package.days_limit
+            created_date = control.created_date
+            expiry_date = created_date + timedelta(days=days_limit)
+            now = timezone.now()
+            
+            # Calculate remaining days
+            if expiry_date > now:
+                remaining_days = (expiry_date - now).days
+                control.remaining_days = remaining_days
+                control.expiry_date = expiry_date
+                control.is_expired = False
+                
+                # Auto-deactivate if expired
+                if control.status and remaining_days <= 0:
+                    control.status = False
+                    control.save()
+            else:
+                control.remaining_days = 0
+                control.expiry_date = expiry_date
+                control.is_expired = True
+                # Auto-deactivate if expired
+                if control.status:
+                    control.status = False
+                    control.save()
+        else:
+            # Unlimited (days_limit = 0)
+            control.remaining_days = None
+            control.expiry_date = None
+            control.is_expired = False
+
     context = {'controls': controls}
     return render(request, "mobile_control.html", context)
+
 
 from StoreShop.models import Store
 
@@ -168,6 +209,27 @@ def delete_mobile_control(request, pk):
     return redirect('MobileApp:mobile_control')
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def toggle_mobile_control_status(request, pk):
+    """Toggle the status (Active/Inactive) of a mobile control"""
+    try:
+        control = get_object_or_404(MobileControl, pk=pk)
+        control.status = not control.status
+        control.save()
+        
+        return JsonResponse({
+            'success': True,
+            'status': control.status,
+            'message': f'Status changed to {"Active" if control.status else "Inactive"}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 # ==================== API VIEWS ====================
 
 def _get_client_ip(request):
@@ -217,6 +279,30 @@ def api_register_license(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+    
+    # Check if expired based on package days_limit
+    if control.package and control.package.days_limit > 0:
+        days_limit = control.package.days_limit
+        created_date = control.created_date
+        expiry_date = created_date + timedelta(days=days_limit)
+        now = timezone.now()
+        
+        if expiry_date <= now:
+            # Auto-deactivate if expired
+            if control.status:
+                control.status = False
+                control.save()
+            return JsonResponse({
+                'success': False,
+                'error': 'This license has expired. Please contact administrator.'
+            }, status=403)
+    
+    # Check if the control is active
+    if not control.status:
+        return JsonResponse({
+            'success': False,
+            'error': 'This license is inactive. Please contact administrator.'
+        }, status=403)
 
     registered_count = control.active_devices.count()
     device_exists = control.active_devices.filter(device_id=device_id).exists()
@@ -283,6 +369,30 @@ def api_post_login(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+    
+    # Check if expired based on package days_limit
+    if control.package and control.package.days_limit > 0:
+        days_limit = control.package.days_limit
+        created_date = control.created_date
+        expiry_date = created_date + timedelta(days=days_limit)
+        now = timezone.now()
+        
+        if expiry_date <= now:
+            # Auto-deactivate if expired
+            if control.status:
+                control.status = False
+                control.save()
+            return JsonResponse({
+                'success': False,
+                'error': 'This license has expired. Please contact administrator.'
+            }, status=403)
+    
+    # Check if the control is active
+    if not control.status:
+        return JsonResponse({
+            'success': False,
+            'error': 'This license is inactive. Please contact administrator.'
+        }, status=403)
 
     is_registered = control.active_devices.filter(device_id=device_id).exists()
     if not is_registered:
@@ -334,6 +444,9 @@ def api_post_logout(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+    
+    # Check if the control is active (for logout, we allow even if inactive)
+    # But it's good practice to check - you can remove this if you want logout to work always
 
     deleted, _ = control.active_devices.filter(device_id=device_id).delete()
     if deleted:
