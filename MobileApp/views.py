@@ -413,6 +413,29 @@ def api_post_login(request, endpoint):
         'device_id': device_id
     }, status=200)
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def toggle_mobile_control_status(request, pk):
+    """
+    Toggle Active/Inactive status WITHOUT deleting existing registered devices
+    """
+    try:
+        control = get_object_or_404(MobileControl, pk=pk)
+
+        # Toggle current status
+        control.status = not control.status
+        control.save()
+
+        return JsonResponse({
+            'success': True,
+            'status': control.status,
+            'message': f'Status changed to {"Active" if control.status else "Inactive"}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @csrf_exempt
