@@ -5,8 +5,6 @@
 {% block header_title %}<strong>Mobile App List</strong>{% endblock %}
 
 {% block content %}
-<!-- <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"> -->
-
 
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -97,7 +95,6 @@
                             data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
                             <i class="fa-solid fa-trash"></i> Delete
                         </button>
-
                     </td>
                 </tr>
                 {% endfor %}
@@ -132,7 +129,7 @@
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Full absolute GET endpoint (not clickable) -->
+                <!-- Full absolute GET endpoint -->
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
                     <strong style="color:#10b981;">Endpoint:</strong>
                     <code id="get-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
@@ -147,22 +144,17 @@
                 <h6 style="color:#10b981; margin-bottom:10px;">Response Data:</h6>
 
                 <div style="background:#0f172a; padding:15px; border-radius:8px;">
-
                     {% for control in project.controls.all %}
                     <div style="padding:10px; border-bottom:1px solid #334155; margin-bottom:12px;">
-
-                        <!-- Customer -->
                         <p style="margin:0; font-size:14px;">
                             <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
                         </p>
 
-                        <!-- License Key -->
                         <p style="margin:0; font-size:14px;">
                             <strong style="color:#e5e7eb;">License Key:</strong>
                             <code style="color:#fbbf24;">{{ control.license_key }}</code>
                         </p>
 
-                        <!-- Package -->
                         <p style="margin:0; font-size:14px;">
                             <strong style="color:#e5e7eb;">Package:</strong>
                             {% if control.package %}
@@ -174,19 +166,15 @@
                             {% endif %}
                         </p>
 
-                        <!-- MODULES LIST -->
                         <div style="margin-top:5px;">
                             <strong style="color:#e5e7eb;">Modules:</strong>
-
                             {% if control.package %}
                             {% for m in control.package.modules.all %}
                             <div style="margin-top:4px;">
-                                <span
-                                    style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
+                                <span style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
                                     {{ m.module_name }}
                                 </span>
-                                <span
-                                    style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
+                                <span style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
                                     {{ m.module_code }}
                                 </span>
                             </div>
@@ -196,7 +184,6 @@
                             {% endif %}
                         </div>
 
-                        <!-- License info -->
                         <p style="margin-top:8px; font-size:14px;">
                             <strong style="color:#e5e7eb;">Max Devices:</strong> {{ control.login_limit }}
                         </p>
@@ -204,88 +191,17 @@
                             <strong style="color:#e5e7eb;">Registered Devices:</strong>
                             <span style="color:#10b981;">{{ control.active_devices.count }}</span>
                         </p>
-
                     </div>
                     {% empty %}
                     <p style="color:#9ca3af; text-align:center;">No customers added yet</p>
                     {% endfor %}
                 </div>
 
-
-
                 <h6 style="color:#10b981; margin-top:20px;">Active Devices:</h6>
                 <div id="active-devices-{{ project.id }}"
                     style="background:#0f172a; padding:15px; border-radius:8px; color:#e5e7eb; font-size:13px;">
                     <em>Loading active devices...</em>
                 </div>
-
-                <script>
-                    async function loadActiveDevices(projectId, endpoint) {
-                        const container = document.getElementById('active-devices-' + projectId);
-                        if (!container) return;
-
-                        try {
-                            const res = await fetch(endpoint);
-                            const data = await res.json();
-
-                            if (!data.success) {
-                                container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
-                                return;
-                            }
-
-                            let html = '';
-                            for (const c of data.customers) {
-                                const devices = c.registered_devices || [];
-                                const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
-
-                                html += `<div style="margin-top:10px;">
-                            <h5 style="color:#facc15;">${c.customer_name} - License ${c.license_key || '-'}</h5>
-                            <p style="margin:0; color:#e5e7eb;">Registered ${summary.registered_count}/${summary.max_devices}</p>
-                        </div>`;
-
-                                if (devices.length === 0) {
-                                    html += `<p style="color:#9ca3af;">No registered devices</p>`;
-                                } else {
-                                    html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-                            <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Registered At</th><th></th></tr>`;
-                                    for (const d of devices) {
-                                        html += `<tr style="border-bottom:1px solid #1e293b;">
-                                <td>${d.device_id}</td>
-                                <td>${d.ip_address || '-'}</td>
-                                <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
-                                <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
-                                        style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
-                                        Remove
-                                    </button></td>
-                            </tr>`;
-                                    }
-                                    html += `</table>`;
-                                }
-                            }
-
-                            container.innerHTML = html;
-                        } catch (err) {
-                            container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
-                        }
-                    }
-
-                    async function removeDevice(endpoint, license_key, device_id, projectId) {
-                        if (!confirm('Remove this device?')) return;
-                        const logoutUrl = endpoint + 'logout/';
-                        const body = JSON.stringify({ license_key, device_id });
-
-                        const res = await fetch(logoutUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body
-                        });
-
-                        const data = await res.json();
-                        alert(data.message || data.error);
-                        loadActiveDevices(projectId, endpoint); // refresh list
-                    }
-                </script>
-
 
                 <div style="margin-top:15px; padding:12px; background:#065f46; border-radius:8px;">
                     <strong>Note:</strong> This GET API returns all customers with their login data for this project.
@@ -326,41 +242,13 @@
                     </button>
                 </div>
 
-                <!-- Full absolute POST endpoint (not clickable) -->
-                <!-- <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <strong style="color:#f97316;">Login Endpoint:</strong>
-                    <code id="post-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
-                        {{ base_url }}{% url 'MobileApp:api_post_login' project.api_endpoint %}
-                    </code>
-                    <button class="btn btn-sm" style="background:#7c2d12; margin-left:10px;"
-                        onclick="copyText('post-endpoint-{{ project.id }}')">
-                        <i class="fa-solid fa-copy"></i> Copy
-                    </button>
-
-                    
-                    <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
-                        onclick="tryLogin('{{ project.id }}')">
-                        <i class="fa-solid fa-play"></i> Try Login
-                    </button>
-                </div> -->
-
                 <h6 style="color:#10b981; margin-bottom:10px;">Register Body (JSON):</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">
-{
+                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">{
   "license_key": "YOUR_LICENSE_KEY",
   "device_id": "DEVICE-001"
 }</pre>
-                <!-- </div>
-
-                <h6 style="color:#f97316; margin-bottom:10px;">Login Body (JSON):</h6>
-                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">
-{
-  "license_key": "YOUR_LICENSE_KEY",
-  "device_id": "DEVICE-001"
-}</pre>
-                </div> -->
+                </div>
 
                 <h6 style="color:#f97316; margin-bottom:10px;">Active Licenses:</h6>
                 <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
@@ -377,8 +265,7 @@
                             {% for control in project.controls.all %}
                             <tr style="border-bottom:1px solid #1e293b;">
                                 <td style="padding:8px;">{{ control.customer_name }}</td>
-                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code>
-                                </td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code></td>
                                 <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
                                 <td style="padding:8px; text-align:center;">
                                     <span style="color:#10b981;">{{ control.active_devices.count }}</span>
@@ -427,11 +314,10 @@
 </div>
 {% endif %}
 
-<!-- Delete Modal -->
+<!-- Delete Modal (FIXED WITH FORM) -->
 <div class="modal fade" id="deleteModal{{ project.id }}" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background:#1e293b; color:white;">
-
             <div class="modal-header" style="border-bottom:1px solid #334155;">
                 <h5 class="modal-title">
                     <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
@@ -449,22 +335,91 @@
 
             <div class="modal-footer" style="border-top:1px solid #334155;">
                 <button class="btn" data-bs-dismiss="modal">Cancel</button>
-                <a href="{% url 'MobileApp:mobileproject_delete' project.id %}" class="btn" style="background:#b91c1c;">
-                    Yes, Delete
-                </a>
+                
+                <!-- DELETE FORM (FIXED) -->
+                <form method="POST" action="{% url 'MobileApp:mobileproject_delete' project.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background:#b91c1c; color:white;">
+                        Yes, Delete
+                    </button>
+                </form>
             </div>
-
         </div>
     </div>
 </div>
 
 {% endfor %}
 
-<!-- JS helpers: copy & tryPost (CSRF-aware) -->
+<!-- JavaScript Section -->
 <script>
-    /**
-     * Copy text from an element (by id) to clipboard.
-     */
+    // Active Devices Loading Function
+    async function loadActiveDevices(projectId, endpoint) {
+        const container = document.getElementById('active-devices-' + projectId);
+        if (!container) return;
+
+        try {
+            const res = await fetch(endpoint);
+            const data = await res.json();
+
+            if (!data.success) {
+                container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
+                return;
+            }
+
+            let html = '';
+            for (const c of data.customers) {
+                const devices = c.registered_devices || [];
+                const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
+
+                html += `<div style="margin-top:10px;">
+                    <h5 style="color:#facc15;">${c.customer_name} - License ${c.license_key || '-'}</h5>
+                    <p style="margin:0; color:#e5e7eb;">Registered ${summary.registered_count}/${summary.max_devices}</p>
+                </div>`;
+
+                if (devices.length === 0) {
+                    html += `<p style="color:#9ca3af;">No registered devices</p>`;
+                } else {
+                    html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+                        <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Registered At</th><th></th></tr>`;
+                    for (const d of devices) {
+                        html += `<tr style="border-bottom:1px solid #1e293b;">
+                            <td>${d.device_id}</td>
+                            <td>${d.ip_address || '-'}</td>
+                            <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
+                            <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
+                                    style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
+                                    Remove
+                                </button></td>
+                        </tr>`;
+                    }
+                    html += `</table>`;
+                }
+            }
+
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
+        }
+    }
+
+    // Remove Device Function
+    async function removeDevice(endpoint, license_key, device_id, projectId) {
+        if (!confirm('Remove this device?')) return;
+        const logoutUrl = endpoint + 'logout/';
+        const body = JSON.stringify({ license_key, device_id });
+
+        const res = await fetch(logoutUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+        loadActiveDevices(projectId, endpoint);
+    }
+
+    // Copy Text Function
     function copyText(elementId) {
         try {
             const el = document.getElementById(elementId);
@@ -472,7 +427,6 @@
             const text = el.innerText.trim();
             navigator.clipboard.writeText(text)
                 .then(() => {
-                    // lightweight feedback
                     const short = text.length > 120 ? text.slice(0, 120) + '…' : text;
                     alert('Copied URL:\n' + short);
                 })
@@ -484,16 +438,13 @@
         }
     }
 
-    /**
-     * Read a cookie (for CSRF)
-     */
+    // Get CSRF Cookie
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -503,17 +454,17 @@
         return cookieValue;
     }
 
-    /**
-     * Register/login helpers triggered from buttons.
-     */
+    // Try Register Function
     async function tryRegister(projectId) {
         await postLicenseAction(projectId, 'register');
     }
 
+    // Try Login Function
     async function tryLogin(projectId) {
         await postLicenseAction(projectId, 'login');
     }
 
+    // Post License Action
     async function postLicenseAction(projectId, action) {
         const endpointId = action === 'register' ? 'register-endpoint-' + projectId : 'post-endpoint-' + projectId;
         const el = document.getElementById(endpointId);
@@ -562,9 +513,8 @@
             alert(action.toUpperCase() + ' failed: ' + err);
         }
     }
-</script>
 
-<script>
+    // Search Filter Function
     function filterProjectList() {
         let input = document.getElementById("searchProject").value.toLowerCase();
         let rows = document.querySelectorAll("table tbody tr");
