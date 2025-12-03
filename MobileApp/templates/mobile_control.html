@@ -152,16 +152,25 @@
 
                     <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
-                           style="background:#2563eb; color:white;">Edit</a>
+                        style="background:#2563eb; color:white;">Edit</a>
+
+                        {% if c.id %}
                         <button class="btn"
-                           style="background:#b91c1c; color:white;"
-                           data-bs-toggle="modal" data-bs-target="#deleteModal{{ c.id }}">Delete</button>
+                            style="background:#b91c1c; color:white;"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ c.id }}">
+                            Delete
+                        </button>
+                        {% else %}
+                        <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
+                        {% endif %}
                     </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    
 
     <p style="margin-top:16px; color:#9ca3af;">Total Controls: {{ controls.count }}</p>
 
@@ -171,6 +180,8 @@
     </div>
     {% endif %}
 </div>
+
+
 
 {% for c in controls %}
 <!-- DEVICE LIST POPUP -->
@@ -191,6 +202,35 @@
         </div>
     </div>
 </div>
+
+{% if c.id %}
+<div class="modal fade" id="deleteModal{{ c.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Are you sure?</p>
+                <h4 class="text-center">{{ c.customer_name }}</h4>
+            </div>
+
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'MobileApp:delete_mobile_control' c.id %}"
+                   class="btn" style="background:#b91c1c;">Yes, Delete</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endfor %}
 
 <!-- Delete Copy Script -->
