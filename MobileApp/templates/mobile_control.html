@@ -60,8 +60,9 @@
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Number of users</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                     <th style="padding:12px;white-space: nowrap;">License Key</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
                 </tr>
@@ -131,7 +132,13 @@
 
                     <td style="padding:12px;white-space: nowrap">
                         <span id="license_{{ c.id }}">{{ c.license_key }}</span>
-                        <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm btn-secondary">Copy</button>
+                    </td>
+
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm" 
+                            style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
                     </td>
 
                     <td style="padding:12px;text-align:center;white-space: nowrap">
