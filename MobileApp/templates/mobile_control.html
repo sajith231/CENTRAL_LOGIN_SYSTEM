@@ -57,10 +57,11 @@
                     <th style="padding:12px;white-space: nowrap;">Client ID</th>
                     <th style="padding:12px;white-space: nowrap;">Package</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
+                    
                     <th style="padding:12px;white-space: nowrap;">License Key</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
@@ -111,6 +112,8 @@
                         {% endif %}
                     </td>
 
+                    <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
+
                     <td style="padding:12px;text-align:center;white-space: nowrap">
                         {{ c.registered_count }}
                     </td>
@@ -128,7 +131,7 @@
                         </button>
                     </td>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
+                    
 
                     <td style="padding:12px;white-space: nowrap">
                         <span id="license_{{ c.id }}">{{ c.license_key }}</span>
