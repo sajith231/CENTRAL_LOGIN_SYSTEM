@@ -507,6 +507,7 @@ def api_get_project_data(request, endpoint):
                     'max_devices': control.login_limit,
                 },
                 'registered_devices': registered_devices,
+                'status': "Active" if control.status else "Inactive"  # ✔️ NEW STATUS FIELD
             })
 
         return JsonResponse({
