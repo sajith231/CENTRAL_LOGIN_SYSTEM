@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Edit Branch</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Branch Name -->
+        <div class="mb-3">
+            <label>Branch Name</label>
+            <input type="text" name="name" value="{{ branch.name }}" required class="form-control"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Place -->
+        <div class="mb-3">
+            <label>Place</label>
+            <input type="text" name="place" value="{{ branch.place }}" required class="form-control"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Country Dropdown -->
+        <div class="mb-3">
+            <label>Country</label>
+            <select name="country" class="form-control" id="countrySelect"
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for c,code in branch._meta.get_field('country').choices %}
+                <option value="{{ c }}" {% if branch.country == c %}selected{% endif %}>
+                    {{ code }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Currency Code (Auto Display) -->
+        <div class="mb-3">
+            <label>Currency Code</label>
+            <input type="text" id="currencyDisplay"
+                   class="form-control" readonly
+                   value="{{ branch.currency_code }}"
+                   style="background:#0f1b31; font-family:monospace; color:#00ff9d; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
+
+<script>
+    const currencyMap = {
+        "India": "INR",
+        "United Arab Emirates": "AED",
+        "Saudi Arabia": "SAR",
+        "Qatar": "QAR",
+        "Kuwait": "KWD",
+        "Oman": "OMR",
+        "Bahrain": "BHD",
+        "United States": "USD",
+        "United Kingdom": "GBP",
+        "Canada": "CAD",
+        "Australia": "AUD"
+    };
+
+    document.getElementById("countrySelect").addEventListener("change", function() {
+        document.getElementById("currencyDisplay").value =
+            currencyMap[this.value] || "INR";
+    });
+</script>
+
+{% endblock %}

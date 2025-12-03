@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="padding:0;">
+
+  <!-- Header row + Add New button -->
+  <div style="display:flex; justify-content:space-between; align-items:center;
+              padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+      <h2 style="margin:0;">Packages</h2>
+      <a href="{% url 'ModuleAndPackage:add_package_page' %}" class="btn btn-success">Add New</a>
+  </div>
+
+  <!-- Table -->
+  <div style="padding:20px;">
+    <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+      <thead>
+        <tr style="background: var(--hover);">
+          <th style="padding:12px;">#</th>
+          <th style="padding:12px;">Package Name</th>
+          <th style="padding:12px;">Project</th>
+          <th style="padding:12px;">Modules</th>
+          <th style="padding:12px;">Days Limit</th>
+          <th style="padding:12px;">Edit</th>
+          <th style="padding:12px;">Delete</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for p in packages %}
+        <tr style="background:#0f1b31;">
+          <td style="padding:12px;">{{ forloop.counter }}</td>
+          <td style="padding:12px;">{{ p.package_name }}</td>
+          <td style="padding:12px;">{{ p.project.project_name }}</td>
+
+          <!-- UPDATED MODULE DISPLAY -->
+          <td style="padding:12px;">
+              {% for m in p.modules.all %}
+                <span class="badge bg-info" style="margin-right:4px;">
+                    {{ m.module_name }} ({{ m.module_code }})
+                </span>
+              {% endfor %}
+          </td>
+
+          <td style="padding:12px;">
+              {% if p.days_limit == 0 %}
+                <span style="color:#9ca3af;">Unlimited</span>
+              {% else %}
+                <span style="color:#fbbf24;">{{ p.days_limit }} days</span>
+              {% endif %}
+          </td>
+
+          <td style="padding:12px;">
+              <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
+          </td>
+
+          <td style="padding:12px;">
+            <a href="{% url 'ModuleAndPackage:delete_package' p.id %}"
+               class="btn btn-danger btn-sm"
+               onclick="return confirm('Delete this package?')">Delete</a>
+          </td>
+        </tr>
+
+        {% empty %}
+        <tr style="background:#0f1b31;">
+          <td colspan="7" style="padding:12px;">No packages yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

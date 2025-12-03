@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="padding:20px;">
+    <h2 style="color:white;">Add New Branch</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Branch Name -->
+        <div class="mb-3">
+            <label>Branch Name</label>
+            <input type="text" name="name" required class="form-control"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Place -->
+        <div class="mb-3">
+            <label>Place</label>
+            <input type="text" name="place" required class="form-control"
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Country Dropdown -->
+        <div class="mb-3">
+            <label>Country</label>
+            <select name="country" class="form-control" id="countrySelect"
+                    required style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="India" selected>India</option>
+                <option value="United Arab Emirates">UAE</option>
+                <option value="Saudi Arabia">Saudi Arabia</option>
+                <option value="Qatar">Qatar</option>
+                <option value="Kuwait">Kuwait</option>
+                <option value="Oman">Oman</option>
+                <option value="Bahrain">Bahrain</option>
+                <option value="United States">USA</option>
+                <option value="United Kingdom">UK</option>
+                <option value="Canada">Canada</option>
+                <option value="Australia">Australia</option>
+            </select>
+        </div>
+
+        <!-- Currency Code (Auto Display) -->
+        <div class="mb-3">
+            <label>Currency Code</label>
+            <input type="text" id="currencyDisplay"
+                   class="form-control" readonly
+                   value="INR"
+                   style="background:#0f1b31; font-family:monospace; color:#00ff9d; border:1px solid #334155;">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
+
+<script>
+    const currencyMap = {
+        "India": "INR",
+        "United Arab Emirates": "AED",
+        "Saudi Arabia": "SAR",
+        "Qatar": "QAR",
+        "Kuwait": "KWD",
+        "Oman": "OMR",
+        "Bahrain": "BHD",
+        "United States": "USD",
+        "United Kingdom": "GBP",
+        "Canada": "CAD",
+        "Australia": "AUD"
+    };
+
+    document.getElementById("countrySelect").addEventListener("change", function() {
+        document.getElementById("currencyDisplay").value =
+            currencyMap[this.value] || "INR";
+    });
+</script>
+
+{% endblock %}

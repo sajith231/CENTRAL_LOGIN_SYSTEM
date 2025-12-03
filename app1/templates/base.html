@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Admin{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Font Awesome & Bootstrap -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      /* page background (slate-900) */
+      --panel: #111827;
+      /* panels/nav (gray-900)       */
+      --text: #e5e7eb;
+      /* text (gray-200)             */
+      --muted: #9ca3af;
+      /* muted text (gray-400)       */
+      --hover: #1f2937;
+      /* hover panel (gray-800)      */
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+      --sidebar: 280px;
+    }
+
+    * {
+      box-sizing: border-box;
+      color: var(--text);
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar);
+      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      padding: 0;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Menu Container */
+    .menu-container {
+      padding: 20px 12px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .menu>li {
+      margin: 4px 0;
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 12px 16px;
+    }
+
+    .menu .menu-toggle {
+      width: 100%;
+      background: transparent;
+      border: none;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .menu .menu-toggle i:first-child {
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      transition: color 0.2s ease;
+    }
+
+    .menu .menu-toggle:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    .menu .menu-toggle:hover i:first-child {
+      color: #3b82f6;
+    }
+
+    .menu .menu-toggle[aria-expanded="true"] {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    .menu .menu-toggle[aria-expanded="true"] i:first-child {
+      color: #3b82f6;
+    }
+
+    .menu .menu-toggle .chev {
+      margin-left: auto;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .menu .menu-toggle[aria-expanded="true"] .chev {
+      transform: rotate(90deg);
+      color: #3b82f6;
+    }
+
+    .submenu {
+      display: none;
+      padding: 8px 0 8px 8px;
+      margin-left: 20px;
+      border-left: 2px solid rgba(255, 255, 255, 0.06);
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .submenu.open {
+      display: block;
+    }
+
+    .submenu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      transition: all 0.2s ease;
+      position: relative;
+      margin: 2px 0;
+    }
+
+    .submenu a i {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      transition: color 0.2s ease;
+    }
+
+    .submenu a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      padding-left: 18px;
+    }
+
+    .submenu a:hover i {
+      color: #60a5fa;
+    }
+
+    .submenu a.active {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+      color: #60a5fa;
+      font-weight: 500;
+      border-left: 3px solid #3b82f6;
+      padding-left: 15px;
+    }
+
+    .submenu a.active i {
+      color: #60a5fa;
+    }
+
+    /* User Info Section */
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      margin-top: auto;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--panel);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-ghost {
+      padding: 10px 14px;
+      background: var(--panel);
+      border-radius: 10px;
+      color: var(--text);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      background: var(--hover);
+    }
+
+    main {
+      padding: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left .25s ease;
+        z-index: 5;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .content {
+        margin-left: 0;
+      }
+
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .35);
+        z-index: 4;
+      }
+
+      .overlay.show {
+        display: block;
+      }
+
+      .hamburger {
+        display: inline-flex;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--panel);
+        border: none;
+        color: var(--text);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <!-- Menu Container -->
+      <div class="menu-container">
+        <ul class="menu">
+  {% with am=request.session.allowed_menus %}
+
+  {# 1) WEB APP #}
+  {% if request.user.is_superuser or 'web_control' in am or 'webapp_list' in am %}
+    <li>
+      <button class="menu-toggle" aria-expanded="false" data-target="submenu-web">
+        <i class="fa-solid fa-globe"></i>
+        <span>Web App</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div id="submenu-web" class="submenu">
+        {% if request.user.is_superuser or 'web_control' in am %}
+          <a href="{% url 'WebApp:web_control' %}" class="{% block active_web_control %}{% endblock %}">
+            <i class="fa-solid fa-sliders"></i> Web Licensing
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'webapp_list' in am %}
+          <a href="{% url 'WebApp:webapp_list' %}" class="{% block active_web_app_list %}{% endblock %}">
+            <i class="fa-solid fa-list-check"></i> Web App List
+          </a>
+        {% endif %}
+      </div>
+    </li>
+  {% endif %}
+
+  {# 2) MOBILE APP #}
+  {% if request.user.is_superuser or 'mobile_control' in am or 'mobileapp_list' in am or 'module_list' in am or 'package_list' in am %}
+    <li>
+      <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span>Mobile App</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div id="submenu-mobile" class="submenu">
+        {% if request.user.is_superuser or 'mobile_control' in am %}
+          <a href="{% url 'MobileApp:mobile_control' %}">
+            <i class="fa-solid fa-sliders"></i> Mobile Licensing
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'mobileapp_list' in am %}
+          <a href="{% url 'MobileApp:mobileapp_list' %}">
+            <i class="fa-solid fa-list-check"></i> Mobile App List
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'module_list' in am %}
+          <a href="{% url 'ModuleAndPackage:module_list' %}">
+            <i class="fa-solid fa-puzzle-piece"></i> Module
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'package_list' in am %}
+          <a href="{% url 'ModuleAndPackage:package_list' %}">
+            <i class="fa-solid fa-box-open"></i> Package
+          </a>
+        {% endif %}
+      </div>
+    </li>
+  {% endif %}
+
+  {# 3) CLIENTS #}
+  {% if request.user.is_superuser or 'stores_list' in am or 'shop_list' in am %}
+    <li>
+      <button class="menu-toggle" aria-expanded="false" data-target="submenu-clients">
+        <i class="fa-solid fa-building-user"></i>
+        <span>Clients</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div id="submenu-clients" class="submenu">
+        {% if request.user.is_superuser or 'stores_list' in am %}
+          <a href="{% url 'stores_list' %}">
+            <i class="fa-solid fa-store"></i> Corporate
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'shop_list' in am %}
+          <a href="{% url 'shop_list' %}">
+            <i class="fa-solid fa-shop"></i> Company
+          </a>
+        {% endif %}
+      </div>
+    </li>
+  {% endif %}
+
+  <li class="menu-divider"></li>
+
+  {# 4) USER MANAGEMENT #}
+  {% if request.user.is_superuser or 'users_table' in am or 'user_menu_control' in am %}
+    <li>
+      <button class="menu-toggle" aria-expanded="false" data-target="submenu-user">
+        <i class="fa-solid fa-users-gear"></i>
+        <span>User Management</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div id="submenu-user" class="submenu">
+        {% if request.user.is_superuser or 'users_table' in am %}
+          <a href="{% url 'users_table' %}" class="{% block active_users %}{% endblock %}">
+            <i class="fa-solid fa-users"></i> Users
+          </a>
+        {% endif %}
+        {% if request.user.is_superuser or 'user_menu_control' in am %}
+          <a href="{% url 'user_controll:user_menu_user_list' %}" class="{% block active_user_menu_control %}{% endblock %}">
+            <i class="fa-solid fa-user-gear"></i> User Menu Control
+          </a>
+        {% endif %}
+      </div>
+    </li>
+  {% endif %}
+
+  {# 5) MASTER #}
+  {% if request.user.is_superuser or 'branch_list' in am %}
+    <li>
+      <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Master</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div id="submenu-master" class="submenu">
+        {% if request.user.is_superuser or 'branch_list' in am %}
+          <a href="{% url 'branch_list' %}" class="{% block active_branch %}{% endblock %}">
+            <i class="fa-solid fa-code-branch"></i> Branch
+          </a>
+        {% endif %}
+      </div>
+    </li>
+  {% endif %}
+
+  {% endwith %}
+        </ul>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            {% if request.user.is_superuser %}
+              {{ request.user.username|first|upper }}
+            {% else %}
+              {{ request.session.custom_user_name|first|upper }}
+            {% endif %}
+          </div>
+          <div class="user-details">
+            <div class="user-name">
+              {% if request.user.is_superuser %}
+                {{ request.user.username }}
+              {% else %}
+                {{ request.session.custom_user_name }}
+              {% endif %}
+            </div>
+            <div class="user-role">
+              {% if request.user.is_superuser %}
+                Super Admin
+              {% else %}
+                {{ request.session.custom_user_level|default:"User" }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right side -->
+    <div class="content" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+      <div class="topbar">
+        <div class="mobile-top">
+          <button id="hamburger" class="hamburger" aria-label="Toggle menu" onclick="toggleSidebar()">☰</button>
+          <div>{% block header_title %}<strong>Admin</strong><span class="muted"> / panel</span>{% endblock %}</div>
+        </div>
+        <a class="btn-ghost" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </div>
+
+      <main>
+        {% block content %}
+        <div class="card">
+          <h1 style="margin:0 0 8px 0;">Welcome</h1>
+          <p class="muted" style="margin:0;">Use the sidebar to navigate between modules.</p>
+        </div>
+        {% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  <script>
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    function toggleSidebar() { const open = sidebar.classList.toggle('open'); overlay.classList.toggle('show', open); }
+    const mq = window.matchMedia('(min-width: 901px)');
+    function syncHamburger() { const btn = document.getElementById('hamburger'); if (!btn) return; btn.style.display = mq.matches ? 'none' : 'inline-flex'; }
+    mq.addEventListener('change', syncHamburger); syncHamburger();
+
+    // Dropdown logic
+    const toggles = document.querySelectorAll('.menu-toggle');
+    toggles.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-target');
+        const panel = document.getElementById(id);
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        panel.classList.toggle('open');
+      });
+    });
+
+    // Auto-open the correct dropdown when a child has .active
+    document.querySelectorAll('.submenu').forEach(panel => {
+      const hasActive = panel.querySelector('a.active');
+      if (hasActive) {
+        panel.classList.add('open');
+        const toggle = document.querySelector('[data-target="' + panel.id + '"]');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+      }
+    });
+  </script>
+</body>
+
+</html>
