@@ -208,13 +208,11 @@ def delete_mobile_control(request, pk):
     messages.success(request, f'Mobile control "{name}" deleted.')
     return redirect('MobileApp:mobile_control')
 
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def toggle_mobile_control_status(request, pk):
     """
-    Toggle Active/Inactive status and enforce restriction instantly:
-    - If set to Inactive → unregister all active devices
+    Toggle Active/Inactive status WITHOUT deleting existing registered devices
     """
     try:
         control = get_object_or_404(MobileControl, pk=pk)
@@ -222,10 +220,6 @@ def toggle_mobile_control_status(request, pk):
         # Toggle current status
         control.status = not control.status
         control.save()
-
-        # Forcefully logout all devices if made inactive
-        if not control.status:
-            control.active_devices.all().delete()
 
         return JsonResponse({
             'success': True,
@@ -238,6 +232,7 @@ def toggle_mobile_control_status(request, pk):
             'success': False,
             'error': str(e)
         }, status=500)
+
 
 
 
