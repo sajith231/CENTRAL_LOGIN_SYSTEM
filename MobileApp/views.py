@@ -208,30 +208,6 @@ def delete_mobile_control(request, pk):
     messages.success(request, f'Mobile control "{name}" deleted.')
     return redirect('MobileApp:mobile_control')
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def toggle_mobile_control_status(request, pk):
-    """
-    Toggle Active/Inactive status WITHOUT deleting existing registered devices
-    """
-    try:
-        control = get_object_or_404(MobileControl, pk=pk)
-
-        # Toggle current status
-        control.status = not control.status
-        control.save()
-
-        return JsonResponse({
-            'success': True,
-            'status': control.status,
-            'message': f'Status changed to {"Active" if control.status else "Inactive"}'
-        })
-
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
 
 
 
@@ -285,16 +261,15 @@ def api_register_license(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
-    
-    # Check if expired based on package days_limit
+
+    # Check package expiry rule
     if control.package and control.package.days_limit > 0:
         days_limit = control.package.days_limit
         created_date = control.created_date
         expiry_date = created_date + timedelta(days=days_limit)
         now = timezone.now()
-        
+
         if expiry_date <= now:
-            # Auto-deactivate if expired
             if control.status:
                 control.status = False
                 control.save()
@@ -302,8 +277,8 @@ def api_register_license(request, endpoint):
                 'success': False,
                 'error': 'This license has expired. Please contact administrator.'
             }, status=403)
-    
-    # Check if the control is active
+
+    # Check status
     if not control.status:
         return JsonResponse({
             'success': False,
@@ -311,9 +286,22 @@ def api_register_license(request, endpoint):
         }, status=403)
 
     registered_count = control.active_devices.count()
-    device_exists = control.active_devices.filter(device_id=device_id).exists()
 
-    if device_exists:
+    # If device previously registered but admin removed it → BLOCK
+    was_device_removed = LoginLog.objects.filter(client_id=device_id, control=control).exists() \
+                         and not control.active_devices.filter(device_id=device_id).exists()
+
+    if was_device_removed:
+        return JsonResponse({
+            'success': False,
+            'error': 'Device removed by admin. Please contact administrator.',
+            'registered_count': registered_count,
+            'max_devices': control.login_limit
+        }, status=403)
+
+    # Already exists (normal case)
+    is_device_exists = control.active_devices.filter(device_id=device_id).exists()
+    if is_device_exists:
         return JsonResponse({
             'success': True,
             'message': 'Device already registered',
@@ -368,23 +356,27 @@ def api_post_login(request, endpoint):
             'error': 'license_key and device_id are required'
         }, status=400)
 
+    # Validate Project & License Exists
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
         control = MobileControl.objects.get(project=project, license_key=license_key)
     except MobileProject.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+        return JsonResponse({
+            'success': False,
+            'error': 'Project not found'
+        }, status=404)
     except MobileControl.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
-    
-    # Check if expired based on package days_limit
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid license key for this project'
+        }, status=404)
+
+    # Expiry Validation
     if control.package and control.package.days_limit > 0:
-        days_limit = control.package.days_limit
-        created_date = control.created_date
-        expiry_date = created_date + timedelta(days=days_limit)
+        expiry_date = control.created_date + timedelta(days=control.package.days_limit)
         now = timezone.now()
-        
+
         if expiry_date <= now:
-            # Auto-deactivate if expired
             if control.status:
                 control.status = False
                 control.save()
@@ -392,22 +384,22 @@ def api_post_login(request, endpoint):
                 'success': False,
                 'error': 'This license has expired. Please contact administrator.'
             }, status=403)
-    
-    # Check if the control is active
+
+    # License Active Check
     if not control.status:
         return JsonResponse({
             'success': False,
             'error': 'This license is inactive. Please contact administrator.'
         }, status=403)
 
-    is_registered = control.active_devices.filter(device_id=device_id).exists()
-    if not is_registered:
+    # Device Registered Check
+    if not control.active_devices.filter(device_id=device_id).exists():
         return JsonResponse({
             'success': False,
-            'error': 'Device is not registered for this license',
-            'license_key': license_key
+            'error': 'Device removed by admin. Please contact administrator.'
         }, status=403)
 
+    # Store Login Record
     LoginLog.objects.create(
         control=control,
         client_id=device_id,
@@ -420,6 +412,7 @@ def api_post_login(request, endpoint):
         'license_key': license_key,
         'device_id': device_id
     }, status=200)
+
 
 
 @csrf_exempt
@@ -515,6 +508,18 @@ def api_get_project_data(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
 
 
+def validate_control_and_device(control, device_id):
+    """
+    Common validation for license status + device registration
+    """
+    if not control.status:
+        return False, "License inactive. Contact administrator."
+
+    # Check if device registered
+    if not control.active_devices.filter(device_id=device_id).exists():
+        return False, "Device removed by admin. Contact administrator."
+
+    return True, None
 
 
 
