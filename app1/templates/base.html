@@ -440,12 +440,12 @@
       <div id="submenu-clients" class="submenu">
         {% if request.user.is_superuser or 'stores_list' in am %}
           <a href="{% url 'stores_list' %}">
-            <i class="fa-solid fa-store"></i> Store
+            <i class="fa-solid fa-store"></i> corporate
           </a>
         {% endif %}
         {% if request.user.is_superuser or 'shop_list' in am %}
           <a href="{% url 'shop_list' %}">
-            <i class="fa-solid fa-shop"></i> Shop
+            <i class="fa-solid fa-shop"></i> Company
           </a>
         {% endif %}
       </div>
