@@ -219,6 +219,14 @@ def api_post_login(request, endpoint):
         project = WebProject.objects.get(api_endpoint=endpoint)
         control = WebControl.objects.get(project=project, client_id=client_id)
 
+        # If there is a related Shop and it is inactive, block login
+        shop = Shop.objects.filter(client_id=client_id).first()
+        if shop and not shop.is_active:
+            return JsonResponse({
+                'success': False,
+                'error': 'This shop is inactive. Please contact administrator.'
+            }, status=403)
+
         # Count currently logged in devices
         active_count = ActiveDevice.objects.filter(control=control).count()
         if active_count >= control.login_limit:

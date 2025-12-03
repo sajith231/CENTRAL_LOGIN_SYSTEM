@@ -212,22 +212,32 @@ def delete_mobile_control(request, pk):
 @csrf_exempt
 @require_http_methods(["POST"])
 def toggle_mobile_control_status(request, pk):
-    """Toggle the status (Active/Inactive) of a mobile control"""
+    """
+    Toggle Active/Inactive status and apply restrictions immediately
+    """
     try:
         control = get_object_or_404(MobileControl, pk=pk)
+
+        # Toggle current status
         control.status = not control.status
         control.save()
-        
+
+        # If turned inactive → remove all active devices
+        if not control.status:
+            control.active_devices.all().delete()
+
         return JsonResponse({
             'success': True,
             'status': control.status,
             'message': f'Status changed to {"Active" if control.status else "Inactive"}'
         })
+
     except Exception as e:
         return JsonResponse({
             'success': False,
             'error': str(e)
         }, status=500)
+
 
 
 # ==================== API VIEWS ====================

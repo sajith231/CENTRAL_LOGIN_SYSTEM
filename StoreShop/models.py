@@ -38,6 +38,7 @@ class Shop(models.Model):
     email = models.EmailField()
     contact_no = models.CharField(max_length=15)
     client_id = models.CharField(max_length=50, unique=True, editable=False)
+    is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         """

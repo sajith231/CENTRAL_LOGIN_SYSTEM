@@ -71,6 +71,7 @@ def add_shop(request):
         place = request.POST.get("place")
         email = request.POST.get("email")
         contact_no = request.POST.get("contact_no")
+        is_active = bool(request.POST.get("is_active"))
 
         store = get_object_or_404(Store, id=store_id)
         branch = get_object_or_404(Branch, id=branch_id)
@@ -81,7 +82,8 @@ def add_shop(request):
             branch=branch,
             place=place,
             email=email,
-            contact_no=contact_no
+            contact_no=contact_no,
+            is_active=is_active,
         )
         return redirect("shop_list")
 
@@ -99,6 +101,7 @@ def edit_shop(request, id):
         shop.place = request.POST.get("place")
         shop.email = request.POST.get("email")
         shop.contact_no = request.POST.get("contact_no")
+        shop.is_active = bool(request.POST.get("is_active"))
 
         shop.store = get_object_or_404(Store, id=store_id)
         shop.branch = get_object_or_404(Branch, id=branch_id)

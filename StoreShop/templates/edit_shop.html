@@ -66,6 +66,13 @@
             </select>
         </div>
 
+        <!-- Status -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="is_active" id="is_active" class="form-check-input"
+                   {% if shop.is_active %}checked{% endif %}>
+            <label for="is_active" class="form-check-label">Active</label>
+        </div>
+
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
 </div>
