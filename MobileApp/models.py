@@ -42,6 +42,8 @@ from ModuleAndPackage.models import Package
 import random, string
 
 
+import random, string
+
 class MobileControl(models.Model):
     project = models.ForeignKey('MobileProject', on_delete=models.CASCADE, related_name='controls')
     store = models.ForeignKey(Store, on_delete=models.SET_NULL, null=True, blank=True)
@@ -50,35 +52,38 @@ class MobileControl(models.Model):
     customer_name = models.CharField(max_length=255)
     client_id = models.CharField(max_length=200)
 
-    # Unique License Key – NOT tied to project or client anymore
-    license_key = models.CharField(max_length=10, unique=True, null=True, blank=True, editable=False)
+    # 16 chars + 3 hyphens = 19
+    license_key = models.CharField(max_length=19, unique=True, null=True, blank=True, editable=False)
 
     login_limit = models.PositiveIntegerField(default=1)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    # Status field: True = Active, False = Inactive
     status = models.BooleanField(default=True)
 
-    created_date = models.DateTimeField(auto_now_add=True)   # ✔️ include created date
+    created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_date']
 
+    def _generate_license_key(self):
+        chars = string.ascii_uppercase + string.digits
+        raw = ''.join(random.choices(chars, k=16))      # 16 chars total
+        # group into 4-4-4-4 with '-'
+        return '-'.join(raw[i:i+4] for i in range(0, 16, 4))
+
     def save(self, *args, **kwargs):
         if not self.license_key:
-            chars = string.ascii_uppercase + string.digits
-            key = ''.join(random.choices(chars, k=10))
-
+            key = self._generate_license_key()
+            # ensure unique
             while MobileControl.objects.filter(license_key=key).exists():
-                key = ''.join(random.choices(chars, k=10))
-
+                key = self._generate_license_key()
             self.license_key = key
-        
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.customer_name} - {self.license_key}"
+
 
     
     

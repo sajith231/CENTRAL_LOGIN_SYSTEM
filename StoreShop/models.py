@@ -37,25 +37,20 @@ class Shop(models.Model):
     place = models.CharField(max_length=150, null=True, blank=True)
     email = models.EmailField()
     contact_no = models.CharField(max_length=15)
-    client_id = models.CharField(max_length=50, unique=True, editable=False)
+
+    # 13 characters now
+    client_id = models.CharField(max_length=13, unique=True, editable=False)
+
     is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        """
-        Auto-generate a 10-character client_id (A–Z, 0–9) on first save.
-        Example: 7G2K9Q4MBD
-        """
         if not self.client_id:
             characters = string.ascii_uppercase + string.digits
-            client_id = ''.join(random.choices(characters, k=10))
+            client_id = ''.join(random.choices(characters, k=13))
 
-            # ensure uniqueness
             while Shop.objects.filter(client_id=client_id).exists():
-                client_id = ''.join(random.choices(characters, k=10))
+                client_id = ''.join(random.choices(characters, k=13))
 
             self.client_id = client_id
 
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name} ({self.client_id})"
