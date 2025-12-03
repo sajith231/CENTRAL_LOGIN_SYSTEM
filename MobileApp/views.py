@@ -491,7 +491,29 @@ def api_get_project_data(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def toggle_mobile_control_status(request, pk):
+    """
+    Toggle Active/Inactive status WITHOUT deleting existing registered devices
+    """
+    try:
+        control = get_object_or_404(MobileControl, pk=pk)
 
+        # Toggle current status
+        control.status = not control.status
+        control.save()
+
+        return JsonResponse({
+            'success': True,
+            'status': control.status,
+            'message': f'Status changed to {"Active" if control.status else "Inactive"}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 # http://127.0.0.1:8000/mobileapp/api/project/project1/license/register/
