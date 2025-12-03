@@ -232,12 +232,13 @@ def _device_payload(control):
         ).order_by('device_id')
     )
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_register_license(request, endpoint):
     """
     POST API: Registers a device against a license BEFORE login.
-    Body: {"license_key": "XXXX-XXXX-XXXX-XXXX", "device_id": "DEVICE-001"}
+    Body: {"license_key": "ABC123", "device_id": "DEVICE-001"}
     """
     try:
         payload = json.loads(request.body)
@@ -260,23 +261,25 @@ def api_register_license(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
-
-    # 1️⃣ Check license expiry
+    
+    # Check if expired based on package days_limit
     if control.package and control.package.days_limit > 0:
-        expiry_date = control.created_date + timedelta(days=control.package.days_limit)
+        days_limit = control.package.days_limit
+        created_date = control.created_date
+        expiry_date = created_date + timedelta(days=days_limit)
         now = timezone.now()
-
+        
         if expiry_date <= now:
+            # Auto-deactivate if expired
             if control.status:
                 control.status = False
                 control.save()
-
             return JsonResponse({
                 'success': False,
                 'error': 'This license has expired. Please contact administrator.'
             }, status=403)
-
-    # 2️⃣ Check active/inactive status
+    
+    # Check if the control is active
     if not control.status:
         return JsonResponse({
             'success': False,
@@ -286,18 +289,16 @@ def api_register_license(request, endpoint):
     registered_count = control.active_devices.count()
     device_exists = control.active_devices.filter(device_id=device_id).exists()
 
-    # 3️⃣ Device already exists → NO NEW ENTRY
     if device_exists:
         return JsonResponse({
             'success': True,
-            'message': 'Device already registered. Login allowed.',
+            'message': 'Device already registered',
             'license_key': license_key,
             'registered_devices': _device_payload(control),
             'registered_count': registered_count,
             'max_devices': control.login_limit,
         }, status=200)
 
-    # 4️⃣ Check max device limit before adding
     if registered_count >= control.login_limit:
         return JsonResponse({
             'success': False,
@@ -306,7 +307,6 @@ def api_register_license(request, endpoint):
             'registered_count': registered_count
         }, status=403)
 
-    # 5️⃣ Register new device
     ActiveDevice.objects.create(
         control=control,
         device_id=device_id,
@@ -321,7 +321,6 @@ def api_register_license(request, endpoint):
         'registered_count': control.active_devices.count(),
         'max_devices': control.login_limit,
     }, status=201)
-
 
 
 @csrf_exempt
