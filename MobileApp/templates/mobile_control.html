@@ -69,17 +69,17 @@
             <tbody>
                 {% for c in controls %}
                 <tr style="background:#0f172a; border-bottom:1px solid #1e293b;">
-                    <td style="padding:12px;">{{ forloop.counter }}</td>
-                    <td style="padding:12px;">{{ c.created_date|date:"Y-m-d" }}</td>
-                    <td style="padding:12px;"><strong>{{ c.project.project_name }}</strong></td>
-                    <td style="padding:12px;">{{ c.store.name }}</td>
-                    <td style="padding:12px;">{{ c.customer_name }}</td>
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
+                    <td style="padding:12px;white-space: nowrap">{{ c.created_date|date:"Y-m-d" }}</td>
+                    <td style="padding:12px;white-space: nowrap"><strong>{{ c.project.project_name }}</strong></td>
+                    <td style="padding:12px;white-space: nowrap">{{ c.store.name }}</td>
+                    <td style="padding:12px;white-space: nowrap">{{ c.customer_name }}</td>
+                    <td style="padding:12px;white-space: nowrap">
                         <span style="background:#16a34a33; padding:4px 8px; border-radius:6px; color:#16a34a;">
                             {{ c.client_id }}
                         </span>
                     </td>
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap">
                         {% if c.package %}
                         <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;white-space: nowrap;">
                             {{ c.package.package_name }}
@@ -89,7 +89,7 @@
                         {% endif %}
                     </td>
 
-                    <td style="padding:12px;text-align:center;">
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
                         {% if c.remaining_days is None %}
                             <span style="color:#9ca3af;">Unlimited</span>
                         {% elif c.is_expired %}
@@ -110,15 +110,15 @@
                         {% endif %}
                     </td>
 
-                    <td style="padding:12px;text-align:center;">
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
                         {{ c.registered_count }}
                     </td>
-                    <td style="padding:12px;text-align:center;">
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
                         {{ c.balance_count }}
                     </td>
 
 
-                    <td style="padding:12px;text-align:center;">
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
                         <button class="btn btn-sm"
                             style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
                             data-bs-toggle="modal" data-bs-target="#deviceModal{{ c.id }}"
@@ -127,14 +127,14 @@
                         </button>
                     </td>
 
-                    <td style="padding:12px;text-align:center;">{{ c.login_limit }}</td>
+                    <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
 
-                    <td style="padding:12px;">
+                    <td style="padding:12px;white-space: nowrap">
                         <span id="license_{{ c.id }}">{{ c.license_key }}</span>
                         <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm btn-secondary">Copy</button>
                     </td>
 
-                    <td style="padding:12px;text-align:center;">
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
                         <button id="statusBtn_{{ c.id }}" 
                                 onclick="toggleStatus({{ c.id }})"
                                 class="btn btn-sm"
@@ -143,7 +143,7 @@
                         </button>
                     </td>
 
-                    <td style="padding:12px;text-align:center; display:flex; gap:4px;">
+                    <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
                            style="background:#2563eb; color:white;">Edit</a>
                         <button class="btn"
