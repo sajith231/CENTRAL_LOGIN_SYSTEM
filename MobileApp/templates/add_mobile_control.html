@@ -27,37 +27,44 @@
                 <option value="">Select Package</option>
             </select>
         </div>
-        <div class="mb-3">
-    <label>Branch</label>
-    <select name="branch" class="form-control" required
-            style="background:#0f1b31; color:white; border:1px solid #334155;">
-        <option value="">Select Branch</option>
-        {% for b in branches %}
-        <option value="{{ b.id }}">{{ b.name }} - {{ b.place }}</option>
-        {% endfor %}
-    </select>
-</div>
 
-        <!-- Store -->
+        <!-- 🔹 Branch -->
+        <div class="mb-3">
+            <label>Branch</label>
+            <select id="branchSelect" name="branch" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                <option value="{{ branch.id }}">{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Corporate -->
         <div class="mb-3">
             <label>Corporate</label>
             <select id="storeSelect" name="store" class="form-control" required
                     style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Corporate</option>
                 {% for store in stores %}
-                <option value="{{ store.id }}">{{ store.name }}</option>
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}">
+                    {{ store.name }}
+                </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Shop -->
+        <!-- Company -->
         <div class="mb-3">
             <label>Company</label>
             <select id="shopSelect" name="shop" class="form-control" required
                     style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Company</option>
                 {% for shop in shops %}
-                <option value="{{ shop.id }}" data-client="{{ shop.client_id }}">
+                <option value="{{ shop.id }}"
+                        data-client="{{ shop.client_id }}"
+                        data-store="{{ shop.store_id }}"
+                        data-branch="{{ shop.branch_id }}">
                     {{ shop.name }}
                 </option>
                 {% endfor %}
@@ -82,13 +89,64 @@
     </form>
 </div>
 
-
 <!-- Auto Set Client ID from Shop -->
 <script>
-document.getElementById("shopSelect").addEventListener("change", function () {
-    const selectedOption = this.options[this.selectedIndex];
-    document.getElementById("clientIdInput").value =
-        selectedOption.getAttribute("data-client") || "";
+const branchSelect = document.getElementById("branchSelect");
+const storeSelect  = document.getElementById("storeSelect");
+const shopSelect   = document.getElementById("shopSelect");
+const clientInput  = document.getElementById("clientIdInput");
+
+// keep full lists
+const allStoreOptions = Array.from(storeSelect.options);
+const allShopOptions  = Array.from(shopSelect.options);
+
+// when branch changes → filter corporates + reset companies
+branchSelect.addEventListener("change", function () {
+    const branchId = this.value;
+
+    // reset corporate
+    storeSelect.innerHTML = '';
+    storeSelect.appendChild(allStoreOptions[0].cloneNode(true));  // "Select Corporate"
+
+    allStoreOptions.forEach(opt => {
+        const bId = opt.getAttribute("data-branch");
+        if (!opt.value) return;  // skip placeholder
+        if (!branchId || bId === branchId) {
+            storeSelect.appendChild(opt.cloneNode(true));
+        }
+    });
+
+    // reset company dropdown
+    shopSelect.innerHTML = '';
+    shopSelect.appendChild(allShopOptions[0].cloneNode(true));    // "Select Company"
+    clientInput.value = '';
+});
+
+// when corporate changes → filter companies
+storeSelect.addEventListener("change", function () {
+    const storeId  = this.value;
+    const branchId = branchSelect.value;
+
+    shopSelect.innerHTML = '';
+    shopSelect.appendChild(allShopOptions[0].cloneNode(true));
+
+    allShopOptions.forEach(opt => {
+        if (!opt.value) return;
+        const optStore  = opt.getAttribute("data-store");
+        const optBranch = opt.getAttribute("data-branch");
+        if ((!storeId || optStore === storeId) &&
+            (!branchId || optBranch === branchId)) {
+            shopSelect.appendChild(opt.cloneNode(true));
+        }
+    });
+
+    clientInput.value = '';
+});
+
+// when company changes → set client id
+shopSelect.addEventListener("change", function () {
+    const selected = this.options[this.selectedIndex];
+    clientInput.value = selected.getAttribute("data-client") || "";
 });
 </script>
 
@@ -98,7 +156,7 @@ document.getElementById("projectSelect").addEventListener("change", function () 
     const projectID = this.value;
     let pkgSelect = document.getElementById("packageSelect");
 
-    pkgSelect.innerHTML = '<option value="">Loading...</option>';
+    pkgSelect.innerHTML = '<option value="">Loading.</option>';
 
     fetch(`/module-package/get-packages/${projectID}/`)
         .then(res => res.json())
