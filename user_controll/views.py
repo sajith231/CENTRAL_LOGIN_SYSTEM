@@ -41,8 +41,8 @@ def get_all_menus():
             "name": "Clients",
             "icon": "fa-solid fa-building-user",
             "submenus": [
-                {"id": "stores_list", "name": "Store", "icon": "fa-solid fa-store"},
-                {"id": "shop_list", "name": "Shop", "icon": "fa-solid fa-shop"},
+                {"id": "stores_list", "name": "Coporate", "icon": "fa-solid fa-store"},
+                {"id": "shop_list", "name": "Company", "icon": "fa-solid fa-shop"},
             ],
         },
         {
