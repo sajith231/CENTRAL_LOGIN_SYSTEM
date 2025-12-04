@@ -432,19 +432,30 @@
                     html += `<p style="color:#9ca3af;">No registered devices</p>`;
                 } else {
                     html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-                        <tr><th align="left">Device ID</th><th align="left">IP</th><th align="left">Registered At</th><th></th></tr>`;
-                    for (const d of devices) {
-                        html += `<tr style="border-bottom:1px solid #1e293b;">
-                            <td>${d.device_id}</td>
-                            <td>${d.ip_address || '-'}</td>
-                            <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
-                            <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
-                                    style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
-                                    Remove
-                                </button></td>
-                        </tr>`;
-                    }
-                    html += `</table>`;
+    <tr>
+        <th align="left">Device Name</th>
+        <th align="left">Device ID</th>
+        <th align="left">IP</th>
+        <th align="left">Registered At</th>
+        <th></th>
+    </tr>`;
+
+for (const d of devices) {
+    html += `<tr style="border-bottom:1px solid #1e293b;">
+        <td>${d.device_name || '-'}</td>
+        <td>${d.device_id}</td>
+        <td>${d.ip_address || '-'}</td>
+        <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
+        <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
+                style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
+                Remove
+            </button></td>
+    </tr>`;
+}
+
+html += `</table>`;
+
+                }
             }
 
             container.innerHTML = html;
