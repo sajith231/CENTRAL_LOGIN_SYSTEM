@@ -1,6 +1,7 @@
 from django.db import models
 import re
 from ModuleAndPackage.models import Package
+from branch.models import Branch
 
 class MobileProject(models.Model):
     project_name = models.CharField(max_length=200)
