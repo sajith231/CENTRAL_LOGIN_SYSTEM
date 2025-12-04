@@ -5,17 +5,17 @@
 
 {% block content %}
 <div class="card" style="padding:20px;">
-    <h2 style="color:white;">Add Shop</h2>
+    <h2 style="color:white;">Add Company</h2>
 
     <form method="POST">
         {% csrf_token %}
 
         <!-- Store -->
         <div class="mb-3">
-            <label>Store</label>
+            <label>Corporate</label>
             <select name="store" class="form-control" required
                     style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="" style="background:#0f1b31; color:white;">Select Store</option>
+                <option value="" style="background:#0f1b31; color:white;">Select Corporate</option>
                 {% for store in stores %}
                 <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}

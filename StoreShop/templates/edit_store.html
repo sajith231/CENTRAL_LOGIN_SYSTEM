@@ -2,14 +2,14 @@
 {% block content %}
 
 <div class="card" style="padding:20px;">
-    <h2 style="color:white;">Edit Store</h2>
+    <h2 style="color:white;">Edit Corporate</h2>
 
     <form method="POST">
         {% csrf_token %}
 
         <!-- Store Name -->
         <div class="mb-3">
-            <label>Store Name</label>
+            <label>Corporate Name</label>
             <input type="text" name="name" value="{{ store.name }}" class="form-control" required
                    style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
