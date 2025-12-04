@@ -456,36 +456,29 @@
 
     // Remove Device Function
     async function removeDevice(endpoint, license_key, device_id, projectId) {
-        if (!confirm("Are you sure you want to remove this device?")) return;
+        // endpoint here is FULL URL like:
+        // https://activate.imcbs.com/mobileapp/api/project/sastest/
+        if (!confirm("Remove this device?")) return;
 
-        const logoutUrl = `/mobileapp/api/project/${endpoint}/logout/`;  // Correct API path
-        const bodyData = JSON.stringify({
-            license_key: license_key,
-            device_id: device_id
-        });
+        // Just add 'logout/' to that URL
+        const logoutUrl = endpoint + 'logout/';
 
         try {
-            const response = await fetch(logoutUrl, {
+            const res = await fetch(logoutUrl, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: bodyData
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ license_key, device_id })
             });
 
-            const result = await response.json();
+            const data = await res.json();
 
-            if (result.success) {
-                alert("Device removed successfully!");
-            } else {
-                alert(result.error || "Failed to remove device");
-            }
+            alert(data.message || data.error);
 
-            // Refresh device list after removal
-            loadActiveDevices(projectId, `/mobileapp/api/project/${endpoint}/`);
-            
-        } catch (error) {
-            console.error("Error:", error);
+            // Reload devices in that modal
+            loadActiveDevices(projectId, endpoint);
+
+        } catch (err) {
+            console.error("Logout error:", err);
             alert("Something went wrong. Please try again.");
         }
     }
