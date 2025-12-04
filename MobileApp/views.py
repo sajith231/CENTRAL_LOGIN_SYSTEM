@@ -119,11 +119,14 @@ def mobile_control_list(request):
 
 
 from StoreShop.models import Store
+from branch.models import Branch   # ➕ Import Branch model
+
 
 def add_mobile_control(request):
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
-    stores = Store.objects.all()  # ➕ Store list added
+    stores = Store.objects.all()
+    branches = Branch.objects.all()  # ➕ Branch list
     packages = Package.objects.all()
 
     if request.method == 'POST':
@@ -131,9 +134,10 @@ def add_mobile_control(request):
         shop_id = request.POST.get('shop')
         store_id = request.POST.get('store')
         package_id = request.POST.get('package')
+        branch_id = request.POST.get('branch')  # ➕ Get branch id
         login_limit = request.POST.get('login_limit', '1').strip()
 
-        if not project_id or not shop_id or not store_id or not package_id:
+        if not project_id or not shop_id or not store_id or not package_id or not branch_id:
             messages.error(request, 'All fields are required.')
             return redirect("MobileApp:add_mobile_control")
 
@@ -141,11 +145,13 @@ def add_mobile_control(request):
         shop = get_object_or_404(Shop, pk=shop_id)
         store = get_object_or_404(Store, pk=store_id)
         package = get_object_or_404(Package, pk=package_id)
+        branch = get_object_or_404(Branch, pk=branch_id)  # ➕ Fetch branch
 
         MobileControl.objects.create(
             project=project,
             store=store,
             shop=shop,
+            branch=branch,   # ➕ Save branch
             customer_name=shop.name,
             client_id=shop.client_id,
             login_limit=int(login_limit),
@@ -158,28 +164,31 @@ def add_mobile_control(request):
     return render(request, "add_mobile_control.html", {
         'projects': projects,
         'shops': shops,
-        'stores': stores,  # ➕ send store list
+        'stores': stores,
+        'branches': branches,  # ➕ send branch list
         'packages': packages
     })
-
 
 
 def edit_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
-    stores = Store.objects.all()  # ➕ Store list
+    stores = Store.objects.all()
+    branches = Branch.objects.all()  # ➕ Branch list
     packages = Package.objects.all()
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
         shop = get_object_or_404(Shop, pk=request.POST.get('shop'))
         store = get_object_or_404(Store, pk=request.POST.get('store'))
+        branch = get_object_or_404(Branch, pk=request.POST.get('branch'))  # ➕ branch
         package = get_object_or_404(Package, pk=request.POST.get('package'))
 
         control.project = project
-        control.shop = shop  # ➕ Save shop
-        control.store = store  # ➕ Save store
+        control.shop = shop
+        control.store = store
+        control.branch = branch  # ➕ Save branch
         control.customer_name = shop.name
         control.client_id = shop.client_id
         control.package = package
@@ -194,8 +203,10 @@ def edit_mobile_control(request, pk):
         'projects': projects,
         'shops': shops,
         'stores': stores,
+        'branches': branches,  # ➕ send branch list
         'packages': packages
     })
+
 
 
 

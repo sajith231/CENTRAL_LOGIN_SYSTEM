@@ -57,6 +57,8 @@ class MobileControl(models.Model):
 
     login_limit = models.PositiveIntegerField(default=1)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
+
     status = models.BooleanField(default=False)
     bill_status = models.BooleanField(default=False)
 

@@ -29,6 +29,22 @@
             </select>
         </div>
 
+
+
+        <div class="mb-3">
+    <label>Branch</label>
+    <select name="branch" class="form-control"
+            style="background:#0f1b31; color:white; border:1px solid #334155;">
+        {% for b in branches %}
+        <option value="{{ b.id }}"
+            {% if control.branch and control.branch.id == b.id %}selected{% endif %}>
+            {{ b.name }} - {{ b.place }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+
         <!-- Store -->
         <div class="mb-3">
             <label>Corporate</label>

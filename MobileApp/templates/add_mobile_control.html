@@ -27,6 +27,16 @@
                 <option value="">Select Package</option>
             </select>
         </div>
+        <div class="mb-3">
+    <label>Branch</label>
+    <select name="branch" class="form-control" required
+            style="background:#0f1b31; color:white; border:1px solid #334155;">
+        <option value="">Select Branch</option>
+        {% for b in branches %}
+        <option value="{{ b.id }}">{{ b.name }} - {{ b.place }}</option>
+        {% endfor %}
+    </select>
+</div>
 
         <!-- Store -->
         <div class="mb-3">
