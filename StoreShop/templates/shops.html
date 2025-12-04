@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Shops{% endblock %}
+{% block header_title %}<strong>Shops</strong><span class="muted"> / list</span>{% endblock %}
+{% block active_shop %}active{% endblock %}
+
+{% block content %}
+<div class="card" style="padding:0;">
+  <div style="display:flex; justify-content:space-between; align-items:center;
+              padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+    <h2 style="margin:0;">Company</h2>
+    <a href="{% url 'add_shop' %}" class="btn btn-success">Add New</a>
+  </div>
+
+  <!-- 🔍 Shop Name Search -->
+  <div style="padding:12px 20px;">
+      <input type="text" id="shopSearch" placeholder="Search shop..."
+             style="padding:8px 12px; width:250px; border-radius:6px;
+                    border:1px solid #334155; background:#0f1b31; color:white;">
+  </div>
+
+  <script>
+      document.getElementById("shopSearch").addEventListener("keyup", function () {
+          let keyword = this.value.toLowerCase();
+          let rows = document.querySelectorAll("table tbody tr");
+
+          rows.forEach(row => {
+              let shopName = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
+              row.style.display = shopName.includes(keyword) ? "" : "none";
+          });
+      });
+  </script>
+
+  <div style="padding:0 20px 20px;">
+    <div style="overflow: scroll;">
+    <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+      <thead>
+        <tr style="background: var(--hover);">
+            <th style="padding:12px;">#</th>
+            <th style="padding:12px;">Company Name</th>
+            <th style="padding:12px;">Client ID</th>
+            <th style="padding:12px;">Corporate</th>
+            <th style="padding:12px;">Email</th>
+            <th style="padding:12px;">Contact No</th>
+            <th>Branch</th>
+            <th>Place</th>
+            <th style="padding:12px;">Edit</th>
+            <th style="padding:12px;">Delete</th>
+        </tr>
+        </thead>
+        
+      <tbody >
+        {% for shop in shops %}
+        <tr style="background:#0f1b31;">
+          <td style="padding:12px;">{{ forloop.counter }}</td>
+          <td style="padding:12px;">{{ shop.name }}</td>
+          <td style="padding:12px;">{{ shop.client_id }}</td>
+          <td style="padding:12px;">{{ shop.store.name }}</td>
+          <td style="padding:12px;">{{ shop.email }}</td>
+          <td style="padding:12px;">{{ shop.contact_no }}</td>
+          <td>{{ shop.branch.name }}</td>
+          <td>{{ shop.place }}</td>
+          <td style="padding:12px;">
+            <a href="{% url 'edit_shop' shop.id %}" class="btn btn-primary btn-sm">Edit</a>
+          </td>
+          <td style="padding:12px;">
+            <form method="post" action="{% url 'delete_shop' shop.id %}" onsubmit="return confirm('Are you sure?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="padding:12px;">No shops yet.</td></tr>
+        {% endfor %}
+        </div>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}

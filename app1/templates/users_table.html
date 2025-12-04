@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+{% block header_title %}<strong>Users</strong><span class="muted"> / list</span>{% endblock %}
+{% block active_users %}active{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="card" style="margin-bottom:12px;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card" style="padding:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+      <h2 style="margin:0;">Users</h2>
+      <a href="{% url 'add_user' %}" class="btn"
+   style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+    <i class="fa-solid fa-plus"></i> Add User
+</a>
+    </div>
+
+    <div style="padding:12px 20px 20px;">
+      <div style="overflow:auto;">
+        <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:10px;">#</th>
+              <th style="text-align:left; padding:10px;">Name</th>
+              <th style="text-align:left; padding:10px;">Profile</th>
+              <th style="text-align:left; padding:10px;">Email</th>
+              <th style="text-align:left; padding:10px;">Branch</th>
+              <th style="text-align:left; padding:10px;">User Role</th>
+              <th style="text-align:left; padding:10px;">Level</th>
+              <th style="text-align:left; padding:10px;">Password</th>
+              <th style="text-align:left; padding:10px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr style="background:#0f1b31;">
+                <td style="padding:10px;">{{ forloop.counter }}</td>
+                <td style="padding:10px;">{{ r.name|default:"-" }}</td>
+
+                <!-- 🖼 Profile Image -->
+                <td style="padding:10px;">
+                  {% if r.profile_image %}
+                    <img src="{{ r.profile_image.url }}" alt="{{ r.name }}" style="height:40px; width:40px; border-radius:50%; object-fit:cover; border:1px solid #1e293b;">
+                  {% else %}
+                    <div style="height:40px; width:40px; border-radius:50%; background:#1e293b; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                      <span style="font-size:13px;">N/A</span>
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td style="padding:10px;">{{ r.email|default:"-" }}</td>
+                <td style="padding:10px;">{{ r.branch.name|default:"-" }}{% if r.branch.place %} - {{ r.branch.place }}{% endif %}</td>
+                <td style="padding:10px;">{{ r.user_role }}</td>
+                <td style="padding:10px;">{{ r.level }}</td>
+                <td style="padding:10px; font-family:monospace;">{{ r.password }}</td>
+
+                <td style="padding:6px 10px;">
+                  <div style="display:flex; gap:8px;">
+                    <!-- ✏️ Edit -->
+                    <a href="{% url 'edit_user' r.id %}"
+   class="btn" style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
+    <i class="fa-solid fa-pen-to-square"></i> Edit
+</a>
+
+<!-- 🗑 Delete -->
+<form method="post" action="{% url 'delete_user' r.id %}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+  {% csrf_token %}
+  <button type="submit" class="btn" style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;">
+      <i class="fa-solid fa-trash"></i> Delete
+  </button>
+</form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr style="background:#0f1b31;">
+                <td colspan="9" style="padding:12px;">No users yet. Click the + button to add one.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

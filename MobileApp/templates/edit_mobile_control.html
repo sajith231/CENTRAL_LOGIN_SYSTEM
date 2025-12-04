@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="padding:20px;">
+    <h2 style="color:whitesmoke;">Edit Mobile Control</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Project -->
+        <div class="mb-3">
+            <label>Project</label>
+            <select name="project" id="projectSelect" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for project in projects %}
+                <option value="{{ project.id }}"
+                        {% if project.id == control.project.id %}selected{% endif %}>
+                    {{ project.project_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Package -->
+        <div class="mb-3">
+            <label>Package</label>
+            <select name="package" id="packageSelect" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+            </select>
+        </div>
+
+
+
+        <div class="mb-3">
+    <label>Branch</label>
+    <select name="branch" class="form-control"
+            style="background:#0f1b31; color:white; border:1px solid #334155;">
+        {% for b in branches %}
+        <option value="{{ b.id }}"
+            {% if control.branch and control.branch.id == b.id %}selected{% endif %}>
+            {{ b.name }} - {{ b.place }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+
+        <!-- Store -->
+        <div class="mb-3">
+            <label>Corporate</label>
+            <select id="storeSelect" name="store" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for store in stores %}
+                <option value="{{ store.id }}"
+                        {% if control.store.id == store.id %}selected{% endif %}>
+                    {{ store.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Shop -->
+        <div class="mb-3">
+            <label>Company</label>
+            <select id="shopSelect" name="shop" class="form-control" required
+                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% for shop in shops %}
+                <option value="{{ shop.id }}"
+                        data-client="{{ shop.client_id }}"
+                        {% if shop.id == control.shop.id %}selected{% endif %}>
+                    {{ shop.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Client ID -->
+        <div class="mb-3">
+            <label>Client ID</label>
+            <input type="text" id="clientIdInput" class="form-control"
+                   value="{{ control.client_id }}" readonly
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Login Limit -->
+        <div class="mb-3">
+            <label>Number of Users</label>
+            <input type="number" name="login_limit" class="form-control"
+                   value="{{ control.login_limit }}" min="1" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+        <div class="mb-3">
+    <label>License Key</label>
+    <input type="text" class="form-control" value="{{ control.license_key }}" readonly
+           style="background:#0f1b31; color:white; border:1px solid #334155;">
+</div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
+
+
+<!-- Auto Set Client ID -->
+<script>
+document.getElementById("shopSelect").addEventListener("change", function () {
+    const clientID = this.options[this.selectedIndex].getAttribute("data-client");
+    document.getElementById("clientIdInput").value = clientID;
+});
+</script>
+
+<!-- Load Packages On Project Change -->
+<script>
+let selectedPkg = "{{ control.package.id }}";
+let selectedProject = "{{ control.project.id }}";
+
+function loadPackages(projectID, selectedPkgID = null) {
+    fetch(`/module-package/get-packages/${projectID}/`)
+        .then(res => res.json())
+        .then(data => {
+            let pkgSelect = document.getElementById("packageSelect");
+            pkgSelect.innerHTML = "";
+
+            data.forEach(pkg => {
+                pkgSelect.innerHTML += `
+                    <option value="${pkg.id}" 
+                        ${selectedPkgID == pkg.id ? "selected" : ""}>
+                        ${pkg.package_name}
+                    </option>`;
+            });
+        });
+}
+
+// Load on page load
+loadPackages(selectedProject, selectedPkg);
+
+// Update packages on change
+document.getElementById("projectSelect").addEventListener("change", function () {
+    loadPackages(this.value);
+});
+</script>
+
+{% endblock %}
