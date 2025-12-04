@@ -52,9 +52,10 @@
                     <th style="padding:12px;white-space: nowrap;">No</th>
                     <th style="padding:12px;white-space: nowrap;">Created</th>
                     <th style="padding:12px;white-space: nowrap;">Project</th>
-                    <th style="padding:12px;white-space: nowrap;">Store</th>
-                    <th style="padding:12px;white-space: nowrap;">Shop</th>
+                    <th style="padding:12px;white-space: nowrap;">Corporate</th>
+                    <th style="padding:12px;white-space: nowrap;">Company</th>
                     <th style="padding:12px;white-space: nowrap;">Client ID</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Copy</th>
                     <th style="padding:12px;white-space: nowrap;">Package</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
@@ -77,10 +78,20 @@
                     <td style="padding:12px;white-space: nowrap">{{ c.store.name }}</td>
                     <td style="padding:12px;white-space: nowrap">{{ c.customer_name }}</td>
                     <td style="padding:12px;white-space: nowrap">
-                        <span style="background:#16a34a33; padding:4px 8px; border-radius:6px; color:#16a34a;">
-                            {{ c.client_id }}
-                        </span>
-                    </td>
+    <span id="clientid-{{ c.id }}" 
+          style="background:#16a34a33; padding:4px 8px; border-radius:6px; color:#16a34a;">
+        {{ c.client_id }}
+    </span>
+</td>
+
+<td style="padding:12px;white-space: nowrap;">
+    <button class="btn btn-sm"
+        style="background:#475569; padding:5px 8px; border-radius:6px;"
+        onclick="copyText('clientid-{{ c.id }}')">
+        <i class="fa-solid fa-copy"></i> Copy
+    </button>
+</td>
+
                     <td style="padding:12px;white-space: nowrap">
                         {% if c.package %}
                         <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;white-space: nowrap;">
@@ -407,6 +418,14 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(updateCountdown, 1000); // Update every second
     });
 });
+
+
+function copyText(elementId) {
+    const el = document.getElementById(elementId);
+    const text = el.innerText.trim();
+    navigator.clipboard.writeText(text);
+    alert("Copied: " + text);
+}
 </script>
 
 {% endblock %}
