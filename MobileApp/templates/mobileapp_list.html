@@ -456,20 +456,40 @@
 
     // Remove Device Function
     async function removeDevice(endpoint, license_key, device_id, projectId) {
-        if (!confirm('Remove this device?')) return;
-        const logoutUrl = endpoint + 'logout/';
-        const body = JSON.stringify({ license_key, device_id });
+        if (!confirm("Are you sure you want to remove this device?")) return;
 
-        const res = await fetch(logoutUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body
+        const logoutUrl = `/mobileapp/api/project/${endpoint}/logout/`;  // Correct API path
+        const bodyData = JSON.stringify({
+            license_key: license_key,
+            device_id: device_id
         });
 
-        const data = await res.json();
-        alert(data.message || data.error);
-        loadActiveDevices(projectId, endpoint);
+        try {
+            const response = await fetch(logoutUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: bodyData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Device removed successfully!");
+            } else {
+                alert(result.error || "Failed to remove device");
+            }
+
+            // Refresh device list after removal
+            loadActiveDevices(projectId, `/mobileapp/api/project/${endpoint}/`);
+            
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Something went wrong. Please try again.");
+        }
     }
+
 
     // Copy Text Function
     function copyText(elementId) {
