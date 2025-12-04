@@ -66,6 +66,7 @@
                     <th style="padding:12px;white-space: nowrap;">License Key</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
                 </tr>
             </thead>
@@ -163,6 +164,15 @@
                             {% if c.status %}Active{% else %}Inactive{% endif %}
                         </button>
                     </td>
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+    <button id="billBtn_{{ c.id }}"
+            onclick="toggleBillStatus({{ c.id }})"
+            class="btn btn-sm"
+            style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+        {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
+    </button>
+</td>
+
 
                     <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
@@ -427,5 +437,37 @@ function copyText(elementId) {
     alert("Copied: " + text);
 }
 </script>
+<script>
+    async function toggleBillStatus(controlId) {
+    if (!confirm("Change bill status?")) return;
 
+    try {
+        const response = await fetch(`/mobileapp/mobile_control/toggle-bill-status/${controlId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const btn = document.getElementById(`billBtn_${controlId}`);
+            if (data.status) {
+                btn.innerHTML = 'Billed';
+                btn.style.background = '#16a34a';
+            } else {
+                btn.innerHTML = 'Unbilled';
+                btn.style.background = '#dc2626';
+            }
+        } else {
+            alert(data.error || 'Failed to update bill status');
+        }
+    } catch (error) {
+        alert('Error updating bill status');
+    }
+}
+
+</script>
 {% endblock %}

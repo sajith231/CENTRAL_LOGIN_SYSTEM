@@ -33,7 +33,7 @@
             <label>Corporate</label>
             <select id="storeSelect" name="store" class="form-control" required
                     style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="">Select Store</option>
+                <option value="">Select Corporate</option>
                 {% for store in stores %}
                 <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}
@@ -45,7 +45,7 @@
             <label>Company</label>
             <select id="shopSelect" name="shop" class="form-control" required
                     style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="">Select Shop</option>
+                <option value="">Select Company</option>
                 {% for shop in shops %}
                 <option value="{{ shop.id }}" data-client="{{ shop.client_id }}">
                     {{ shop.name }}

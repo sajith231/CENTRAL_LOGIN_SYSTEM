@@ -528,3 +528,18 @@ def toggle_mobile_control_status(request, pk):
 
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def toggle_bill_status(request, pk):
+    try:
+        control = get_object_or_404(MobileControl, pk=pk)
+        control.bill_status = not control.bill_status
+        control.save()
+
+        return JsonResponse({
+            'success': True,
+            'status': control.bill_status,
+            'message': "Billed" if control.bill_status else "Unbilled"
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
