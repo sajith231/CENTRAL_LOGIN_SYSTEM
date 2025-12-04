@@ -231,11 +231,7 @@ def _device_payload(control):
             'logged_in_at',
         ).order_by('device_id')
     )
-def process_logout(control, device_id):
-    deleted, _ = control.active_devices.filter(device_id=device_id).delete()
-    if deleted:
-        return True
-    return False
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -402,9 +398,6 @@ def api_post_login(request, endpoint):
     }, status=200)
 
 
-
-
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_post_logout(request, endpoint):
@@ -433,18 +426,19 @@ def api_post_logout(request, endpoint):
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
+    
+    # Check if the control is active (for logout, we allow even if inactive)
+    # But it's good practice to check - you can remove this if you want logout to work always
 
-    # Process device removal through ActiveDevice table
     deleted, _ = control.active_devices.filter(device_id=device_id).delete()
-
     if deleted:
-        remaining_devices = _device_payload(control)
+        remaining = _device_payload(control)
         return JsonResponse({
             'success': True,
             'message': 'Device removed from license',
             'license_key': license_key,
-            'registered_devices': remaining_devices,
-            'registered_count': len(remaining_devices),
+            'registered_devices': remaining,
+            'registered_count': len(remaining),
             'max_devices': control.login_limit,
         }, status=200)
 
@@ -452,7 +446,6 @@ def api_post_logout(request, endpoint):
         'success': False,
         'error': 'Device not found for this license'
     }, status=404)
-
 
 
 

@@ -456,33 +456,20 @@
 
     // Remove Device Function
     async function removeDevice(endpoint, license_key, device_id, projectId) {
-        // endpoint here is FULL URL like:
-        // https://activate.imcbs.com/mobileapp/api/project/sastest/
-        if (!confirm("Remove this device?")) return;
-
-        // Just add 'logout/' to that URL
+        if (!confirm('Remove this device?')) return;
         const logoutUrl = endpoint + 'logout/';
+        const body = JSON.stringify({ license_key, device_id });
 
-        try {
-            const res = await fetch(logoutUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ license_key, device_id })
-            });
+        const res = await fetch(logoutUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
 
-            const data = await res.json();
-
-            alert(data.message || data.error);
-
-            // Reload devices in that modal
-            loadActiveDevices(projectId, endpoint);
-
-        } catch (err) {
-            console.error("Logout error:", err);
-            alert("Something went wrong. Please try again.");
-        }
+        const data = await res.json();
+        alert(data.message || data.error);
+        loadActiveDevices(projectId, endpoint);
     }
-
 
     // Copy Text Function
     function copyText(elementId) {
