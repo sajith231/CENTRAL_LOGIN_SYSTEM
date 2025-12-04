@@ -332,27 +332,32 @@ async function loadDeviceList(endpoint, license, index) {
     }
 
     let html = `
-    <table style="width:100%; font-size:13px; color:white;">
-    <tr style="border-bottom:1px solid #334155;">
-      <th>Device ID</th><th>IP</th><th>Logged at</th><th style="text-align:center;"></th>
-    </tr>`;
-
-    devices.forEach(device => {
-        html += `
+        <table style="width:100%; font-size:13px; color:white;">
         <tr style="border-bottom:1px solid #334155;">
-          <td>${device.device_id}</td>
-          <td>${device.ip_address || '-'}</td>
-          <td>${new Date(device.logged_in_at).toLocaleString()}</td>
-          <td style="text-align:center;">
-            <button onclick="removeDevice('${endpoint}','${license}','${device.device_id}', ${index})"
-                  class="btn btn-sm"
-                  style="background:#b91c1c; color:white;">Remove</button>
-          </td>
+        <th>Device Name</th>
+        <th>Device ID</th>
+        <th>IP</th>
+        <th>Logged at</th>
+        <th style="text-align:center;"></th>
         </tr>`;
-    });
 
-    html += `</table>`;
-    container.innerHTML = html;
+        devices.forEach(device => {
+            html += `
+            <tr style="border-bottom:1px solid #334155;">
+            <td>${device.device_name || '-'}</td>
+            <td>${device.device_id}</td>
+            <td>${device.ip_address || '-'}</td>
+            <td>${new Date(device.logged_in_at).toLocaleString()}</td>
+            <td style="text-align:center;">
+                <button onclick="removeDevice('${endpoint}','${license}','${device.device_id}', ${index})"
+                    class="btn btn-sm"
+                    style="background:#b91c1c; color:white;">Remove</button>
+            </td>
+            </tr>`;
+        });
+
+        html += `</table>`;
+        container.innerHTML = html;
 }
 
 async function removeDevice(endpoint, license, device_id, index) {
