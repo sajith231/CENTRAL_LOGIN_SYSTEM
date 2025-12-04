@@ -227,6 +227,7 @@ def _device_payload(control):
     return list(
         control.active_devices.values(
             'device_id',
+            'device_name',  # 👈 Added
             'ip_address',
             'logged_in_at',
         ).order_by('device_id')
@@ -247,6 +248,7 @@ def api_register_license(request, endpoint):
 
     license_key = payload.get('license_key', '').strip()
     device_id = payload.get('device_id', '').strip()
+    device_name = payload.get('device_name', '').strip()
 
     if not license_key or not device_id:
         return JsonResponse({
@@ -310,6 +312,7 @@ def api_register_license(request, endpoint):
     ActiveDevice.objects.create(
         control=control,
         device_id=device_id,
+        device_name=device_name,
         ip_address=_get_client_ip(request),
     )
 

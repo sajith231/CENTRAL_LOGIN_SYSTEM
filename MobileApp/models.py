@@ -109,6 +109,7 @@ class LoginLog(models.Model):
 class ActiveDevice(models.Model):
     control = models.ForeignKey(MobileControl, on_delete=models.CASCADE, related_name='active_devices')
     device_id = models.CharField(max_length=255)
+    device_name = models.CharField(max_length=255, null=True, blank=True)
     logged_in_at = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
 
