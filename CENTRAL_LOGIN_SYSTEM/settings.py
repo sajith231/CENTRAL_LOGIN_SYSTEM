@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'StoreShop',
     'ModuleAndPackage',
     'user_controll',
+    'client_id_list'
 ]
 
 # ------------------------------------------------------------------
@@ -116,7 +117,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'central_login_system',  # Your DB name
         'USER': 'postgres',           # Your DB username
-        'PASSWORD': 'info@imc',   # Your DB password
+        'PASSWORD': 'sajith@2003',   # Your DB password
         'HOST': 'localhost',          # Or server IP if remote
         'PORT': '5432',               # Default PostgreSQL port
     }
