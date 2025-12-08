@@ -51,6 +51,7 @@
                 <tr style="background:#1e293b;">
                     <th style="padding:12px;white-space: nowrap;">No</th>
                     <th style="padding:12px;white-space: nowrap;">Created</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
                     <th style="padding:12px;white-space: nowrap;">Project</th>
                     <th style="padding:12px;white-space: nowrap;">Corporate</th>
                     <th style="padding:12px;white-space: nowrap;">Company</th>
@@ -66,7 +67,7 @@
                     
                     <th style="padding:12px;white-space: nowrap;">License Key</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
+                    
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
                 </tr>
@@ -76,6 +77,14 @@
                 <tr style="background:#0f172a; border-bottom:1px solid #1e293b;">
                     <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
                     <td style="padding:12px;white-space: nowrap">{{ c.created_date|date:"Y-m-d" }}</td>
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        <button id="statusBtn_{{ c.id }}" 
+                                onclick="toggleStatus({{ c.id }})"
+                                class="btn btn-sm"
+                                style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                            {% if c.status %}Active{% else %}Inactive{% endif %}
+                        </button>
+                    </td>
                     <td style="padding:12px;white-space: nowrap"><strong>{{ c.project.project_name }}</strong></td>
                     <td style="padding:12px;white-space: nowrap">{{ c.store.name }}</td>
                     <td style="padding:12px;white-space: nowrap">{{ c.customer_name }}</td>
@@ -168,14 +177,7 @@
                         </button>
                     </td>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button id="statusBtn_{{ c.id }}" 
-                                onclick="toggleStatus({{ c.id }})"
-                                class="btn btn-sm"
-                                style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
-                            {% if c.status %}Active{% else %}Inactive{% endif %}
-                        </button>
-                    </td>
+                    
                     <td style="padding:12px;text-align:center;white-space: nowrap">
     <button id="billBtn_{{ c.id }}"
             onclick="toggleBillStatus({{ c.id }})"
