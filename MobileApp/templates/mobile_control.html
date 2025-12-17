@@ -18,8 +18,11 @@
         <select id="projectFilter"
             style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
             <option value="">All Projects</option>
-            {% for c in controls %}
-            <option value="{{ c.project.project_name }}">{{ c.project.project_name }}</option>
+
+            {% regroup controls by project.project_name as project_list %}
+
+            {% for p in project_list %}
+                <option value="{{ p.grouper }}">{{ p.grouper }}</option>
             {% endfor %}
         </select>
     </div>
