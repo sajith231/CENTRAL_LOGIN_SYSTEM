@@ -468,47 +468,87 @@ def api_post_logout(request, endpoint):
     }, status=404)
 
 
+from django.utils import timezone
+from datetime import timedelta
 
 @require_http_methods(["GET"])
 def api_get_project_data(request, endpoint):
     """
-    GET API: Returns all customers with login data + package + modules + active devices
+    GET API:
+    Returns customers + license + package + devices + expiry info
     """
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
         controls = MobileControl.objects.filter(project=project)
 
         customers_data = []
+
         for control in controls:
             registered_devices = _device_payload(control)
 
+            # ---------- LICENSE EXPIRY CALCULATION ----------
+            expiry_date = None
+            remaining_days = None
+            is_expired = False
+
+            if control.package and control.package.days_limit > 0:
+                expiry_date = control.created_date + timedelta(days=control.package.days_limit)
+                now = timezone.now()
+
+                if expiry_date <= now:
+                    remaining_days = 0
+                    is_expired = True
+
+                    # auto deactivate
+                    if control.status:
+                        control.status = False
+                        control.save()
+                else:
+                    remaining_days = (expiry_date - now).days
+            # ------------------------------------------------
+
             customers_data.append({
-                'customer_name': control.customer_name,
-                'client_id': control.client_id,
-                'license_key': control.license_key,
-                'package': control.package.package_name if control.package else None,
-                'modules': [
+                "customer_name": control.customer_name,
+                "client_id": control.client_id,
+                "license_key": control.license_key,
+
+                "package": control.package.package_name if control.package else None,
+
+                "modules": [
                     {
                         "module_name": m.module_name,
                         "module_code": m.module_code
-                    } for m in control.package.modules.all()
+                    }
+                    for m in control.package.modules.all()
                 ] if control.package else [],
-                'license_summary': {
-                    'registered_count': len(registered_devices),
-                    'max_devices': control.login_limit,
+
+                "license_summary": {
+                    "registered_devices": len(registered_devices),
+                    "max_devices": control.login_limit,
                 },
-                'registered_devices': registered_devices,
-                'status': "Active" if control.status else "Inactive"  # ✔️ NEW STATUS FIELD
+
+                "license_validity": {
+                    "expiry_date": expiry_date.date().isoformat() if expiry_date else None,
+                    "remaining_days": remaining_days,
+                    "is_expired": is_expired,
+                },
+
+                "registered_devices": registered_devices,
+                "status": "Active" if control.status else "Inactive",
             })
 
         return JsonResponse({
-            'success': True,
-            'project_name': project.project_name,
-            'customers': customers_data
+            "success": True,
+            "project_name": project.project_name,
+            "customers": customers_data
         })
 
     except MobileProject.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+        return JsonResponse({
+            "success": False,
+            "error": "Project not found"
+        }, status=404)
+
 
 
 @csrf_exempt
