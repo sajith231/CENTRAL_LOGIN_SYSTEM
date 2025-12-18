@@ -31,7 +31,8 @@ INSTALLED_APPS = [
     'StoreShop',
     'ModuleAndPackage',
     'user_controll',
-    'client_id_list'
+    'client_id_list',
+    'coporate_and_clientid',
 ]
 
 # ------------------------------------------------------------------

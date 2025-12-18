@@ -28,6 +28,7 @@ urlpatterns = [
     path('store-shop/', include('StoreShop.urls')),
     path('module-package/', include('ModuleAndPackage.urls')),
     path('user-control/', include('user_controll.urls')),
-     path("client-id-list/", include("client_id_list.urls")),
+    path("client-id-list/", include("client_id_list.urls")),
+    path('corporate-clientid/', include('coporate_and_clientid.urls')),
     
 ]+ (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG and not settings.CLOUDFLARE_R2_ENABLED else [])
