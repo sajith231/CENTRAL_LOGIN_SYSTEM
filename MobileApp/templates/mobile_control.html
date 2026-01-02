@@ -9,7 +9,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h2 style="margin:0; font-size:20px;">Add Licensing</h2>
         <a href="{% url 'MobileApp:add_mobile_control' %}" class="btn"
-           style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+            style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
             <i class="fa-solid fa-sliders"></i> Add Licensing
         </a>
     </div>
@@ -22,9 +22,22 @@
             {% regroup controls by project.project_name as project_list %}
 
             {% for p in project_list %}
-                <option value="{{ p.grouper }}">{{ p.grouper }}</option>
+            <option value="{{ p.grouper }}">{{ p.grouper }}</option>
             {% endfor %}
         </select>
+        <input type="text" id="clientIdFilter"
+        placeholder="Search Client ID"
+        style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white; width:220px;">
+
+    <!-- Status Filter -->
+    <select id="statusFilter"
+        style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+    </select>
     </div>
 
     <script>
@@ -39,12 +52,18 @@
         });
     </script>
 
+    
+    
+
+</div>
+
+
     {% if messages %}
-        {% for message in messages %}
-        <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-            {{ message }}
-        </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+        {{ message }}
+    </div>
+    {% endfor %}
     {% endif %}
 
     {% if controls %}
@@ -55,101 +74,83 @@
                     <th style="padding:12px;white-space: nowrap;">No</th>
                     <th style="padding:12px;white-space: nowrap;">Created</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
-                    <th style="padding:12px;white-space: nowrap;">Project</th>
-                    <th style="padding:12px;white-space: nowrap;">Corporate</th>
                     <th style="padding:12px;white-space: nowrap;">Company</th>
-                    <th style="padding:12px;white-space: nowrap;">Client ID</th>
-                    <th style="padding:12px; text-align:left;white-space: nowrap;">Copy</th>
-                    <th style="padding:12px;white-space: nowrap;">Package</th>
-                    <th style="padding:12px; white-space: nowrap;">Branch</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
+                    <th style="padding:12px;white-space: nowrap;">Project</th>
+                    <th style="padding:12px;white-space: nowrap;">More details</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
-                    
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
                     <th style="padding:12px;white-space: nowrap;">License Key</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
-                    
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
+                    <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
                     <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
+
+                    
+
+
+
+
+
+
+
+
+
+
+
                 </tr>
             </thead>
             <tbody>
                 {% for c in controls %}
-                <tr style="background:#0f172a; border-bottom:1px solid #1e293b;">
+                <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
+                    data-status="{% if c.status %}active{% else %}inactive{% endif %}">
                     <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
-                    <td style="padding:12px;white-space: nowrap">{{ c.created_date|date:"Y-m-d" }}</td>
+                    <td style="padding:12px;white-space: nowrap">{{ c.created_date|date:"d-m-Y" }}</td>
                     <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button id="statusBtn_{{ c.id }}" 
-                                onclick="toggleStatus({{ c.id }})"
-                                class="btn btn-sm"
-                                style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                        <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm"
+                            style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
                             {% if c.status %}Active{% else %}Inactive{% endif %}
                         </button>
                     </td>
-                    <td style="padding:12px;white-space: nowrap"><strong>{{ c.project.project_name }}</strong></td>
-                    <td style="padding:12px;white-space: nowrap">{{ c.store.name }}</td>
-                    <td style="padding:12px;white-space: nowrap">{{ c.customer_name }}</td>
                     <td style="padding:12px;white-space: nowrap">
-    <span id="clientid-{{ c.id }}" 
-          style="background:#16a34a33; padding:4px 8px; border-radius:6px; color:#16a34a;">
-        {{ c.client_id }}
-    </span>
-</td>
-
-<td style="padding:12px;white-space: nowrap;">
-    <button class="btn btn-sm"
-        style="background:#475569; padding:5px 8px; border-radius:6px;"
-        onclick="copyText('clientid-{{ c.id }}')">
-        <i class="fa-solid fa-copy"></i> Copy
-    </button>
-</td>
-
+                        {{ c.customer_name }}
+                        <br>
+                        <small style="color:#9ca3af;">
+                            {{ c.shop.place }}
+                        </small>
+                    </td>
                     <td style="padding:12px;white-space: nowrap">
+                        <strong>{{ c.project.project_name }}</strong>
+                        <br>
                         {% if c.package %}
-                        <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;white-space: nowrap;">
+                        <small style="color:#9ca3af;">
                             {{ c.package.package_name }}
-                        </span>
+                        </small>
                         {% else %}
-                        <span style="color:#9ca3af;">-</span>
+                        <small style="color:#9ca3af;">No Package</small>
                         {% endif %}
                     </td>
+                    <td style="padding:12px;white-space: nowrap; text-align:center;">
+                        <button class="btn btn-sm"
+                            style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
+                            data-bs-toggle="modal"
+                            data-bs-target="#moreDetailsModal"
 
-                    <td style="padding:12px; white-space: nowrap;">
-    {% if c.branch %}
-    <span style="background:#475569; padding:3px 8px; border-radius:6px; color:#fff; font-size:12px;">
-        {{ c.branch.name }}
-    </span>
-    {% else %}
-    <span style="color:#9ca3af;">-</span>
-    {% endif %}
-</td>
+                            data-company="{{ c.customer_name }}"
+                            data-corporate="{{ c.store.name }}"
+                            data-branch="{{ c.branch.name|default:'-' }}"
+                            data-client="{{ c.client_id }}"
 
+                            onclick="openMoreDetails(this)"
+                        >
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        {% if c.remaining_days is None %}
-                            <span style="color:#9ca3af;">Unlimited</span>
-                        {% elif c.is_expired %}
-                            <span style="color:#dc2626; font-weight:bold;">Expired</span>
-                        {% else %}
-                            <div>
-                                <span id="countdown_{{ c.id }}" 
-                                      data-expiry="{{ c.expiry_date|date:'c' }}"
-                                      style="{% if c.remaining_days <= 3 %}color:#dc2626; font-weight:bold;{% else %}color:#16a34a;{% endif %} font-size:14px;">
-                                    {{ c.remaining_days }} day{{ c.remaining_days|pluralize }}
-                                </span>
-                                {% if c.expiry_date %}
-                                <div style="font-size:11px; color:#6b7280; margin-top:4px;">
-                                    <small>Expires: {{ c.expiry_date|date:"M d, Y" }}</small>
-                                </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
                     </td>
 
                     <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
-
                     <td style="padding:12px;text-align:center;white-space: nowrap">
                         {{ c.registered_count }}
                     </td>
@@ -157,7 +158,44 @@
                         {{ c.balance_count }}
                     </td>
 
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        {% if c.remaining_days is None %}
+                        <span style="color:#9ca3af;">Unlimited</span>
+                        {% elif c.is_expired %}
+                        <span style="color:#dc2626; font-weight:bold;">Expired</span>
+                        {% else %}
+                        <div>
+                            <span id="countdown_{{ c.id }}" data-expiry="{{ c.expiry_date|date:'c' }}"
+                                style="{% if c.remaining_days <= 3 %}color:#dc2626; font-weight:bold;{% else %}color:#16a34a;{% endif %} font-size:14px;">
+                                {{ c.remaining_days }} day{{ c.remaining_days|pluralize }}
+                            </span>
+                            {% if c.expiry_date %}
+                            <div style="font-size:11px; color:#6b7280; margin-top:4px;">
+                                <small>Expires: {{ c.expiry_date|date:"M d, Y" }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding:12px;white-space: nowrap">
+                        <span id="license_{{ c.id }}">{{ c.license_key }}</span>
+                    </td>
 
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm"
+                            style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </td>
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        #
+                    </td>
+                    <td style="padding:12px;text-align:center;white-space: nowrap">
+                        <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"
+                            style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                            {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
+                        </button>
+                    </td>
                     <td style="padding:12px;text-align:center;white-space: nowrap">
                         <button class="btn btn-sm"
                             style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
@@ -166,39 +204,13 @@
                             <i class="fa-solid fa-eye"></i>
                         </button>
                     </td>
-
-                    
-
-                    <td style="padding:12px;white-space: nowrap">
-                        <span id="license_{{ c.id }}">{{ c.license_key }}</span>
-                    </td>
-
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm" 
-                            style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
-                            <i class="fa-regular fa-copy"></i> Copy
-                        </button>
-                    </td>
-
-                    
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-    <button id="billBtn_{{ c.id }}"
-            onclick="toggleBillStatus({{ c.id }})"
-            class="btn btn-sm"
-            style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
-        {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
-    </button>
-</td>
-
-
                     <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
                         <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
-                        style="background:#2563eb; color:white;">Edit</a>
+                            style="background:#2563eb; color:white;">Edit</a>
 
                         {% if c.id %}
-                        <button class="btn"
-                            style="background:#b91c1c; color:white;"
-                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ c.id }}">
+                        <button class="btn" style="background:#b91c1c; color:white;" data-bs-toggle="modal"
+                            data-bs-target="#deleteModal{{ c.id }}">
                             Delete
                         </button>
                         {% else %}
@@ -206,12 +218,34 @@
                         {% endif %}
                     </td>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    
+
 
     <p style="margin-top:16px; color:#9ca3af;">Total Controls: {{ controls.count }}</p>
 
@@ -237,7 +271,7 @@
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="deviceList{{ forloop.counter }}"
-                 style="max-height:400px; overflow-y:auto; background:#0f172a; padding:12px; border-radius:8px;">
+                style="max-height:400px; overflow-y:auto; background:#0f172a; padding:12px; border-radius:8px;">
                 <em>Loading...</em>
             </div>
         </div>
@@ -263,8 +297,8 @@
 
             <div class="modal-footer" style="border-top:1px solid #334155;">
                 <button class="btn" data-bs-dismiss="modal">Cancel</button>
-                <a href="{% url 'MobileApp:delete_mobile_control' c.id %}"
-                   class="btn" style="background:#b91c1c;">Yes, Delete</a>
+                <a href="{% url 'MobileApp:delete_mobile_control' c.id %}" class="btn" style="background:#b91c1c;">Yes,
+                    Delete</a>
             </div>
 
         </div>
@@ -272,83 +306,120 @@
 </div>
 {% endif %}
 
+<div class="modal fade" id="moreDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-circle-info"></i> More Details
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <table style="width:100%; font-size:14px;">
+                    <tr>
+                        <td><strong>Company</strong></td>
+                        <td id="md_company"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Corporate</strong></td>
+                        <td id="md_corporate"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Branch</strong></td>
+                        <td id="md_branch"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Client ID</strong></td>
+                        <td id="md_client"></td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 {% endfor %}
 
 <!-- Delete Copy Script -->
 <script>
-function copyLicense(id) {
-    var text = document.getElementById("license_" + id).innerText;
-    navigator.clipboard.writeText(text);
-    alert("Copied: " + text);
-}
+    function copyLicense(id) {
+        var text = document.getElementById("license_" + id).innerText;
+        navigator.clipboard.writeText(text);
+        alert("Copied: " + text);
+    }
 
-// Toggle Status Function
-async function toggleStatus(controlId) {
-    if (!confirm("Are you sure you want to change the status?")) return;
-    
-    try {
-        const response = await fetch(`/mobileapp/mobile_control/toggle-status/${controlId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            const btn = document.getElementById(`statusBtn_${controlId}`);
-            if (data.status) {
-                btn.innerHTML = 'Active';
-                btn.style.background = '#16a34a';
+    // Toggle Status Function
+    async function toggleStatus(controlId) {
+        if (!confirm("Are you sure you want to change the status?")) return;
+
+        try {
+            const response = await fetch(`/mobileapp/mobile_control/toggle-status/${controlId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const btn = document.getElementById(`statusBtn_${controlId}`);
+                if (data.status) {
+                    btn.innerHTML = 'Active';
+                    btn.style.background = '#16a34a';
+                } else {
+                    btn.innerHTML = 'Inactive';
+                    btn.style.background = '#dc2626';
+                }
             } else {
-                btn.innerHTML = 'Inactive';
-                btn.style.background = '#dc2626';
+                alert(data.error || 'Failed to update status');
             }
-        } else {
-            alert(data.error || 'Failed to update status');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to update status');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to update status');
     }
-}
 
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 </script>
 
 <!-- DEVICE ACTION SCRIPTS -->
 <script>
-async function loadDeviceList(endpoint, license, index) {
-    const url = `/mobileapp/api/project/${endpoint}/`;
-    const container = document.getElementById("deviceList" + index);
+    async function loadDeviceList(endpoint, license, index) {
+        const url = `/mobileapp/api/project/${endpoint}/`;
+        const container = document.getElementById("deviceList" + index);
 
-    const res = await fetch(url);
-    const data = await res.json();
-    const customer = data.customers.find(item => item.license_key === license);
-    const devices = customer?.registered_devices || [];
+        const res = await fetch(url);
+        const data = await res.json();
+        const customer = data.customers.find(item => item.license_key === license);
+        const devices = customer?.registered_devices || [];
 
-    if (devices.length === 0) {
-        container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
-        return;
-    }
+        if (devices.length === 0) {
+            container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
+            return;
+        }
 
-    let html = `
+        let html = `
         <table style="width:100%; font-size:13px; color:white;">
         <tr style="border-bottom:1px solid #334155;">
         <th>Device Name</th>
@@ -375,121 +446,154 @@ async function loadDeviceList(endpoint, license, index) {
 
         html += `</table>`;
         container.innerHTML = html;
-}
+    }
 
-async function removeDevice(endpoint, license, device_id, index) {
-    if (!confirm("Are you sure?")) return;
-    const res = await fetch(`/mobileapp/api/project/${endpoint}/logout/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ license_key: license, device_id })
-    });
+    async function removeDevice(endpoint, license, device_id, index) {
+        if (!confirm("Are you sure?")) return;
+        const res = await fetch(`/mobileapp/api/project/${endpoint}/logout/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ license_key: license, device_id })
+        });
 
-    const data = await res.json();
-    alert(data.message || data.error);
-    loadDeviceList(endpoint, license, index);
-}
+        const data = await res.json();
+        alert(data.message || data.error);
+        loadDeviceList(endpoint, license, index);
+    }
 
-// Real-time countdown timer
-document.addEventListener('DOMContentLoaded', function() {
-    const countdownElements = document.querySelectorAll('[id^="countdown_"]');
-    
-    countdownElements.forEach(function(countdownElement) {
-        const expiryDateStr = countdownElement.getAttribute('data-expiry');
-        if (!expiryDateStr) return;
-        
-        // Parse ISO date string (format: YYYY-MM-DDTHH:MM:SS+00:00)
-        let expiryDate;
-        if (expiryDateStr.includes('T')) {
-            expiryDate = new Date(expiryDateStr).getTime();
-        } else {
-            // Fallback for older format
-            expiryDate = new Date(expiryDateStr.replace(' ', 'T') + 'Z').getTime();
-        }
-        
-        if (isNaN(expiryDate)) {
-            console.error('Invalid expiry date:', expiryDateStr);
-            return;
-        }
-        
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = expiryDate - now;
-            
-            if (distance < 0) {
-                countdownElement.innerHTML = '<span style="color:#dc2626; font-weight:bold;">Expired</span>';
-                countdownElement.style.color = '#dc2626';
+    // Real-time countdown timer
+    document.addEventListener('DOMContentLoaded', function () {
+        const countdownElements = document.querySelectorAll('[id^="countdown_"]');
+
+        countdownElements.forEach(function (countdownElement) {
+            const expiryDateStr = countdownElement.getAttribute('data-expiry');
+            if (!expiryDateStr) return;
+
+            // Parse ISO date string (format: YYYY-MM-DDTHH:MM:SS+00:00)
+            let expiryDate;
+            if (expiryDateStr.includes('T')) {
+                expiryDate = new Date(expiryDateStr).getTime();
+            } else {
+                // Fallback for older format
+                expiryDate = new Date(expiryDateStr.replace(' ', 'T') + 'Z').getTime();
+            }
+
+            if (isNaN(expiryDate)) {
+                console.error('Invalid expiry date:', expiryDateStr);
                 return;
             }
-            
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            let color = '#16a34a';
-            if (days <= 3) color = '#dc2626';
-            
-            countdownElement.style.color = color;
-            countdownElement.style.fontWeight = days <= 3 ? 'bold' : 'normal';
-            countdownElement.style.display = 'inline-block';
-            
-            // Format countdown display
-            if (days > 0) {
-                countdownElement.innerHTML = `<strong>${days}</strong> day${days !== 1 ? 's' : ''}`;
-            } else if (hours > 0) {
-                countdownElement.innerHTML = `<strong>${hours}h</strong> ${minutes}m`;
-            } else if (minutes > 0) {
-                countdownElement.innerHTML = `<strong>${minutes}m</strong> ${seconds}s`;
-            } else {
-                countdownElement.innerHTML = `<strong>${seconds}s</strong>`;
+
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const distance = expiryDate - now;
+
+                if (distance < 0) {
+                    countdownElement.innerHTML = '<span style="color:#dc2626; font-weight:bold;">Expired</span>';
+                    countdownElement.style.color = '#dc2626';
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                let color = '#16a34a';
+                if (days <= 3) color = '#dc2626';
+
+                countdownElement.style.color = color;
+                countdownElement.style.fontWeight = days <= 3 ? 'bold' : 'normal';
+                countdownElement.style.display = 'inline-block';
+
+                // Format countdown display
+                if (days > 0) {
+                    countdownElement.innerHTML = `<strong>${days}</strong> day${days !== 1 ? 's' : ''}`;
+                } else if (hours > 0) {
+                    countdownElement.innerHTML = `<strong>${hours}h</strong> ${minutes}m`;
+                } else if (minutes > 0) {
+                    countdownElement.innerHTML = `<strong>${minutes}m</strong> ${seconds}s`;
+                } else {
+                    countdownElement.innerHTML = `<strong>${seconds}s</strong>`;
+                }
             }
-        }
-        
-        updateCountdown();
-        setInterval(updateCountdown, 1000); // Update every second
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000); // Update every second
+        });
     });
-});
 
 
-function copyText(elementId) {
-    const el = document.getElementById(elementId);
-    const text = el.innerText.trim();
-    navigator.clipboard.writeText(text);
-    alert("Copied: " + text);
-}
+    function copyText(elementId) {
+        const el = document.getElementById(elementId);
+        const text = el.innerText.trim();
+        navigator.clipboard.writeText(text);
+        alert("Copied: " + text);
+    }
 </script>
 <script>
     async function toggleBillStatus(controlId) {
-    if (!confirm("Change bill status?")) return;
+        if (!confirm("Change bill status?")) return;
 
-    try {
-        const response = await fetch(`/mobileapp/mobile_control/toggle-bill-status/${controlId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        });
+        try {
+            const response = await fetch(`/mobileapp/mobile_control/toggle-bill-status/${controlId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (data.success) {
-            const btn = document.getElementById(`billBtn_${controlId}`);
-            if (data.status) {
-                btn.innerHTML = 'Billed';
-                btn.style.background = '#16a34a';
+            if (data.success) {
+                const btn = document.getElementById(`billBtn_${controlId}`);
+                if (data.status) {
+                    btn.innerHTML = 'Billed';
+                    btn.style.background = '#16a34a';
+                } else {
+                    btn.innerHTML = 'Unbilled';
+                    btn.style.background = '#dc2626';
+                }
             } else {
-                btn.innerHTML = 'Unbilled';
-                btn.style.background = '#dc2626';
+                alert(data.error || 'Failed to update bill status');
             }
-        } else {
-            alert(data.error || 'Failed to update bill status');
+        } catch (error) {
+            alert('Error updating bill status');
         }
-    } catch (error) {
-        alert('Error updating bill status');
     }
-}
 
 </script>
+<script>
+    function openMoreDetails(btn) {
+        document.getElementById("md_company").innerText   = btn.dataset.company || "-";
+        document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
+        document.getElementById("md_branch").innerText    = btn.dataset.branch || "-";
+        document.getElementById("md_client").innerText    = btn.dataset.client || "-";
+    }
+</script>
+<script>
+function applyFilters() {
+    const clientFilter = document.getElementById("clientIdFilter").value.toLowerCase();
+    const statusFilter = document.getElementById("statusFilter").value;
+
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+        const clientId = (row.dataset.clientId || "").toLowerCase();
+        const status   = row.dataset.status || "";
+
+        const clientMatch = clientId.includes(clientFilter);
+        const statusMatch =
+            statusFilter === "" || status === statusFilter;
+
+        row.style.display = (clientMatch && statusMatch) ? "" : "none";
+    });
+}
+
+// listeners
+document.getElementById("clientIdFilter").addEventListener("keyup", applyFilters);
+document.getElementById("statusFilter").addEventListener("change", applyFilters);
+</script>
+
+
 {% endblock %}
