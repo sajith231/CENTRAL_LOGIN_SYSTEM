@@ -27,4 +27,9 @@ urlpatterns = [
     path("mobile_control/toggle-bill-status/<int:pk>/",
      views.toggle_bill_status,
      name="toggle_bill_status"),
+    path("mobile_control/billing/<int:pk>/",views.mobile_control_billing,name="mobile_control_billing"),
+    path("billing-history/toggle-status/<int:pk>/",views.toggle_billing_history_status,name="toggle_billing_history_status"),
+
+    
+
 ]

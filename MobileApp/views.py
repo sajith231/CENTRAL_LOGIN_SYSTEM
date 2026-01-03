@@ -76,45 +76,38 @@ from datetime import timedelta
 
 def mobile_control_list(request):
     """Shows table of MobileControl entries"""
-    controls = MobileControl.objects.select_related('project', 'package').all()
+    controls = (
+        MobileControl.objects
+        .select_related('project', 'package')
+        .prefetch_related('active_devices')
+        .all()
+    )
+
+    now = timezone.now()
 
     for control in controls:
+        # -------- DEVICE COUNTS --------
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
-        
-        # Calculate remaining days and check expiration
-        if control.package and control.package.days_limit > 0:
-            days_limit = control.package.days_limit
-            created_date = control.created_date
-            expiry_date = created_date + timedelta(days=days_limit)
-            now = timezone.now()
-            
-            # Calculate remaining days
-            if expiry_date > now:
-                remaining_days = (expiry_date - now).days
-                control.remaining_days = remaining_days
-                control.expiry_date = expiry_date
-                control.is_expired = False
-                
-                # Auto-deactivate if expired
-                if control.status and remaining_days <= 0:
-                    control.status = False
-                    control.save()
-            else:
-                control.remaining_days = 0
-                control.expiry_date = expiry_date
-                control.is_expired = True
-                # Auto-deactivate if expired
-                if control.status:
-                    control.status = False
-                    control.save()
+
+        # -------- EXPIRY / REMAINING DAYS --------
+        if control.expiry_date:
+            delta = control.expiry_date - now
+            control.remaining_days = delta.days
+            control.is_expired = delta.total_seconds() <= 0
+
+            # Auto deactivate when expired
+            if control.is_expired and control.status:
+                control.status = False
+                control.save(update_fields=["status"])
         else:
-            # Unlimited (days_limit = 0)
+            # Unlimited license
             control.remaining_days = None
-            control.expiry_date = None
             control.is_expired = False
 
-    context = {'controls': controls}
+    context = {
+        "controls": controls
+    }
     return render(request, "mobile_control.html", context)
 
 
@@ -603,3 +596,103 @@ def toggle_bill_status(request, pk):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+
+
+from datetime import timedelta
+from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import MobileControl, MobileBillingHistory
+
+
+def mobile_control_billing(request, pk):
+    control = get_object_or_404(MobileControl, pk=pk)
+
+    # ---------- CURRENT EXPIRY ----------
+    expiry_date = control.expiry_date
+
+    if request.method == "POST":
+        extend_days = int(request.POST.get("extend_days") or 0)
+        extend_login = int(request.POST.get("extend_login") or 0)
+        bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
+        remark = request.POST.get("remark", "").strip()
+
+        # store OLD values for history
+        old_login_limit = control.login_limit
+        old_expiry = control.expiry_date
+
+        # ---------- LOGIN LIMIT (+ / -) ----------
+        if extend_login != 0:
+            new_login_limit = control.login_limit + extend_login
+            if new_login_limit < 1:
+                messages.error(request, "Login limit cannot be less than 1")
+                return redirect("MobileApp:mobile_control_billing", pk=pk)
+            control.login_limit = new_login_limit
+
+        # ---------- EXPIRY DATE (+ / -) ----------
+        if extend_days != 0:
+            if control.expiry_date:
+                new_expiry = control.expiry_date + timedelta(days=extend_days)
+            else:
+                # first-time expiry setup
+                new_expiry = timezone.now() + timedelta(days=extend_days)
+
+            if new_expiry < timezone.now():
+                messages.error(request, "Expiry date cannot be in the past")
+                return redirect("MobileApp:mobile_control_billing", pk=pk)
+
+            control.expiry_date = new_expiry
+
+        # ---------- BILL STATUS ----------
+        control.bill_status = bill_status
+        control.save()
+
+        # ---------- SAVE BILLING HISTORY ----------
+        MobileBillingHistory.objects.create(
+            control=control,
+            extended_days=extend_days,
+            extended_login_limit=extend_login,
+            old_expiry_date=old_expiry,
+            new_expiry_date=control.expiry_date,
+            old_login_limit=old_login_limit,
+            new_login_limit=control.login_limit,
+            bill_status=bill_status,
+            remark=remark
+        )
+
+        messages.success(request, "Billing updated successfully")
+        return redirect("MobileApp:mobile_control_billing", pk=pk)
+
+    # ---------- HISTORY ----------
+    history = control.billing_history.all().order_by("-created_at")
+
+    return render(request, "mobileapp_billing.html", {
+        "control": control,
+        "expiry_date": expiry_date,
+        "history": history
+    })
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from .models import MobileBillingHistory
+
+@csrf_exempt
+@require_POST
+def toggle_billing_history_status(request, pk):
+    try:
+        history = MobileBillingHistory.objects.get(pk=pk)
+        history.bill_status = not history.bill_status
+        history.save()
+
+        return JsonResponse({
+            "success": True,
+            "status": history.bill_status
+        })
+    except MobileBillingHistory.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "error": "Record not found"
+        }, status=404)

@@ -187,8 +187,16 @@
                             <i class="fa-regular fa-copy"></i> Copy
                         </button>
                     </td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        #
+                    <td style="padding:12px;text-align:center;">
+                        {% if c.id %}
+                            <a href="{% url 'MobileApp:mobile_control_billing' c.id %}"
+                            class="btn btn-sm"
+                            style="background:#0ea5e9; color:white;">
+                            Billing
+                            </a>
+                        {% else %}
+                            <span style="color:#9ca3af;">-</span>
+                        {% endif %}
                     </td>
                     <td style="padding:12px;text-align:center;white-space: nowrap">
                         <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"

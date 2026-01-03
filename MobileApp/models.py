@@ -65,6 +65,7 @@ class MobileControl(models.Model):
 
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    expiry_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_date']
@@ -121,3 +122,35 @@ class ActiveDevice(models.Model):
 
     def __str__(self):
         return f"{self.control.client_id} - {self.device_id}"
+
+
+
+
+
+class MobileBillingHistory(models.Model):
+    control = models.ForeignKey(
+        MobileControl,
+        on_delete=models.CASCADE,
+        related_name="billing_history"
+    )
+
+    # allow + / - values
+    extended_days = models.IntegerField(default=0)
+    extended_login_limit = models.IntegerField(default=0)
+
+    old_expiry_date = models.DateTimeField(null=True, blank=True)
+    new_expiry_date = models.DateTimeField(null=True, blank=True)
+
+    old_login_limit = models.PositiveIntegerField()
+    new_login_limit = models.PositiveIntegerField()
+
+    bill_status = models.BooleanField(default=False)
+    remark = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.control.client_id} | {self.created_at}"
