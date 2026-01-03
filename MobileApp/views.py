@@ -460,9 +460,9 @@ def api_post_logout(request, endpoint):
         'error': 'Device not found for this license'
     }, status=404)
 
-
+from django.http import JsonResponse
 from django.utils import timezone
-from datetime import timedelta
+from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["GET"])
 def api_get_project_data(request, endpoint):
@@ -475,30 +475,27 @@ def api_get_project_data(request, endpoint):
         controls = MobileControl.objects.filter(project=project)
 
         customers_data = []
+        now = timezone.now()
 
         for control in controls:
             registered_devices = _device_payload(control)
+            registered_count = len(registered_devices)
 
-            # ---------- LICENSE EXPIRY CALCULATION ----------
-            expiry_date = None
+            # ---------- LICENSE EXPIRY (UPDATED LOGIC) ----------
+            expiry_date = control.expiry_date
             remaining_days = None
             is_expired = False
 
-            if control.package and control.package.days_limit > 0:
-                expiry_date = control.created_date + timedelta(days=control.package.days_limit)
-                now = timezone.now()
+            if expiry_date:
+                delta = expiry_date - now
+                remaining_days = delta.days
+                is_expired = delta.total_seconds() <= 0
 
-                if expiry_date <= now:
-                    remaining_days = 0
-                    is_expired = True
-
-                    # auto deactivate
-                    if control.status:
-                        control.status = False
-                        control.save()
-                else:
-                    remaining_days = (expiry_date - now).days
-            # ------------------------------------------------
+                # auto deactivate if expired
+                if is_expired and control.status:
+                    control.status = False
+                    control.save(update_fields=["status"])
+            # ---------------------------------------------------
 
             customers_data.append({
                 "customer_name": control.customer_name,
@@ -516,7 +513,7 @@ def api_get_project_data(request, endpoint):
                 ] if control.package else [],
 
                 "license_summary": {
-                    "registered_devices": len(registered_devices),
+                    "registered_devices": registered_count,
                     "max_devices": control.login_limit,
                 },
 
