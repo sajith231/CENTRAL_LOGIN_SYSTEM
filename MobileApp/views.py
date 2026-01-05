@@ -616,8 +616,15 @@ def mobile_control_billing(request, pk):
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date
 
+    # Check for unbilled history
+    has_unbilled_history = control.billing_history.filter(bill_status=False).exists()
+
     if request.method == "POST":
-        extend_days = int(request.POST.get("extend_days") or 0)
+        if has_unbilled_history:
+            messages.error(request, "Cannot update billing with outstanding unbilled items. Please clear pending bills first.")
+            return redirect("MobileApp:mobile_control_billing", pk=pk)
+
+        # extend_days is now calculated below based on package or input
         extend_login = int(request.POST.get("extend_login") or 0)
         bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
         remark = request.POST.get("remark", "").strip()
@@ -625,6 +632,17 @@ def mobile_control_billing(request, pk):
         # store OLD values for history
         old_login_limit = control.login_limit
         old_expiry = control.expiry_date
+
+        # ---------- EXTEND DAYS LOGIC ----------
+        package_id = request.POST.get('package')
+        
+        # If a package is selected, use its days limit
+        if package_id:
+            package = get_object_or_404(Package, pk=package_id)
+            extend_days = package.days_limit
+        else:
+            # Fallback to manual input if available (or 0)
+            extend_days = int(request.POST.get("extend_days") or 0)
 
         # ---------- LOGIN LIMIT (+ / -) ----------
         if extend_login != 0:
@@ -678,10 +696,15 @@ def mobile_control_billing(request, pk):
     # ---------- HISTORY ----------
     history = control.billing_history.all().order_by("-created_at")
 
+    # Available packages for this project
+    packages = Package.objects.filter(project=control.project)
+
     return render(request, "mobileapp_billing.html", {
         "control": control,
         "expiry_date": expiry_date,
-        "history": history
+        "history": history,
+        "packages": packages,
+        "has_unbilled_history": has_unbilled_history
     })
 
 from django.http import JsonResponse

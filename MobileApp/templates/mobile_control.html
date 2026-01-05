@@ -538,39 +538,7 @@
         alert("Copied: " + text);
     }
 </script>
-<script>
-    async function toggleBillStatus(controlId) {
-        if (!confirm("Change bill status?")) return;
 
-        try {
-            const response = await fetch(`/mobileapp/mobile_control/toggle-bill-status/${controlId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                const btn = document.getElementById(`billBtn_${controlId}`);
-                if (data.status) {
-                    btn.innerHTML = 'Billed';
-                    btn.style.background = '#16a34a';
-                } else {
-                    btn.innerHTML = 'Unbilled';
-                    btn.style.background = '#dc2626';
-                }
-            } else {
-                alert(data.error || 'Failed to update bill status');
-            }
-        } catch (error) {
-            alert('Error updating bill status');
-        }
-    }
-
-</script>
 <script>
     function openMoreDetails(btn) {
         document.getElementById("md_company").innerText   = btn.dataset.company || "-";
