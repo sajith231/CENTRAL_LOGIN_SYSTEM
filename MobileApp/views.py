@@ -643,8 +643,8 @@ def mobile_control_billing(request, pk):
             control.expiry_date = new_expiry
 
         # ---------- BILL STATUS ----------
-        control.bill_status = bill_status
-        control.save()
+        # control.bill_status = bill_status  <-- Logic changed: auto-calculated below
+        # control.save()
 
         # ---------- SAVE BILLING HISTORY ----------
         MobileBillingHistory.objects.create(
@@ -658,6 +658,13 @@ def mobile_control_billing(request, pk):
             bill_status=bill_status,
             remark=remark
         )
+
+        # RE-CALCULATE CONTROL STATUS
+        # If any history item is Unbilled (False), then Control is Unbilled
+        # Only if ALL are Billed (True) is Control Billed
+        has_unbilled = control.billing_history.filter(bill_status=False).exists()
+        control.bill_status = not has_unbilled
+        control.save()
 
         messages.success(request, "Billing updated successfully")
         return redirect("MobileApp:mobile_control_billing", pk=pk)
@@ -683,6 +690,12 @@ def toggle_billing_history_status(request, pk):
         history = MobileBillingHistory.objects.get(pk=pk)
         history.bill_status = not history.bill_status
         history.save()
+
+        # Update Parent Control Status
+        control = history.control
+        has_unbilled = control.billing_history.filter(bill_status=False).exists()
+        control.bill_status = not has_unbilled
+        control.save()
 
         return JsonResponse({
             "success": True,
