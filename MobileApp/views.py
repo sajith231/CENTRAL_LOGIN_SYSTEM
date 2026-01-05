@@ -139,6 +139,11 @@ def add_mobile_control(request):
         store = get_object_or_404(Store, pk=store_id)
         package = get_object_or_404(Package, pk=package_id)
 
+        # Calculate expiry date if package has a limit
+        expiry_date = None
+        if package.days_limit > 0:
+            expiry_date = timezone.now() + timedelta(days=package.days_limit)
+
         MobileControl.objects.create(
             project=project,
             store=store,
@@ -146,7 +151,8 @@ def add_mobile_control(request):
             customer_name=shop.name,
             client_id=shop.client_id,
             login_limit=int(login_limit),
-            package=package
+            package=package,
+            expiry_date=expiry_date
         )
 
         messages.success(request, 'Mobile control saved successfully!')
