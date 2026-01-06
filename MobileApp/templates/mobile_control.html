@@ -107,7 +107,13 @@
                 <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
                     data-status="{% if c.status %}active{% else %}inactive{% endif %}">
                     <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
-                    <td style="padding:12px;white-space: nowrap">{{ c.created_date|date:"d-m-Y" }}</td>
+                    <td style="padding:12px;white-space: nowrap">
+                        {{ c.created_date|date:"d-m-Y" }}
+                        <br>
+                        <small style="color:#9ca3af;">
+                            Updated: {{ c.updated_date|date:"d-m-Y H:i" }}
+                        </small>
+                    </td>
                     <td style="padding:12px;text-align:center;white-space: nowrap">
                         <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm"
                             style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">

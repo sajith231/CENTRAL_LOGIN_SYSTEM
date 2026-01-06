@@ -139,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # -------------------- I18N / TZ -----------------
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 

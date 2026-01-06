@@ -80,8 +80,9 @@ def mobile_control_list(request):
         MobileControl.objects
         .select_related('project', 'package')
         .prefetch_related('active_devices')
-        .all()
+        .order_by('-updated_date')   # ✅ SORT BY LATEST UPDATE
     )
+
 
     now = timezone.now()
 
@@ -609,7 +610,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import MobileControl, MobileBillingHistory
 
-
 def mobile_control_billing(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
 
@@ -621,27 +621,29 @@ def mobile_control_billing(request, pk):
 
     if request.method == "POST":
         if has_unbilled_history:
-            messages.error(request, "Cannot update billing with outstanding unbilled items. Please clear pending bills first.")
+            messages.error(
+                request,
+                "Cannot update billing with outstanding unbilled items. Please clear pending bills first."
+            )
             return redirect("MobileApp:mobile_control_billing", pk=pk)
 
-        # extend_days is now calculated below based on package or input
+        # ---------- INPUTS ----------
         extend_login = int(request.POST.get("extend_login") or 0)
         bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
         remark = request.POST.get("remark", "").strip()
 
-        # store OLD values for history
+        # ---------- STORE OLD VALUES ----------
         old_login_limit = control.login_limit
         old_expiry = control.expiry_date
 
         # ---------- EXTEND DAYS LOGIC ----------
-        package_id = request.POST.get('package')
-        
-        # If a package is selected, use its days limit
+        package_id = request.POST.get("package")
+
         if package_id:
             package = get_object_or_404(Package, pk=package_id)
             extend_days = package.days_limit
+            control.package = package
         else:
-            # Fallback to manual input if available (or 0)
             extend_days = int(request.POST.get("extend_days") or 0)
 
         # ---------- LOGIN LIMIT (+ / -) ----------
@@ -657,7 +659,6 @@ def mobile_control_billing(request, pk):
             if control.expiry_date:
                 new_expiry = control.expiry_date + timedelta(days=extend_days)
             else:
-                # first-time expiry setup
                 new_expiry = timezone.now() + timedelta(days=extend_days)
 
             if new_expiry < timezone.now():
@@ -665,10 +666,6 @@ def mobile_control_billing(request, pk):
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
 
             control.expiry_date = new_expiry
-
-        # ---------- BILL STATUS ----------
-        # control.bill_status = bill_status  <-- Logic changed: auto-calculated below
-        # control.save()
 
         # ---------- SAVE BILLING HISTORY ----------
         MobileBillingHistory.objects.create(
@@ -683,11 +680,11 @@ def mobile_control_billing(request, pk):
             remark=remark
         )
 
-        # RE-CALCULATE CONTROL STATUS
-        # If any history item is Unbilled (False), then Control is Unbilled
-        # Only if ALL are Billed (True) is Control Billed
+        # ---------- RE-CALCULATE BILL STATUS ----------
         has_unbilled = control.billing_history.filter(bill_status=False).exists()
         control.bill_status = not has_unbilled
+
+        # ✅ IMPORTANT: FULL SAVE (updates updated_date correctly)
         control.save()
 
         messages.success(request, "Billing updated successfully")
@@ -696,7 +693,7 @@ def mobile_control_billing(request, pk):
     # ---------- HISTORY ----------
     history = control.billing_history.all().order_by("-created_at")
 
-    # Available packages for this project
+    # ---------- PACKAGES ----------
     packages = Package.objects.filter(project=control.project)
 
     return render(request, "mobileapp_billing.html", {
