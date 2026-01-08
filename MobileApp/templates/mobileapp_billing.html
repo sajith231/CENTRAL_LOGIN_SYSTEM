@@ -110,7 +110,7 @@
 
     .input-group-icon {
         position: relative;
-        width:1000px;
+        width: 1000px;
     }
 
     .input-group-icon i {
@@ -130,6 +130,14 @@
 </style>
 
 <div class="container-fluid px-4 py-4">
+
+    <!-- BACK BUTTON -->
+    <div class="mb-3">
+        <a href="{% url 'MobileApp:mobile_control' %}" class="btn btn-outline-secondary btn-sm"
+            style="border-radius:20px; color:#94a3b8; border-color:#334155;">
+            <i class="fas fa-arrow-left me-1"></i> Back to Control
+        </a>
+    </div>
 
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -161,10 +169,12 @@
                         <i class="fas fa-key" style="color:#3b82f6; font-size:0.8rem;"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <p class="mb-0" style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
+                        <p class="mb-0"
+                            style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
                             License Key
                         </p>
-                        <h6 style="color:white; font-family:monospace; font-size:0.75rem; margin:0; word-break:break-all;">
+                        <h6
+                            style="color:white; font-family:monospace; font-size:0.75rem; margin:0; word-break:break-all;">
                             {% if control.license_key %}{{ control.license_key }}{% else %}No Key{% endif %}
                         </h6>
                     </div>
@@ -179,10 +189,12 @@
                         <i class="fas fa-users" style="color:#8b5cf6; font-size:0.8rem;"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <p class="mb-0" style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
+                        <p class="mb-0"
+                            style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
                             Current Users
                         </p>
-                        <h6 style="color:#3b82f6; font-size:1.2rem; font-weight:700; margin:0;">{{ control.login_limit }}</h6>
+                        <h6 style="color:#3b82f6; font-size:1.2rem; font-weight:700; margin:0;">{{ control.login_limit
+                            }}</h6>
                     </div>
                 </div>
             </div>
@@ -195,7 +207,8 @@
                         <i class="fas fa-calendar-alt" style="color:#10b981; font-size:0.8rem;"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <p class="mb-0" style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
+                        <p class="mb-0"
+                            style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
                             Expiry Date
                         </p>
                         <h6 style="color:white; font-size:0.85rem; font-weight:600; margin:0;">
@@ -218,11 +231,13 @@
             </div>
 
             {% if has_unbilled_history %}
-            <div class="alert mb-3" style="background:rgba(220, 38, 38, 0.15); border:1px solid #dc2626; color:#fca5a5; border-radius:8px; padding:12px;">
+            <div class="alert mb-3"
+                style="background:rgba(220, 38, 38, 0.15); border:1px solid #dc2626; color:#fca5a5; border-radius:8px; padding:12px;">
                 <div class="d-flex align-items-start">
                     <i class="fas fa-exclamation-triangle mt-1 me-2" style="font-size:1rem;"></i>
                     <div>
-                        <h6 style="color:#fecaca; font-weight:600; margin-bottom:4px; font-size:0.9rem;">Action Required</h6>
+                        <h6 style="color:#fecaca; font-weight:600; margin-bottom:4px; font-size:0.9rem;">Action Required
+                        </h6>
                         <p class="mb-0" style="font-size:0.85rem;">
                             Outstanding <strong>Unbilled</strong> items exist. Mark them as "Billed" before proceeding.
                         </p>
@@ -303,7 +318,8 @@
 
                     <!-- SUBMIT BUTTON -->
                     <div class="mt-3">
-                        <button type="submit" class="btn submit-btn px-5 py-2" {% if has_unbilled_history %}disabled{% endif %}
+                        <button type="submit" class="btn submit-btn px-5 py-2" {% if has_unbilled_history %}disabled{%
+                            endif %}
                             style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; font-size:0.95rem; {% if has_unbilled_history %}opacity:0.5; cursor:not-allowed;{% endif %}">
                             <i class="fas fa-save me-2"></i>Update Billing
                         </button>
@@ -326,20 +342,20 @@
                         // Activate validity tab
                         tabValidity.classList.add('active');
                         tabUsers.classList.remove('active');
-                        
+
                         secValidity.style.display = 'block';
                         secUsers.style.display = 'none';
-                        
+
                         operationType.value = 'validity';
                         inputUsers.value = '';
                     } else {
                         // Activate users tab
                         tabUsers.classList.add('active');
                         tabValidity.classList.remove('active');
-                        
+
                         secUsers.style.display = 'block';
                         secValidity.style.display = 'none';
-                        
+
                         operationType.value = 'users';
                         selectPkg.value = '';
                         handlePackageChange(selectPkg);
@@ -363,103 +379,114 @@
     <!-- BILLING HISTORY -->
     <div class="card" style="background:#0f172a; border:1px solid #1e293b; border-radius:10px;">
         <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="d-flex align-items-center">
-                            <div class="p-2 rounded me-2" style="background:#1e293b;">
-                                <i class="fas fa-history" style="color:#f59e0b; font-size:1rem;"></i>
-                            </div>
-                            <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Billing History</h5>
-                        </div>
-                        <span class="badge" style="background:#1e293b; color:#94a3b8; padding:6px 12px; font-size:0.8rem;">
-                            {{ history|length }} Record{{ history|length|pluralize }}
-                        </span>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="p-2 rounded me-2" style="background:#1e293b;">
+                        <i class="fas fa-history" style="color:#f59e0b; font-size:1rem;"></i>
                     </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover" style="color:white; font-size:0.85rem;">
-                            <thead>
-                                <tr style="border-bottom:2px solid #1e293b; background:#0a0f1e;">
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-clock me-1"></i>Date
-                                    </th>
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-calendar me-1"></i>Days
-                                    </th>
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-users me-1"></i>Users
-                                    </th>
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-exchange-alt me-1"></i>Change
-                                    </th>
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-credit-card me-1"></i>Status
-                                    </th>
-                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                        <i class="fas fa-comment me-1"></i>Remark
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody style="background:transparent;">
-                                {% for h in history %}
-                                <tr class="history-row" style="border-bottom:1px solid #1e293b; background:transparent;">
-                                    <td style="padding:12px; color:#e2e8f0; background:transparent;">
-                                        <div style="font-weight:500; font-size:0.85rem;">{{ h.created_at|date:"d M Y" }}</div>
-                                        <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i" }}</small>
-                                    </td>
-
-                                    <td style="padding:12px; background:transparent;">
-                                        <span class="badge" style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
-                                        color:{% if h.extended_days >= 0 %}#3b82f6{% else %}#dc2626{% endif %}; font-weight:600;">
-                                            {% if h.extended_days >= 0 %}+{% endif %}{{ h.extended_days }}
-                                        </span>
-                                    </td>
-
-                                    <td style="padding:12px; background:transparent;">
-                                        <span class="badge" style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
-                                        color:{% if h.extended_login_limit >= 0 %}#8b5cf6{% else %}#dc2626{% endif %}; font-weight:600;">
-                                            {% if h.extended_login_limit >= 0 %}+{% endif %}{{ h.extended_login_limit }}
-                                        </span>
-                                    </td>
-
-                                    <td style="padding:12px; font-family:monospace; background:transparent; color:#e2e8f0; font-size:0.85rem;">
-                                        <span style="color:#94a3b8;">{{ h.old_login_limit }}</span>
-                                        <i class="fas fa-arrow-right mx-1" style="color:#64748b; font-size:0.7rem;"></i>
-                                        <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
-                                    </td>
-
-                                    <td style="padding:12px; background:transparent;">
-                                        <button id="billingStatusBtn{{ h.id }}" onclick="toggleHistoryStatus({{ h.id }})"
-                                            class="btn billing-status-btn"
-                                            style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
-                                                   color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
-                                            {% if h.bill_status %}
-                                            <i class="fas fa-check-circle me-1"></i>Billed
-                                            {% else %}
-                                            <i class="fas fa-times-circle me-1"></i>Unbilled
-                                            {% endif %}
-                                        </button>
-                                    </td>
-
-                                    <td style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
-                                        {{ h.remark|default:"—" }}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr style="background:transparent;">
-                                    <td colspan="6" class="text-center" style="padding:40px 20px; color:#64748b; background:transparent;">
-                                        <i class="fas fa-inbox fa-2x mb-2" style="opacity:0.3;"></i>
-                                        <div style="font-size:0.95rem; font-weight:500;">No billing history available</div>
-                                        <small style="color:#475569; font-size:0.8rem;">Updates will appear here</small>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Billing History</h5>
                 </div>
+                <span class="badge" style="background:#1e293b; color:#94a3b8; padding:6px 12px; font-size:0.8rem;">
+                    {{ history|length }} Record{{ history|length|pluralize }}
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover" style="color:white; font-size:0.85rem;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #1e293b; background:#0a0f1e;">
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-clock me-1"></i>Date
+                            </th>
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-calendar me-1"></i>Days
+                            </th>
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-users me-1"></i>Users
+                            </th>
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-exchange-alt me-1"></i>Change
+                            </th>
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-credit-card me-1"></i>Status
+                            </th>
+                            <th
+                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                <i class="fas fa-comment me-1"></i>Remark
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody style="background:transparent;">
+                        {% for h in history %}
+                        <tr class="history-row" style="border-bottom:1px solid #1e293b; background:transparent;">
+                            <td style="padding:12px; color:#e2e8f0; background:transparent;">
+                                <div style="font-weight:500; font-size:0.85rem;">{{ h.created_at|date:"d M Y" }}</div>
+                                <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i" }}</small>
+                            </td>
+
+                            <td style="padding:12px; background:transparent;">
+                                <span class="badge"
+                                    style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
+                                        color:{% if h.extended_days >= 0 %}#3b82f6{% else %}#dc2626{% endif %}; font-weight:600;">
+                                    {% if h.extended_days >= 0 %}+{% endif %}{{ h.extended_days }}
+                                </span>
+                            </td>
+
+                            <td style="padding:12px; background:transparent;">
+                                <span class="badge"
+                                    style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
+                                        color:{% if h.extended_login_limit >= 0 %}#8b5cf6{% else %}#dc2626{% endif %}; font-weight:600;">
+                                    {% if h.extended_login_limit >= 0 %}+{% endif %}{{ h.extended_login_limit }}
+                                </span>
+                            </td>
+
+                            <td
+                                style="padding:12px; font-family:monospace; background:transparent; color:#e2e8f0; font-size:0.85rem;">
+                                <span style="color:#94a3b8;">{{ h.old_login_limit }}</span>
+                                <i class="fas fa-arrow-right mx-1" style="color:#64748b; font-size:0.7rem;"></i>
+                                <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
+                            </td>
+
+                            <td style="padding:12px; background:transparent;">
+                                <button id="billingStatusBtn{{ h.id }}" onclick="toggleHistoryStatus({{ h.id }})"
+                                    class="btn billing-status-btn"
+                                    style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
+                                                   color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
+                                    {% if h.bill_status %}
+                                    <i class="fas fa-check-circle me-1"></i>Billed
+                                    {% else %}
+                                    <i class="fas fa-times-circle me-1"></i>Unbilled
+                                    {% endif %}
+                                </button>
+                            </td>
+
+                            <td
+                                style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
+                                {{ h.remark|default:"—" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr style="background:transparent;">
+                            <td colspan="6" class="text-center"
+                                style="padding:40px 20px; color:#64748b; background:transparent;">
+                                <i class="fas fa-inbox fa-2x mb-2" style="opacity:0.3;"></i>
+                                <div style="font-size:0.95rem; font-weight:500;">No billing history available</div>
+                                <small style="color:#475569; font-size:0.8rem;">Updates will appear here</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
+</div>
 
 </div>
 

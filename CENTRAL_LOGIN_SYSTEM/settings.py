@@ -47,7 +47,7 @@ if CLOUDFLARE_R2_ENABLED:
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
             "OPTIONS": {
                 "access_key": os.getenv("CLOUDFLARE_R2_ACCESS_KEY"),
-                "secret_key": os.getenv("CLOUDFLARE_R2_SECRET_KEY"),
+                "esecret_key": os.getenv("CLOUDFLARE_R2_SECRET_KEY"),
                 "bucket_name": os.getenv("CLOUDFLARE_R2_BUCKET"),
                 "endpoint_url": os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
                 "region_name": "auto",
