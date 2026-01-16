@@ -318,8 +318,7 @@
 
                     <!-- SUBMIT BUTTON -->
                     <div class="mt-3">
-                        <button type="submit" class="btn submit-btn px-5 py-2" {% if has_unbilled_history %}disabled{%
-                            endif %}
+                        <button type="submit" class="btn submit-btn px-5 py-2" {% if has_unbilled_history %}disabled{% endif %}
                             style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; font-size:0.95rem; {% if has_unbilled_history %}opacity:0.5; cursor:not-allowed;{% endif %}">
                             <i class="fas fa-save me-2"></i>Update Billing
                         </button>
