@@ -129,7 +129,7 @@ def add_mobile_control(request):
         shop_id = request.POST.get('shop')
         store_id = request.POST.get('store')
         package_id = request.POST.get('package')
-        login_limit = request.POST.get('login_limit', '1').strip()
+        login_limit = request.POST.get('login_limit', '0').strip()
 
         if not project_id or not shop_id or not store_id or not package_id:
             messages.error(request, 'All fields are required.')
@@ -188,7 +188,6 @@ def edit_mobile_control(request, pk):
         control.customer_name = shop.name
         control.client_id = shop.client_id
         control.package = package
-        control.login_limit = int(request.POST.get('login_limit'))
         control.save()
 
         messages.success(request, 'Mobile control updated successfully!')

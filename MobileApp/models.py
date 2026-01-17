@@ -56,7 +56,7 @@ class MobileControl(models.Model):
     # 16 chars + 3 hyphens = 19
     license_key = models.CharField(max_length=19, unique=True, null=True, blank=True, editable=False)
 
-    login_limit = models.PositiveIntegerField(default=1)
+    login_limit = models.PositiveIntegerField(default=0)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
 
