@@ -25,19 +25,16 @@
             <option value="{{ p.grouper }}">{{ p.grouper }}</option>
             {% endfor %}
         </select>
-        <input type="text" id="clientIdFilter"
-        placeholder="Search Client ID"
-        style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+        <input type="text" id="clientIdFilter" placeholder="Search Client ID" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white; width:220px;">
 
-    <!-- Status Filter -->
-    <select id="statusFilter"
-        style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+        <!-- Status Filter -->
+        <select id="statusFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white;">
-        <option value="">All Status</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-    </select>
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
     </div>
 
     <script>
@@ -52,43 +49,41 @@
         });
     </script>
 
-    
-    
+
+
 
 </div>
 
 
-    {% if messages %}
-    {% for message in messages %}
-    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
-        {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
+{% if messages %}
+{% for message in messages %}
+<div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
 
-    {% if controls %}
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr style="background:#1e293b;">
-                    <th style="padding:12px;white-space: nowrap;">No</th>
-                    <th style="padding:12px;white-space: nowrap;">Created</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
-                    <th style="padding:12px;white-space: nowrap;">Company</th>
-                    <th style="padding:12px;white-space: nowrap;">Project</th>
-                    <th style="padding:12px;white-space: nowrap;">More details</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
-                    <th style="padding:12px;white-space: nowrap;">License Key</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
-                    <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
-
-                    
+{% if controls %}
+<div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="background:#1e293b;">
+                <th style="padding:12px;white-space: nowrap;">No</th>
+                <th style="padding:12px;white-space: nowrap;">Created</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
+                <th style="padding:12px;white-space: nowrap;">Company</th>
+                <th style="padding:12px;white-space: nowrap;">Project</th>
+                <th style="padding:12px;white-space: nowrap;">More details</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
+                <th style="padding:12px;white-space: nowrap;">License Key</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
 
 
 
@@ -100,137 +95,133 @@
 
 
 
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in controls %}
-                <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
-                    data-status="{% if c.status %}active{% else %}inactive{% endif %}">
-                    <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
-                    <td style="padding:12px;white-space: nowrap">
-                        {{ c.created_date|date:"d-m-Y" }}
-                        <br>
-                        <small style="color:#9ca3af;">
-                            Updated: {{ c.updated_date|date:"d-m-Y H:i" }}
-                        </small>
-                    </td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm"
-                            style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
-                            {% if c.status %}Active{% else %}Inactive{% endif %}
-                        </button>
-                    </td>
-                    <td style="padding:12px;white-space: nowrap">
-                        {{ c.customer_name }}
-                        <br>
-                        <small style="color:#9ca3af;">
-                            {{ c.shop.place }}
-                        </small>
-                    </td>
-                    <td style="padding:12px;white-space: nowrap">
-                        <strong>{{ c.project.project_name }}</strong>
-                        <br>
-                        {% if c.package %}
-                        <small style="color:#9ca3af;">
-                            {{ c.package.package_name }}
-                        </small>
-                        {% else %}
-                        <small style="color:#9ca3af;">No Package</small>
-                        {% endif %}
-                    </td>
-                    <td style="padding:12px;white-space: nowrap; text-align:center;">
-                        <button class="btn btn-sm"
-                            style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
-                            data-bs-toggle="modal"
-                            data-bs-target="#moreDetailsModal"
 
-                            data-company="{{ c.customer_name }}"
-                            data-corporate="{{ c.store.name }}"
-                            data-branch="{{ c.branch.name|default:'-' }}"
-                            data-client="{{ c.client_id }}"
 
-                            onclick="openMoreDetails(this)"
-                        >
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in controls %}
+            <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
+                data-status="{% if c.status %}active{% else %}inactive{% endif %}">
+                <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
+                <td style="padding:12px;white-space: nowrap">
+                    {{ c.created_date|date:"d-m-Y" }}
+                    <br>
+                    <small style="color:#9ca3af;">
+                        Updated: {{ c.updated_date|date:"d-m-Y H:i" }}
+                    </small>
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm"
+                        style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                        {% if c.status %}Active{% else %}Inactive{% endif %}
+                    </button>
+                </td>
+                <td style="padding:12px;white-space: nowrap">
+                    {{ c.customer_name }}
+                    <br>
+                    <small style="color:#9ca3af;">
+                        {{ c.shop.place }}
+                    </small>
+                </td>
+                <td style="padding:12px;white-space: nowrap">
+                    <strong>{{ c.project.project_name }}</strong>
+                    <br>
+                    {% if c.package %}
+                    <small style="color:#9ca3af;">
+                        {{ c.package.package_name }}
+                    </small>
+                    {% else %}
+                    <small style="color:#9ca3af;">No Package</small>
+                    {% endif %}
+                </td>
+                <td style="padding:12px;white-space: nowrap; text-align:center;">
+                    <button class="btn btn-sm"
+                        style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
+                        data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
+                        data-corporate="{{ c.store.name }}" data-branch="{{ c.branch.name|default:'-' }}"
+                        data-client="{{ c.client_id }}" onclick="openMoreDetails(this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
 
-                    </td>
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    <button class="btn btn-sm"
+                        style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
+                        data-bs-toggle="modal" data-bs-target="#deviceModal{{ c.id }}"
+                        onclick="loadDeviceList('{{ c.project.api_endpoint }}', '{{ c.license_key }}', {{ forloop.counter }})">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </td>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        {{ c.registered_count }}
-                    </td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        {{ c.balance_count }}
-                    </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {{ c.registered_count }}
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {{ c.balance_count }}
+                </td>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        {% if c.remaining_days is None %}
-                        <span style="color:#9ca3af;">Unlimited</span>
-                        {% elif c.is_expired %}
-                        <span style="color:#dc2626; font-weight:bold;">Expired</span>
-                        {% else %}
-                        <div>
-                            <span id="countdown_{{ c.id }}" data-expiry="{{ c.expiry_date|date:'c' }}"
-                                style="{% if c.remaining_days <= 3 %}color:#dc2626; font-weight:bold;{% else %}color:#16a34a;{% endif %} font-size:14px;">
-                                {{ c.remaining_days }} day{{ c.remaining_days|pluralize }}
-                            </span>
-                            {% if c.expiry_date %}
-                            <div style="font-size:11px; color:#6b7280; margin-top:4px;">
-                                <small>Expires: {{ c.expiry_date|date:"M d, Y" }}</small>
-                            </div>
-                            {% endif %}
+
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm"
+                        style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                </td>
+
+                <td style="padding:12px;white-space: nowrap">
+                    <span id="license_{{ c.id }}">{{ c.license_key }}</span>
+                </td>
+                <td style="padding:12px;text-align:center;">
+                    {% if c.id %}
+                    <a href="{% url 'MobileApp:mobile_control_billing' c.id %}" class="btn btn-sm"
+                        style="background:#0ea5e9; color:white;">
+                        Billing
+                    </a>
+                    {% else %}
+                    <span style="color:#9ca3af;">-</span>
+                    {% endif %}
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"
+                        style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                        {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
+                    </button>
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.remaining_days is None %}
+                    <span style="color:#9ca3af;">Unlimited</span>
+                    {% elif c.is_expired %}
+                    <span style="color:#dc2626; font-weight:bold;">Expired</span>
+                    {% else %}
+                    <div>
+                        <span id="countdown_{{ c.id }}" data-expiry="{{ c.expiry_date|date:'c' }}"
+                            style="{% if c.remaining_days <= 3 %}color:#dc2626; font-weight:bold;{% else %}color:#16a34a;{% endif %} font-size:14px;">
+                            {{ c.remaining_days }} day{{ c.remaining_days|pluralize }}
+                        </span>
+                        {% if c.expiry_date %}
+                        <div style="font-size:11px; color:#6b7280; margin-top:4px;">
+                            <small>Expires: {{ c.expiry_date|date:"M d, Y" }}</small>
                         </div>
                         {% endif %}
-                    </td>
-                    <td style="padding:12px;white-space: nowrap">
-                        <span id="license_{{ c.id }}">{{ c.license_key }}</span>
-                    </td>
+                    </div>
+                    {% endif %}
+                </td>
 
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm"
-                            style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
-                            <i class="fa-regular fa-copy"></i> Copy
-                        </button>
-                    </td>
-                    <td style="padding:12px;text-align:center;">
-                        {% if c.id %}
-                            <a href="{% url 'MobileApp:mobile_control_billing' c.id %}"
-                            class="btn btn-sm"
-                            style="background:#0ea5e9; color:white;">
-                            Billing
-                            </a>
-                        {% else %}
-                            <span style="color:#9ca3af;">-</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"
-                            style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
-                            {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
-                        </button>
-                    </td>
-                    <td style="padding:12px;text-align:center;white-space: nowrap">
-                        <button class="btn btn-sm"
-                            style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
-                            data-bs-toggle="modal" data-bs-target="#deviceModal{{ c.id }}"
-                            onclick="loadDeviceList('{{ c.project.api_endpoint }}', '{{ c.license_key }}', {{ forloop.counter }})">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                    </td>
-                    <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
-                        <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
-                            style="background:#2563eb; color:white;">Edit</a>
+                <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
+                    <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
+                        style="background:#2563eb; color:white;">Edit</a>
 
-                        {% if c.id %}
-                        <button class="btn" style="background:#b91c1c; color:white;" data-bs-toggle="modal"
-                            data-bs-target="#deleteModal{{ c.id }}">
-                            Delete
-                        </button>
-                        {% else %}
-                        <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
-                        {% endif %}
-                    </td>
+                    {% if c.id %}
+                    <button class="btn" style="background:#b91c1c; color:white;" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal{{ c.id }}">
+                        Delete
+                    </button>
+                    {% else %}
+                    <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
+                    {% endif %}
+                </td>
 
 
 
@@ -254,20 +245,20 @@
 
 
 
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 
-    <p style="margin-top:16px; color:#9ca3af;">Total Controls: {{ controls.count }}</p>
+<p style="margin-top:16px; color:#9ca3af;">Total Controls: {{ controls.count }}</p>
 
-    {% else %}
-    <div style="padding:40px; text-align:center; color:#9ca3af;">
-        <h3>No controls found</h3>
-    </div>
-    {% endif %}
+{% else %}
+<div style="padding:40px; text-align:center; color:#9ca3af;">
+    <h3>No controls found</h3>
+</div>
+{% endif %}
 </div>
 
 
@@ -547,34 +538,34 @@
 
 <script>
     function openMoreDetails(btn) {
-        document.getElementById("md_company").innerText   = btn.dataset.company || "-";
+        document.getElementById("md_company").innerText = btn.dataset.company || "-";
         document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
-        document.getElementById("md_branch").innerText    = btn.dataset.branch || "-";
-        document.getElementById("md_client").innerText    = btn.dataset.client || "-";
+        document.getElementById("md_branch").innerText = btn.dataset.branch || "-";
+        document.getElementById("md_client").innerText = btn.dataset.client || "-";
     }
 </script>
 <script>
-function applyFilters() {
-    const clientFilter = document.getElementById("clientIdFilter").value.toLowerCase();
-    const statusFilter = document.getElementById("statusFilter").value;
+    function applyFilters() {
+        const clientFilter = document.getElementById("clientIdFilter").value.toLowerCase();
+        const statusFilter = document.getElementById("statusFilter").value;
 
-    const rows = document.querySelectorAll("table tbody tr");
+        const rows = document.querySelectorAll("table tbody tr");
 
-    rows.forEach(row => {
-        const clientId = (row.dataset.clientId || "").toLowerCase();
-        const status   = row.dataset.status || "";
+        rows.forEach(row => {
+            const clientId = (row.dataset.clientId || "").toLowerCase();
+            const status = row.dataset.status || "";
 
-        const clientMatch = clientId.includes(clientFilter);
-        const statusMatch =
-            statusFilter === "" || status === statusFilter;
+            const clientMatch = clientId.includes(clientFilter);
+            const statusMatch =
+                statusFilter === "" || status === statusFilter;
 
-        row.style.display = (clientMatch && statusMatch) ? "" : "none";
-    });
-}
+            row.style.display = (clientMatch && statusMatch) ? "" : "none";
+        });
+    }
 
-// listeners
-document.getElementById("clientIdFilter").addEventListener("keyup", applyFilters);
-document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    // listeners
+    document.getElementById("clientIdFilter").addEventListener("keyup", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
 </script>
 
 
