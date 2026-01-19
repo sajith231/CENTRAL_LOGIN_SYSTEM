@@ -417,12 +417,15 @@
         const res = await fetch(url);
         const data = await res.json();
         const customer = data.customers.find(item => item.license_key === license);
-        const devices = customer?.registered_devices || [];
+        let devices = customer?.registered_devices || [];
 
         if (devices.length === 0) {
             container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
             return;
         }
+
+        // Sort devices by logged_in_at (latest first)
+        devices.sort((a, b) => new Date(b.logged_in_at) - new Date(a.logged_in_at));
 
         let html = `
         <table style="width:100%; font-size:13px; color:white;">

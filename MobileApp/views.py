@@ -236,7 +236,7 @@ def _device_payload(control):
             'device_name',  # 👈 Added
             'ip_address',
             'logged_in_at',
-        ).order_by('device_id')
+        ).order_by('-logged_in_at')
     )
 
 @csrf_exempt
