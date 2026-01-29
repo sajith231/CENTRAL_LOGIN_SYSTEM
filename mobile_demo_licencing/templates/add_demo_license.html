@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card" style="background:#0f172a; padding:20px; color:white;">
+
+  <!-- Heading -->
+  <h2 style="color:white; margin-bottom:20px;">
+    Create Demo License
+  </h2>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Label -->
+    <label style="color:white; font-weight:600;">
+      Select OG License
+    </label>
+
+    <!-- Dropdown -->
+    <select name="og_license"
+            class="form-control"
+            required
+            style="
+              background:#ffffff;
+              color:#000000;
+              border:1px solid #334155;
+              margin-top:6px;
+            ">
+
+      <option value="" style="color:#000;">Select</option>
+
+      {% for lic in og_licenses %}
+        <option value="{{ lic.id }}" style="color:#000;">
+          {{ lic.project.project_name }} ({{ lic.license_key }})
+        </option>
+      {% endfor %}
+    </select>
+
+    <!-- Button -->
+    <button class="btn btn-primary mt-3">
+      Create Demo
+    </button>
+
+  </form>
+</div>
+
+{% endblock %}

@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="card" style="padding:20px;">
-    <h2 style="color:whitesmoke;">Edit Mobile Control</h2>
+    <h2 style="color:white;">Edit Mobile Control</h2>
 
     <form method="POST">
         {% csrf_token %}
@@ -11,10 +11,9 @@
         <div class="mb-3">
             <label>Project</label>
             <select name="project" id="projectSelect" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for project in projects %}
-                <option value="{{ project.id }}"
-                        {% if project.id == control.project.id %}selected{% endif %}>
+                <option value="{{ project.id }}" {% if project.id==control.project.id %}selected{% endif %}>
                     {{ project.project_name }}
                 </option>
                 {% endfor %}
@@ -25,7 +24,7 @@
         <div class="mb-3">
             <label>Package</label>
             <select name="package" id="packageSelect" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
             </select>
         </div>
 
@@ -33,11 +32,11 @@
         <div class="mb-3">
             <label>Branch</label>
             <select id="branchSelect" name="branch" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Branch</option>
                 {% for b in branches %}
-                <option value="{{ b.id }}"
-                        {% if control.shop.branch and control.shop.branch.id == b.id %}selected{% endif %}>
+                <option value="{{ b.id }}" {% if control.shop.branch and control.shop.branch.id==b.id %}selected{% endif
+                    %}>
                     {{ b.name }} - {{ b.place }}
                 </option>
                 {% endfor %}
@@ -48,11 +47,10 @@
         <div class="mb-3">
             <label>Corporate</label>
             <select id="storeSelect" name="store" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for store in stores %}
-                <option value="{{ store.id }}"
-                        data-branch="{{ store.branch_id }}"
-                        {% if control.store.id == store.id %}selected{% endif %}>
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if control.store.id==store.id
+                    %}selected{% endif %}>
                     {{ store.name }}
                 </option>
                 {% endfor %}
@@ -63,13 +61,10 @@
         <div class="mb-3">
             <label>Company</label>
             <select id="shopSelect" name="shop" class="form-control" required
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for shop in shops %}
-                <option value="{{ shop.id }}"
-                        data-client="{{ shop.client_id }}"
-                        data-store="{{ shop.store_id }}"
-                        data-branch="{{ shop.branch_id }}"
-                        {% if shop.id == control.shop.id %}selected{% endif %}>
+                <option value="{{ shop.id }}" data-client="{{ shop.client_id }}" data-store="{{ shop.store_id }}"
+                    data-branch="{{ shop.branch_id }}" {% if shop.id==control.shop.id %}selected{% endif %}>
                     {{ shop.name }}
                 </option>
                 {% endfor %}
@@ -79,19 +74,25 @@
         <!-- Client ID -->
         <div class="mb-3">
             <label>Client ID</label>
-            <input type="text" id="clientIdInput" class="form-control"
-                   value="{{ control.client_id }}" readonly
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <input type="text" id="clientIdInput" class="form-control" value="{{ control.client_id }}" readonly
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
         <!-- Login Limit -->
-       
+
+
+        <!-- Login Limit -->
+        <div class="mb-3">
+            <label>Number of Users</label>
+            <input type="number" name="login_limit" class="form-control" value="{{ control.login_limit }}" min="0"
+                required style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
 
         <!-- License Key -->
         <div class="mb-3">
             <label>License Key</label>
             <input type="text" class="form-control" value="{{ control.license_key }}" readonly
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
         <button type="submit" class="btn btn-primary">Update</button>
@@ -100,87 +101,87 @@
 
 <!-- Auto Set Client ID -->
 <script>
-const branchSelect = document.getElementById("branchSelect");
-const storeSelect  = document.getElementById("storeSelect");
-const shopSelect   = document.getElementById("shopSelect");
-const clientInput  = document.getElementById("clientIdInput");
+    const branchSelect = document.getElementById("branchSelect");
+    const storeSelect = document.getElementById("storeSelect");
+    const shopSelect = document.getElementById("shopSelect");
+    const clientInput = document.getElementById("clientIdInput");
 
-// Keep original option lists
-const allStoreOptions = Array.from(storeSelect.options);
-const allShopOptions  = Array.from(shopSelect.options);
+    // Keep original option lists
+    const allStoreOptions = Array.from(storeSelect.options);
+    const allShopOptions = Array.from(shopSelect.options);
 
-// Filter Corporate on Branch change
-branchSelect.addEventListener("change", function () {
-    const branchId = this.value;
+    // Filter Corporate on Branch change
+    branchSelect.addEventListener("change", function () {
+        const branchId = this.value;
 
-    storeSelect.innerHTML = '';
-    storeSelect.appendChild(allStoreOptions[0].cloneNode(true));
+        storeSelect.innerHTML = '';
+        storeSelect.appendChild(allStoreOptions[0].cloneNode(true));
 
-    allStoreOptions.forEach(opt => {
-        if (!opt.value) return;
-        if (opt.getAttribute("data-branch") === branchId) {
-            storeSelect.appendChild(opt.cloneNode(true));
-        }
+        allStoreOptions.forEach(opt => {
+            if (!opt.value) return;
+            if (opt.getAttribute("data-branch") === branchId) {
+                storeSelect.appendChild(opt.cloneNode(true));
+            }
+        });
+
+        shopSelect.innerHTML = '';
+        shopSelect.appendChild(allShopOptions[0].cloneNode(true));
+        clientInput.value = '';
     });
 
-    shopSelect.innerHTML = '';
-    shopSelect.appendChild(allShopOptions[0].cloneNode(true));
-    clientInput.value = '';
-});
+    // Filter Company on Corporate change
+    storeSelect.addEventListener("change", function () {
+        const storeId = this.value;
+        const branchId = branchSelect.value;
 
-// Filter Company on Corporate change
-storeSelect.addEventListener("change", function () {
-    const storeId  = this.value;
-    const branchId = branchSelect.value;
+        shopSelect.innerHTML = '';
+        shopSelect.appendChild(allShopOptions[0].cloneNode(true));
 
-    shopSelect.innerHTML = '';
-    shopSelect.appendChild(allShopOptions[0].cloneNode(true));
+        allShopOptions.forEach(opt => {
+            if (!opt.value) return;
+            if (opt.getAttribute("data-store") === storeId &&
+                opt.getAttribute("data-branch") === branchId) {
+                shopSelect.appendChild(opt.cloneNode(true));
+            }
+        });
 
-    allShopOptions.forEach(opt => {
-        if (!opt.value) return;
-        if (opt.getAttribute("data-store") === storeId &&
-            opt.getAttribute("data-branch") === branchId) {
-            shopSelect.appendChild(opt.cloneNode(true));
-        }
+        clientInput.value = '';
     });
 
-    clientInput.value = '';
-});
-
-// Auto set Client ID
-shopSelect.addEventListener("change", function () {
-    const selected = this.options[this.selectedIndex];
-    clientInput.value = selected.getAttribute("data-client") || "";
-});
+    // Auto set Client ID
+    shopSelect.addEventListener("change", function () {
+        const selected = this.options[this.selectedIndex];
+        clientInput.value = selected.getAttribute("data-client") || "";
+    });
 </script>
 
 <!-- Load Packages -->
 <script>
-let selectedPkg = "{{ control.package.id }}";
-let selectedProject = "{{ control.project.id }}";
+    let selectedPkg = "{{ control.package.id }}";
+    let selectedProject = "{{ control.project.id }}";
 
-function loadPackages(projectID, selectedPkgID = null) {
-    fetch(`/module-package/get-packages/${projectID}/`)
-        .then(res => res.json())
-        .then(data => {
-            let pkgSelect = document.getElementById("packageSelect");
-            pkgSelect.innerHTML = "";
+    function loadPackages(projectID, selectedPkgID = null) {
+        fetch(`/module-package/get-packages/${projectID}/`)
+            .then(res => res.json())
+            .then(data => {
+                let pkgSelect = document.getElementById("packageSelect");
+                pkgSelect.innerHTML = "";
 
-            data.forEach(pkg => {
-                pkgSelect.innerHTML += `
+                data.forEach(pkg => {
+                    pkgSelect.innerHTML += `
                     <option value="${pkg.id}"
                         ${selectedPkgID == pkg.id ? "selected" : ""}>
                         ${pkg.package_name}
                     </option>`;
+                });
             });
-        });
-}
+    }
 
-loadPackages(selectedProject, selectedPkg);
+    loadPackages(selectedProject, selectedPkg);
 
-document.getElementById("projectSelect").addEventListener("change", function () {
-    loadPackages(this.value);
-});
+    document.getElementById("projectSelect").addEventListener("change", function () {
+        loadPackages(this.value);
+    });
 </script>
 
 {% endblock %}

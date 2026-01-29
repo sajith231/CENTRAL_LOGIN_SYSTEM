@@ -188,6 +188,10 @@ def edit_mobile_control(request, pk):
         control.customer_name = shop.name
         control.client_id = shop.client_id
         control.package = package
+        
+        login_limit = request.POST.get('login_limit', '0').strip()
+        control.login_limit = int(login_limit)
+        
         control.save()
 
         messages.success(request, 'Mobile control updated successfully!')
