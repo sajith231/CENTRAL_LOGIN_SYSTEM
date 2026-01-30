@@ -10,10 +10,19 @@
       Mobile Demo Licensing
     </h2>
 
-    <a href="{% url 'DemoLicensing:demo_add' %}" class="btn"
-       style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
-      <i class="fa-solid fa-plus"></i> Add Demo License
-    </a>
+    <div style="display:flex; gap:8px;">
+      <!-- OG Based Demo -->
+      <a href="{% url 'DemoLicensing:demo_add' %}" class="btn"
+         style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+        <i class="fa-solid fa-plus"></i> Add Demo License
+      </a>
+
+      <!-- Manual Demo -->
+      <a href="{% url 'DemoLicensing:demo_add_manual' %}" class="btn"
+         style="background:#f59e0b; color:black; padding:8px 16px; border-radius:6px;">
+        <i class="fa-solid fa-pen"></i> Manual Demo
+      </a>
+    </div>
   </div>
 
   <!-- Table -->
@@ -22,17 +31,17 @@
     <table style="width:100%; border-collapse:collapse; color:white;">
       <thead>
         <tr style="background:#1e293b;">
-          <th style="padding:12px; color:white;">No</th>
-          <th style="padding:12px; color:white;">Created</th>
-          <th style="padding:12px; color:white;">Company</th>
-          <th style="padding:12px; color:white;">Project / OG License</th>
-          <th style="padding:12px; color:white;">Demo License</th>
-          <th style="padding:12px; color:white;">T.Lic</th>
-          <th style="padding:12px; color:white;">Reg.Dev</th>
-          <th style="padding:12px; color:white;">Bal.Lic</th>
-          <th style="padding:12px; color:white;">Demo Limit</th>
-          <th style="padding:12px; color:white;">Status</th>
-          <th style="padding:12px; color:white;">Actions</th>
+          <th style="padding:12px;">No</th>
+          <th style="padding:12px;">Created</th>
+          <th style="padding:12px;">Company</th>
+          <th style="padding:12px;">Project / OG License</th>
+          <th style="padding:12px;">Demo License</th>
+          <th style="padding:12px;">T.Lic</th>
+          <th style="padding:12px;">Reg.Dev</th>
+          <th style="padding:12px;">Bal.Lic</th>
+          <th style="padding:12px;">Demo Limit</th>
+          <th style="padding:12px;">Status</th>
+          <th style="padding:12px;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -42,20 +51,29 @@
 
           <!-- Created -->
           <td style="padding:12px;">
-            {{ d.original_license.created_date|date:"d-m-Y" }}
+            {{ d.created_at|date:"d-m-Y" }}
           </td>
 
           <!-- Company -->
           <td style="padding:12px;">
-            {{ d.original_license.customer_name }}
+            {% if d.original_license %}
+              {{ d.original_license.customer_name }}
+            {% else %}
+              {{ d.company_name }}
+            {% endif %}
           </td>
 
-          <!-- Project + OG License -->
+          <!-- Project / OG -->
           <td style="padding:12px;">
-            <strong>{{ d.original_license.project.project_name }}</strong><br>
-            <small style="color:#9ca3af;">
-              ({{ d.original_license.license_key }})
-            </small>
+            {% if d.original_license %}
+              <strong>{{ d.original_license.project.project_name }}</strong><br>
+              <small style="color:#9ca3af;">
+                ({{ d.original_license.license_key }})
+              </small>
+            {% else %}
+              <strong>{{ d.project.project_name }}</strong><br>
+              <small style="color:#9ca3af;">(Manual)</small>
+            {% endif %}
           </td>
 
           <!-- Demo License -->
@@ -67,18 +85,30 @@
 
           <!-- T.Lic -->
           <td style="padding:12px; text-align:center;">
-            {{ d.original_license.login_limit }}
+            {% if d.original_license %}
+              {{ d.original_license.login_limit }}
+            {% else %}
+              -
+            {% endif %}
           </td>
 
           <!-- Reg.Dev -->
           <td style="padding:12px; text-align:center;">
-            {{ d.original_license.active_devices.count }}
+            {% if d.original_license %}
+              {{ d.original_license.active_devices.count }}
+            {% else %}
+              -
+            {% endif %}
           </td>
 
           <!-- Bal.Lic -->
           <td style="padding:12px; text-align:center;">
-            {{ d.original_license.login_limit|add:d.original_license.active_devices.count|floatformat:0 }}
+            {% if d.original_license %}
+              {{ d.original_license.login_limit|default:0|add:d.original_license.active_devices.count|floatformat:0 }}
 
+            {% else %}
+              -
+            {% endif %}
           </td>
 
           <!-- Demo Limit -->

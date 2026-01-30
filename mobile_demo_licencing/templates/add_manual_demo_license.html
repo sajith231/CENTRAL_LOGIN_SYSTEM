@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="background:#0f172a; padding:20px; color:white;">
+  <h2>Manual Demo License</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <label>Company</label>
+    <input type="text" name="company" class="form-control" required>
+
+    <label class="mt-2">Project</label>
+    <select name="project" id="projectSelect" class="form-control" required>
+      <option value="">Select Project</option>
+      {% for p in projects %}
+        <option value="{{ p.id }}">{{ p.project_name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="mt-2">Package</label>
+    <select name="package" id="packageSelect" class="form-control" required>
+      <option value="">Select Package</option>
+    </select>
+
+    <label class="mt-2">Demo Login Limit</label>
+    <input type="number" name="demo_login_limit" value="1" class="form-control">
+
+    <button class="btn btn-success mt-3">Create Manual Demo</button>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const projectSelect = document.getElementById("projectSelect");
+  const packageSelect = document.getElementById("packageSelect");
+
+  // Django dynamic URL
+  const urlTemplate = "{% url 'ModuleAndPackage:get_packages' 0 %}";
+
+  projectSelect.addEventListener("change", function () {
+    const projectId = this.value;
+
+    if (!projectId) {
+      packageSelect.innerHTML = "<option value=''>Select Package</option>";
+      return;
+    }
+
+    packageSelect.innerHTML = "<option>Loading...</option>";
+
+    const url = urlTemplate.replace("/0/", "/" + projectId + "/");
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        packageSelect.innerHTML = "<option value=''>Select Package</option>";
+        if (!data.length) {
+          packageSelect.innerHTML += "<option>No packages found</option>";
+        }
+        data.forEach(pkg => {
+          const opt = document.createElement("option");
+          opt.value = pkg.id;
+          opt.textContent = pkg.package_name;
+          packageSelect.appendChild(opt);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        packageSelect.innerHTML = "<option>Error loading packages</option>";
+      });
+  });
+});
+</script>
+
+{% endblock %}
