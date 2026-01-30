@@ -4,26 +4,30 @@ from django.contrib import messages
 from MobileApp.models import MobileControl
 from ModuleAndPackage.models import Package
 from .models import DemoMobileLicense
-
 def demo_license_list(request):
     demos = DemoMobileLicense.objects.select_related(
         "original_license",
         "original_license__project"
+    ).prefetch_related(
+        "original_license__active_devices"
     )
 
     for d in demos:
         og = d.original_license
 
-        if og:   # OG based demo
+        if og:
             d.total_lic = og.login_limit
             d.reg_dev = og.active_devices.count()
             d.bal_lic = og.login_limit - d.reg_dev
-        else:    # Manual demo (treat as fresh demo)
+            d.devices = og.active_devices.all()
+        else:
             d.total_lic = d.demo_login_limit
             d.reg_dev = 0
             d.bal_lic = d.demo_login_limit
+            d.devices = []   # no devices yet
 
     return render(request, "demo_mobile_licensing.html", {"demos": demos})
+
 
 
 
