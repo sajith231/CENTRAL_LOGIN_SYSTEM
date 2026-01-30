@@ -12,7 +12,7 @@ load_dotenv()
 
 # -------------------- Core ---------------------
 SECRET_KEY = 'django-insecure-c_%uwi0@g9fzwpollp#n1i3q-a=h+_4c(!z51fnj1ljm(zyg$$'
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS: list[str] = ['activate.imcbs.com','www.activate.imcbs.com',"*"]
 
 # -------------------- Apps ---------------------
