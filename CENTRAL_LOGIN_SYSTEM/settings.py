@@ -48,7 +48,7 @@ if CLOUDFLARE_R2_ENABLED:
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
             "OPTIONS": {
                 "access_key": os.getenv("CLOUDFLARE_R2_ACCESS_KEY"),
-                "esecret_key": os.getenv("CLOUDFLARE_R2_SECRET_KEY"),
+                "secret_key": os.getenv("CLOUDFLARE_R2_SECRET_KEY"),
                 "bucket_name": os.getenv("CLOUDFLARE_R2_BUCKET"),
                 "endpoint_url": os.getenv("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
                 "region_name": "auto",
@@ -119,7 +119,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'central_login_system',  # Your DB name
         'USER': 'postgres',           # Your DB username
-        'PASSWORD': 'sajith@2003',   # Your DB password
+        'PASSWORD': 'info@imc',   # Your DB password
         'HOST': 'localhost',          # Or server IP if remote
         'PORT': '5432',               # Default PostgreSQL port
     }
