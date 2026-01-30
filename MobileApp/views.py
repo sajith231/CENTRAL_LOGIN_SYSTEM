@@ -4,9 +4,14 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+
+from app1 import models
 from .models import ActiveDevice, MobileProject, MobileControl, LoginLog
 from StoreShop.models import Shop
 from ModuleAndPackage.models import Package
+from mobile_demo_licencing.models import DemoMobileLicense
+from django.db.models import Q
+
 
 def mobile_home(request):
     """Display list of all mobile projects"""
@@ -275,74 +280,146 @@ def api_register_license(request, endpoint):
 
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
-        control = MobileControl.objects.get(project=project, license_key=license_key)
     except MobileProject.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
-    except MobileControl.DoesNotExist:
+
+    # 🔹 1) Try ORIGINAL license
+    control = MobileControl.objects.filter(
+        project=project,
+        license_key=license_key
+    ).first()
+
+    # 🔹 2) If not found, try DEMO license
+    demo = None
+    if not control:
+        demo = DemoMobileLicense.objects.filter(
+            demo_license=license_key,
+            status=True
+        ).filter(
+            Q(project=project) |
+            Q(original_license__project=project)
+        ).first()
+
+    if not control and not demo:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
 
-    # License expiry rule
-    if control.package and control.package.days_limit > 0:
-        days_limit = control.package.days_limit
-        created_date = control.created_date
-        expiry_date = created_date + timedelta(days=days_limit)
-        now = timezone.now()
+    # ================= OG LICENSE FLOW =================
+    if control:
+        # License expiry rule
+        if control.package and control.package.days_limit > 0:
+            days_limit = control.package.days_limit
+            created_date = control.created_date
+            expiry_date = created_date + timedelta(days=days_limit)
+            now = timezone.now()
 
-        if expiry_date <= now:
-            # auto-disable if expired
-            if control.status:
-                control.status = False
-                control.save()
+            if expiry_date <= now:
+                if control.status:
+                    control.status = False
+                    control.save()
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This license has expired. Please contact administrator.'
+                }, status=403)
+
+        if not control.status:
             return JsonResponse({
                 'success': False,
-                'error': 'This license has expired. Please contact administrator.'
+                'error': 'This license is inactive. Please contact administrator.'
             }, status=403)
 
-    if not control.status:
-        return JsonResponse({
-            'success': False,
-            'error': 'This license is inactive. Please contact administrator.'
-        }, status=403)
+        registered_count = control.active_devices.count()
 
-    registered_count = control.active_devices.count()
+        # Already registered device
+        exists = control.active_devices.filter(device_id=device_id).exists()
+        if exists:
+            return JsonResponse({
+                'success': True,
+                'message': 'Device already registered',
+                'license_key': license_key,
+                'registered_devices': _device_payload(control),
+                'registered_count': registered_count,
+                'max_devices': control.login_limit,
+            }, status=200)
 
-    # Already registered device
-    exists = control.active_devices.filter(device_id=device_id).exists()
-    if exists:
+        # Device limit check
+        if registered_count >= control.login_limit:
+            return JsonResponse({
+                'success': False,
+                'error': 'License limit reached',
+                'max_devices': control.login_limit,
+                'registered_count': registered_count
+            }, status=403)
+
+        # Create new active device
+        ActiveDevice.objects.create(
+            control=control,
+            device_id=device_id,
+            device_name=device_name,
+            ip_address=_get_client_ip(request),
+        )
+
         return JsonResponse({
             'success': True,
-            'message': 'Device already registered',
+            'message': 'Device registered successfully',
             'license_key': license_key,
             'registered_devices': _device_payload(control),
-            'registered_count': registered_count,
+            'registered_count': control.active_devices.count(),
             'max_devices': control.login_limit,
-        }, status=200)
+        }, status=201)
 
-    # Device limit check
-    if registered_count >= control.login_limit:
+    # ================= DEMO LICENSE FLOW =================
+    if demo:
+        now = timezone.now()
+
+        # Expiry check
+        if demo.expires_at and demo.expires_at < now:
+            demo.status = False
+            demo.save(update_fields=["status"])
+            return JsonResponse({
+                'success': False,
+                'error': 'Demo license expired'
+            }, status=403)
+
+        reg_count = demo.active_devices.count()
+
+        # Already registered
+        exists = demo.active_devices.filter(device_id=device_id).exists()
+        if exists:
+            return JsonResponse({
+                'success': True,
+                'message': 'Device already registered',
+                'license_key': license_key,
+                'registered_devices': list(demo.active_devices.values()),
+                'registered_count': reg_count,
+                'max_devices': demo.demo_login_limit,
+            }, status=200)
+
+        # Limit check
+        limit = int(demo.demo_login_limit)
+        if reg_count >= limit:
+            return JsonResponse({
+                'success': False,
+                'error': f'Demo limit reached ({reg_count}/{limit})',
+                'max_devices': limit,
+                'registered_count': reg_count
+            }, status=403)
+
+        ActiveDevice.objects.create(
+            demo_license=demo,
+            device_id=device_id,
+            device_name=device_name,
+            ip_address=_get_client_ip(request),
+        )
+
         return JsonResponse({
-            'success': False,
-            'error': 'License limit reached',
-            'max_devices': control.login_limit,
-            'registered_count': registered_count
-        }, status=403)
+            'success': True,
+            'message': 'Demo device registered',
+            'license_key': license_key,
+            'registered_devices': list(demo.active_devices.values()),
+            'registered_count': demo.active_devices.count(),
+            'max_devices': demo.demo_login_limit,
+        }, status=201)
 
-    # Create new active device
-    ActiveDevice.objects.create(
-        control=control,
-        device_id=device_id,
-        device_name=device_name,
-        ip_address=_get_client_ip(request),
-    )
-
-    return JsonResponse({
-        'success': True,
-        'message': 'Device registered successfully',
-        'license_key': license_key,
-        'registered_devices': _device_payload(control),
-        'registered_count': control.active_devices.count(),
-        'max_devices': control.login_limit,
-    }, status=201)
 
 
 
@@ -420,7 +497,6 @@ def api_post_login(request, endpoint):
         'device_id': device_id
     }, status=200)
 
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_post_logout(request, endpoint):
@@ -444,54 +520,112 @@ def api_post_logout(request, endpoint):
 
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
-        control = MobileControl.objects.get(project=project, license_key=license_key)
     except MobileProject.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
-    except MobileControl.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
-    
-    # Check if the control is active (for logout, we allow even if inactive)
-    # But it's good practice to check - you can remove this if you want logout to work always
 
-    deleted, _ = control.active_devices.filter(device_id=device_id).delete()
-    if deleted:
-        remaining = _device_payload(control)
+    # 🔹 Try OG license first
+    control = MobileControl.objects.filter(
+        project=project,
+        license_key=license_key
+    ).first()
+
+    # 🔹 If not found, try DEMO license
+    demo = None
+    if not control:
+        demo = DemoMobileLicense.objects.filter(
+            demo_license=license_key
+        ).filter(
+            Q(project=project) |
+            Q(original_license__project=project)
+        ).first()
+
+    if not control and not demo:
         return JsonResponse({
-            'success': True,
-            'message': 'Device removed from license',
-            'license_key': license_key,
-            'registered_devices': remaining,
-            'registered_count': len(remaining),
-            'max_devices': control.login_limit,
-        }, status=200)
+            'success': False,
+            'error': 'Invalid license key for this project'
+        }, status=404)
 
-    return JsonResponse({
-        'success': False,
-        'error': 'Device not found for this license'
-    }, status=404)
+    # ================= OG LICENSE LOGOUT =================
+    if control:
+        deleted, _ = control.active_devices.filter(device_id=device_id).delete()
+        if deleted:
+            remaining = _device_payload(control)
+            return JsonResponse({
+                'success': True,
+                'message': 'Device removed from license',
+                'license_key': license_key,
+                'registered_devices': remaining,
+                'registered_count': len(remaining),
+                'max_devices': control.login_limit,
+            }, status=200)
+
+        return JsonResponse({
+            'success': False,
+            'error': 'Device not found for this license'
+        }, status=404)
+
+    # ================= DEMO LICENSE LOGOUT =================
+    if demo:
+        deleted, _ = demo.active_devices.filter(device_id=device_id).delete()
+        if deleted:
+            remaining = list(demo.active_devices.values())
+            return JsonResponse({
+                'success': True,
+                'message': 'Demo device removed',
+                'license_key': license_key,
+                'registered_devices': remaining,
+                'registered_count': len(remaining),
+                'max_devices': demo.demo_login_limit,
+            }, status=200)
+
+        return JsonResponse({
+            'success': False,
+            'error': 'Device not found for this demo license'
+        }, status=404)
+
 
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Q
 
 @require_http_methods(["GET"])
 def api_get_project_data(request, endpoint):
-    """
-    GET API:
-    Returns customers + license + package + devices + expiry info
-    """
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
         controls = MobileControl.objects.filter(project=project)
 
-        customers_data = []
         now = timezone.now()
+
+        # 🔹 NEW: Demo licenses for this project (OG + Manual)
+        demo_licenses = DemoMobileLicense.objects.filter(
+            Q(project=project) |
+            Q(original_license__project=project)
+        )
+
+        demo_keys = []
+        for d in demo_licenses:
+            # auto expire after 5 days
+            if d.expires_at and d.expires_at < now and d.status:
+                d.status = False
+                d.save(update_fields=["status"])
+
+            demo_keys.append({
+                "demo_license": d.demo_license,
+                "demo_login_limit": d.demo_login_limit,
+                "status": "Active" if d.status else "Inactive",
+                "created_at": d.created_at.date().isoformat(),
+                "expires_at": d.expires_at.date().isoformat() if d.expires_at else None
+            })
+
+        customers_data = []
 
         for control in controls:
             registered_devices = _device_payload(control)
             registered_count = len(registered_devices)
 
-            # ---------- LICENSE EXPIRY (UPDATED LOGIC) ----------
             expiry_date = control.expiry_date
             remaining_days = None
             is_expired = False
@@ -501,11 +635,9 @@ def api_get_project_data(request, endpoint):
                 remaining_days = delta.days
                 is_expired = delta.total_seconds() <= 0
 
-                # auto deactivate if expired
                 if is_expired and control.status:
                     control.status = False
                     control.save(update_fields=["status"])
-            # ---------------------------------------------------
 
             customers_data.append({
                 "customer_name": control.customer_name,
@@ -540,6 +672,7 @@ def api_get_project_data(request, endpoint):
         return JsonResponse({
             "success": True,
             "project_name": project.project_name,
+            "demo_licenses": demo_keys,
             "customers": customers_data
         })
 
@@ -548,6 +681,8 @@ def api_get_project_data(request, endpoint):
             "success": False,
             "error": "Project not found"
         }, status=404)
+
+
 
 # h
 

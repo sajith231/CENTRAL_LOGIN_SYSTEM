@@ -1,34 +1,36 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from MobileApp.models import MobileControl
+from MobileApp.models import MobileControl, ActiveDevice
 from ModuleAndPackage.models import Package
 from .models import DemoMobileLicense
+from django.utils import timezone
+
 def demo_license_list(request):
     demos = DemoMobileLicense.objects.select_related(
         "original_license",
-        "original_license__project"
+        "original_license__project",
+        "project"
     ).prefetch_related(
-        "original_license__active_devices"
+        "original_license__active_devices",
+        "active_devices"   # 👈 demo devices
     )
 
-    for d in demos:
-        og = d.original_license
+    now = timezone.now()
 
-        if og:
-            d.total_lic = og.login_limit
-            d.reg_dev = og.active_devices.count()
-            d.bal_lic = og.login_limit - d.reg_dev
-            d.devices = og.active_devices.all()
-        else:
-            d.total_lic = d.demo_login_limit
-            d.reg_dev = 0
-            d.bal_lic = d.demo_login_limit
-            d.devices = []   # no devices yet
+    for d in demos:
+        # 🔹 auto expire demo after 5 days
+        if d.expires_at and d.expires_at < now and d.status:
+            d.status = False
+            d.save(update_fields=["status"])
+
+        # ALWAYS show Demo License stats/devices
+        d.total_lic = d.demo_login_limit
+        d.devices = d.active_devices.all()
+        d.reg_dev = d.devices.count()
+        d.bal_lic = d.total_lic - d.reg_dev
 
     return render(request, "demo_mobile_licensing.html", {"demos": demos})
-
-
 
 
 def add_mobile_demo_licencing(request):
@@ -110,3 +112,10 @@ def add_manual_demo_license(request):
 def get_packages(request, project_id):
     packages = Package.objects.filter(project_id=project_id).values("id", "package_name")
     return JsonResponse(list(packages), safe=False)
+
+
+def delete_demo_device(request, pk):
+    device = get_object_or_404(ActiveDevice, pk=pk)
+    device.delete()
+    messages.success(request, "Device removed successfully")
+    return redirect("DemoLicensing:demo_list")

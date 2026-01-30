@@ -110,18 +110,30 @@ class LoginLog(models.Model):
 
 
 
-class ActiveDevice(models.Model):
-    control = models.ForeignKey(MobileControl, on_delete=models.CASCADE, related_name='active_devices')
-    device_id = models.CharField(max_length=255)
-    device_name = models.CharField(max_length=255, null=True, blank=True)
-    logged_in_at = models.DateTimeField(auto_now_add=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
+from mobile_demo_licencing.models import DemoMobileLicense
 
-    class Meta:
-        unique_together = ['control', 'device_id']
+class ActiveDevice(models.Model):
+    control = models.ForeignKey(
+        MobileControl,
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name="active_devices"
+    )
+    demo_license = models.ForeignKey(
+        DemoMobileLicense,
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name="active_devices"
+    )
+
+    device_id = models.CharField(max_length=255)
+    device_name = models.CharField(max_length=255, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    logged_in_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.control.client_id} - {self.device_id}"
+        return self.device_id
+
 
 
 

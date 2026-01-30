@@ -40,6 +40,7 @@
           <th style="padding:12px;">Reg.Dev</th>
           <th style="padding:12px;">Bal.Lic</th>
           <th style="padding:12px;">Demo Limit</th>
+          <th style="padding:12px;">Expiry Date</th>
           <th style="padding:12px; text-align:center;">Device List</th>
           <th style="padding:12px;">Status</th>
           <th style="padding:12px;">Actions</th>
@@ -102,6 +103,11 @@
           <!-- Demo Limit -->
           <td style="padding:12px; text-align:center;">
             {{ d.demo_login_limit }}
+          </td>
+
+          <!-- Expiry Date -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.expires_at|date:"d-m-Y" }}
           </td>
 
           <!-- Devices -->
@@ -169,6 +175,7 @@
               <th style="padding:8px; text-align:left;">Device ID</th>
               <th style="padding:8px; text-align:left;">IP</th>
               <th style="padding:8px; text-align:left;">Logged at</th>
+              <th style="padding:8px; text-align:center;">#</th>
             </tr>
             {% for dev in d.devices %}
             <tr style="border-bottom:1px solid #334155;">
@@ -176,6 +183,13 @@
               <td style="padding:8px;">{{ dev.device_id }}</td>
               <td style="padding:8px;">{{ dev.ip_address|default:'-' }}</td>
               <td style="padding:8px;">{{ dev.logged_in_at|date:"d-m-Y H:i" }}</td>
+              <td style="padding:8px; text-align:center;">
+                <a href="{% url 'DemoLicensing:demo_device_delete' dev.id %}" class="btn btn-sm"
+                  style="background:#ef4444; color:white; padding:4px 8px; font-size:12px; border-radius:4px;"
+                  onclick="return confirm('Remove this device?');">
+                  <i class="fa-solid fa-trash"></i>
+                </a>
+              </td>
             </tr>
             {% endfor %}
           </table>
