@@ -180,7 +180,7 @@
             {% for dev in d.devices %}
             <tr style="border-bottom:1px solid #334155;">
               <td style="padding:8px;">{{ dev.device_name|default:'-' }}</td>
-              <td style="padding:8px;">{{ dev.device_id }}</td>
+              <td style="padding:8px;">{{ dev.device_id }}</td>c
               <td style="padding:8px;">{{ dev.ip_address|default:'-' }}</td>
               <td style="padding:8px;">{{ dev.logged_in_at|date:"d-m-Y H:i" }}</td>
               <td style="padding:8px; text-align:center;">
