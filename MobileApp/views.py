@@ -624,6 +624,7 @@ def api_get_project_data(request, endpoint):
 
             demo_keys.append({
                 "company": d.original_license.customer_name if d.original_license else d.company_name,
+                "client_id": d.original_license.client_id if d.original_license else None,
                 "demo_license": d.demo_license,
                 "demo_login_limit": d.demo_login_limit,
                 "status": "Active" if d.status else "Inactive",
