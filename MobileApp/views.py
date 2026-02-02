@@ -599,11 +599,21 @@ def api_get_project_data(request, endpoint):
 
         now = timezone.now()
 
-        # 🔹 NEW: Demo licenses for this project (OG + Manual)
+        # 🔹 get customer filter (optional)
+        customer = request.GET.get("customer")
+
+        # 🔹 Demo licenses for this project (OG + Manual)
         demo_licenses = DemoMobileLicense.objects.filter(
             Q(project=project) |
             Q(original_license__project=project)
         )
+
+        # 🔹 FILTER BY COMPANY if provided
+        if customer:
+            demo_licenses = demo_licenses.filter(
+                Q(company_name__iexact=customer) |
+                Q(original_license__customer_name__iexact=customer)
+            )
 
         demo_keys = []
         for d in demo_licenses:
@@ -613,6 +623,7 @@ def api_get_project_data(request, endpoint):
                 d.save(update_fields=["status"])
 
             demo_keys.append({
+                "company": d.original_license.customer_name if d.original_license else d.company_name,
                 "demo_license": d.demo_license,
                 "demo_login_limit": d.demo_login_limit,
                 "status": "Active" if d.status else "Inactive",
@@ -681,6 +692,7 @@ def api_get_project_data(request, endpoint):
             "success": False,
             "error": "Project not found"
         }, status=404)
+
 
 
 
