@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="padding:20px;">
+    <h2 style="color: whitesmoke;">Add Package</h2>
+
+    <form method="POST" action="{% url 'ModuleAndPackage:save_package' %}">
+        {% csrf_token %}
+
+        <!-- Package Name -->
+        <div class="mb-3">
+            <label>Package Name</label>
+            <input type="text" name="package_name" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Project Dropdown -->
+        <div class="mb-3">
+            <label>Select Project</label>
+            <select name="project" id="projectDropdown" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="" style="background:#0f1b31; color:white;">Select Project</option>
+
+                {% for project in projects %}
+                <option value="{{ project.id }}" style="background:#0f1b31; color:white;">
+                    {{ project.project_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Modules Select -->
+        <div class="mb-3">
+            <label>Select Modules</label>
+            <select name="modules" id="modulesDropdown" class="form-control" multiple required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <!-- loaded dynamically -->
+            </select>
+        </div>
+
+        <!-- Days Limit -->
+        <div class="mb-3">
+            <label>Number of Days Limit</label>
+            <input type="number" name="days_limit" class="form-control" value="0" min="0" placeholder="0 = Unlimited"
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <small style="color:#9ca3af;">Enter number of days before auto-deactivation. 0 means unlimited.</small>
+        </div>
+
+        <button class="btn btn-success">Save</button>
+        <a href="{% url 'ModuleAndPackage:package_list' %}" class="btn btn-secondary"
+            style="background:#64748b; border:none; margin-left:10px;">Back</a>
+    </form>
+</div>
+
+<!-- Dynamic module load -->
+<script>
+    document.getElementById("projectDropdown").addEventListener("change", function () {
+        let projectID = this.value;
+
+        fetch("/module-package/get-modules/" + projectID + "/")
+            .then(res => res.json())
+            .then(data => {
+                let modulesSelect = document.getElementById("modulesDropdown");
+                modulesSelect.innerHTML = "";
+
+                data.forEach(m => {
+                    modulesSelect.innerHTML += `
+                        <option value="${m.id}" style="background:#0f1b31; color:white;">
+                            ${m.module_name}
+                        </option>`;
+                });
+            });
+    });
+</script>
+
+{% endblock %}

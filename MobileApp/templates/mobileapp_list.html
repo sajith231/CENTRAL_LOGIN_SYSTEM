@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block active_mobile_app_list %}active{% endblock %}
+{% block header_title %}<strong>Mobile App List</strong>{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0; font-size:20px;">Mobile App Projects</h2>
+
+        <a href="{% url 'MobileApp:mobileproject_create' %}" class="btn"
+            style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+            <i class="fa-solid fa-plus"></i> Add New
+        </a>
+    </div>
+
+    <div style="margin-bottom:15px; display:flex; gap:10px;">
+        <input type="text" id="searchProject" placeholder="Search Project..."
+            style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px;">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Table -->
+    {% if projects %}
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#1e293b;">
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">No</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Created Date</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Project Name</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">GET API</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Register API</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">License Remove API</th>
+                    <th style="padding:12px; text-align:center;white-space: nowrap;">Description</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for project in projects %}
+                <tr style="border-bottom:1px solid #1e293b;">
+                    <td style="padding:12px;white-space: nowrap;">{{ forloop.counter }}</td>
+
+                    <td style="padding:12px;white-space: nowrap;">
+                        {{ project.created_date|date:"d/m/Y" }}
+                    </td>
+
+                    <td style="padding:12px;white-space: nowrap;">
+                        <strong>{{ project.project_name }}</strong>
+                    </td>
+
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#065f46; font-size:12px;" data-bs-toggle="modal"
+                            data-bs-target="#getApiModal{{ project.id }}"
+                            onclick="loadActiveDevices({{ project.id }}, '{{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}')">
+                            <i class="fa-solid fa-code"></i> GET
+                        </button>
+                    </td>
+
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#7c2d12; font-size:12px;" data-bs-toggle="modal"
+                            data-bs-target="#postApiModal{{ project.id }}">
+                            <i class="fa-solid fa-paper-plane"></i> POST
+                        </button>
+                    </td>
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#b91c1c; font-size:12px;"
+                            data-bs-toggle="modal" data-bs-target="#removeApiModal{{ project.id }}">
+                            <i class="fa-solid fa-ban"></i> Remove API
+                        </button>
+                    </td>
+
+
+                    <td style="padding:12px; text-align:center;">
+                        {% if project.description %}
+                        <button class="btn" data-bs-toggle="modal" data-bs-target="#descModal{{ project.id }}">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </button>
+                        {% else %}
+                        <span style="color:#9ca3af;">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:12px;display: flex;gap: 2%;">
+                        <a href="{% url 'MobileApp:mobileproject_edit' project.id %}" class="btn"
+                            style="background:#2563eb; color:white; padding:6px 12px; border-radius:6px;">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </a>
+
+                        <button class="btn"
+                            style="background:#b91c1c; color:white; padding:6px 12px; border-radius:6px;"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p style="margin-top:16px; color:#9ca3af;">
+        Total Projects: {{ projects.count }}
+    </p>
+
+    {% else %}
+    <div style="padding:40px; text-align:center;">
+        <i class="fa-solid fa-circle-info" style="font-size:40px; margin-bottom:10px;"></i>
+        <h3>No mobile projects found</h3>
+        <p>Add your first project using the button above.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ALL MODALS -->
+{% for project in projects %}
+
+<!-- GET API Modal -->
+<div class="modal fade" id="getApiModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-code"></i> GET API - {{ project.project_name }}
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Full absolute GET endpoint -->
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <strong style="color:#10b981;">Endpoint:</strong>
+                    <code id="get-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+                        {{ base_url }}{% url 'MobileApp:api_get_project' project.api_endpoint %}
+                    </code>
+                    <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
+                        onclick="copyText('get-endpoint-{{ project.id }}')">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <h6 style="color:#10b981; margin-bottom:10px;">Response Data:</h6>
+
+                <div style="background:#0f172a; padding:15px; border-radius:8px;">
+                    {% for control in project.controls.all %}
+                    <div style="padding:10px; border-bottom:1px solid #334155; margin-bottom:12px;">
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Customer:</strong> {{ control.customer_name }}
+                        </p>
+
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">License Key:</strong>
+                            <code style="color:#fbbf24;">{{ control.license_key }}</code>
+                        </p>
+
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Package:</strong>
+                            {% if control.package %}
+                            <span style="background:#1e3a8a; padding:4px 8px; border-radius:6px; color:#93c5fd;">
+                                {{ control.package.package_name }}
+                            </span>
+                            {% else %}
+                            <span style="color:#9ca3af;">None</span>
+                            {% endif %}
+                        </p>
+
+                        <div style="margin-top:5px;">
+                            <strong style="color:#e5e7eb;">Modules:</strong>
+                            {% if control.package %}
+                            {% for m in control.package.modules.all %}
+                            <div style="margin-top:4px;">
+                                <span style="background:#0f172a; padding:4px 8px; border-radius:6px; color:#fbbf24; font-size:12px;">
+                                    {{ m.module_name }}
+                                </span>
+                                <span style="background:#1e293b; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:12px;">
+                                    {{ m.module_code }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p style="color:#9ca3af; font-size:13px;">No modules</p>
+                            {% endif %}
+                        </div>
+
+                        <p style="margin-top:8px; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Max Devices:</strong> {{ control.login_limit }}
+                        </p>
+                        <p style="margin:0; font-size:14px;">
+                            <strong style="color:#e5e7eb;">Registered Devices:</strong>
+                            <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+                        </p>
+                    </div>
+                    {% empty %}
+                    <p style="color:#9ca3af; text-align:center;">No customers added yet</p>
+                    {% endfor %}
+                </div>
+
+                <h6 style="color:#10b981; margin-top:20px;">Active Devices:</h6>
+                <div id="active-devices-{{ project.id }}"
+                    style="background:#0f172a; padding:15px; border-radius:8px; color:#e5e7eb; font-size:13px;">
+                    <em>Loading active devices...</em>
+                </div>
+
+                <div style="margin-top:15px; padding:12px; background:#065f46; border-radius:8px;">
+                    <strong>Note:</strong> This GET API returns all customers with their login data for this project.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POST API Modal -->
+<div class="modal fade" id="postApiModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-paper-plane"></i> License APIs - {{ project.project_name }}
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Register endpoint -->
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <strong style="color:#10b981;">Register Endpoint:</strong>
+                    <code id="register-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+                        {{ base_url }}{% url 'MobileApp:api_register_license' project.api_endpoint %}
+                    </code>
+                    <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
+                        onclick="copyText('register-endpoint-{{ project.id }}')">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+
+                    <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
+                        onclick="tryRegister('{{ project.id }}')">
+                        <i class="fa-solid fa-play"></i> Try Register
+                    </button>
+                </div>
+
+                <h6 style="color:#10b981; margin-bottom:10px;">Register Body (JSON):</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <pre style="color:#e5e7eb; margin:0; font-size:13px;">{
+  "license_key": "YOUR_LICENSE_KEY",
+  "device_id": "DEVICE-001"
+}</pre>
+                </div>
+
+                <h6 style="color:#f97316; margin-bottom:10px;">Active Licenses:</h6>
+                <div style="background:#0f172a; padding:15px; border-radius:8px; overflow-x:auto;">
+                    <table style="width:100%; color:#e5e7eb; font-size:13px;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #334155;">
+                                <th style="padding:8px; text-align:left;">Customer Name</th>
+                                <th style="padding:8px; text-align:left;">License Key</th>
+                                <th style="padding:8px; text-align:center;">Max Devices</th>
+                                <th style="padding:8px; text-align:center;">Registered Devices</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for control in project.controls.all %}
+                            <tr style="border-bottom:1px solid #1e293b;">
+                                <td style="padding:8px;">{{ control.customer_name }}</td>
+                                <td style="padding:8px;"><code style="color:#fbbf24;">{{ control.license_key }}</code></td>
+                                <td style="padding:8px; text-align:center;">{{ control.login_limit }}</td>
+                                <td style="padding:8px; text-align:center;">
+                                    <span style="color:#10b981;">{{ control.active_devices.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="padding:20px; text-align:center; color:#9ca3af;">
+                                    No customers added yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:15px; padding:12px; background:#7c2d12; border-radius:8px;">
+                    <strong>Note:</strong> Register each device with its license before login. When the registered count
+                    hits the limit, additional devices are blocked automatically.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- License Remove API Modal -->
+<div class="modal fade" id="removeApiModal{{ project.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="background:#1e293b; color:white;">
+      <div class="modal-header" style="border-bottom:1px solid #334155;">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-ban"></i> Remove Device API - {{ project.project_name }}
+        </h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <strong style="color:#f97316;">Endpoint:</strong>
+        <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+          <code id="remove-endpoint-{{ project.id }}" style="color:#60a5fa;">
+            {{ base_url }}/mobileapp/api/project/{{ project.api_endpoint }}/logout/
+          </code>
+
+          <button class="btn btn-sm" style="background:#475569; margin-left:10px;"
+              onclick="copyText('remove-endpoint-{{ project.id }}')">
+            <i class="fa-solid fa-copy"></i> Copy
+          </button>
+        </div>
+
+        <div style="background:#0f172a; padding:15px; border-radius:8px;">
+          <h6>Request Body (JSON):</h6>
+          <pre style="color:#e5e7eb; margin:0;">
+{
+  "license_key": "LICENSE_KEY_HERE",
+  "device_id": "DEVICE-001"
+}
+          </pre>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #334155;">
+        <button class="btn" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Description Modal -->
+{% if project.description %}
+<div class="modal fade" id="descModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">Description - {{ project.project_name }}</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{ project.description|linebreaks }}
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Modal (FIXED WITH FORM) -->
+<div class="modal fade" id="deleteModal{{ project.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:white;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Are you sure you want to delete:</p>
+                <h4 class="text-center">{{ project.project_name }}</h4>
+                <div style="margin-top:10px; background:#7f1d1d; padding:12px; border-radius:8px;">
+                    This action cannot be undone.
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top:1px solid #334155;">
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                
+                <!-- DELETE FORM (FIXED) -->
+                <form method="POST" action="{% url 'MobileApp:mobileproject_delete' project.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background:#b91c1c; color:white;">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+
+<!-- JavaScript Section -->
+<script>
+    // Active Devices Loading Function
+    async function loadActiveDevices(projectId, endpoint) {
+        const container = document.getElementById('active-devices-' + projectId);
+        if (!container) return;
+
+        try {
+            const res = await fetch(endpoint);
+            const data = await res.json();
+
+            if (!data.success) {
+                container.innerHTML = '<span style="color:#ef4444;">Error loading devices</span>';
+                return;
+            }
+
+            let html = '';
+            for (const c of data.customers) {
+                const devices = c.registered_devices || [];
+                const summary = c.license_summary || { registered_count: devices.length, max_devices: '?' };
+
+                html += `<div style="margin-top:10px;">
+                    <h5 style="color:#facc15;">${c.customer_name} - License ${c.license_key || '-'}</h5>
+                    <p style="margin:0; color:#e5e7eb;">Registered ${summary.registered_count}/${summary.max_devices}</p>
+                </div>`;
+
+                if (devices.length === 0) {
+                    html += `<p style="color:#9ca3af;">No registered devices</p>`;
+                } else {
+                    html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+    <tr>
+        <th align="left">Device Name</th>
+        <th align="left">Device ID</th>
+        <th align="left">IP</th>
+        <th align="left">Registered At</th>
+        <th></th>
+    </tr>`;
+
+for (const d of devices) {
+    html += `<tr style="border-bottom:1px solid #1e293b;">
+        <td>${d.device_name || '-'}</td>
+        <td>${d.device_id}</td>
+        <td>${d.ip_address || '-'}</td>
+        <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
+        <td><button onclick="removeDevice('${endpoint}','${c.license_key}','${d.device_id}', ${projectId})"
+                style="background:#b91c1c; color:white; border:none; padding:5px 10px; border-radius:6px;">
+                Remove
+            </button></td>
+    </tr>`;
+}
+
+html += `</table>`;
+
+                }
+            }
+
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<span style="color:#ef4444;">Error: ${err}</span>`;
+        }
+    }
+
+    // Remove Device Function
+    async function removeDevice(endpoint, license_key, device_id, projectId) {
+        if (!confirm('Remove this device?')) return;
+        const logoutUrl = endpoint + 'logout/';
+        const body = JSON.stringify({ license_key, device_id });
+
+        const res = await fetch(logoutUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+        loadActiveDevices(projectId, endpoint);
+    }
+
+    // Copy Text Function
+    function copyText(elementId) {
+        try {
+            const el = document.getElementById(elementId);
+            if (!el) { alert('Element not found: ' + elementId); return; }
+            const text = el.innerText.trim();
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const short = text.length > 120 ? text.slice(0, 120) + '…' : text;
+                    alert('Copied URL:\n' + short);
+                })
+                .catch(err => {
+                    alert('Copy failed: ' + err);
+                });
+        } catch (err) {
+            alert('Copy error: ' + err);
+        }
+    }
+
+    // Get CSRF Cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Try Register Function
+    async function tryRegister(projectId) {
+        await postLicenseAction(projectId, 'register');
+    }
+
+    // Try Login Function
+    async function tryLogin(projectId) {
+        await postLicenseAction(projectId, 'login');
+    }
+
+    // Post License Action
+    async function postLicenseAction(projectId, action) {
+        const endpointId = action === 'register' ? 'register-endpoint-' + projectId : 'post-endpoint-' + projectId;
+        const el = document.getElementById(endpointId);
+        if (!el) { alert('Endpoint not found: ' + endpointId); return; }
+        const endpoint = el.innerText.trim();
+
+        const license_key = prompt('Enter license key:', '');
+        if (license_key === null) return;
+        if (license_key.trim() === '') {
+            alert('license_key cannot be empty');
+            return;
+        }
+
+        const device_id = prompt('Enter device ID (ex: DEVICE-001):', '');
+        if (device_id === null) return;
+        if (device_id.trim() === '') {
+            alert('device_id cannot be empty');
+            return;
+        }
+
+        const payload = { license_key: license_key.trim(), device_id: device_id.trim() };
+        const csrftoken = getCookie('csrftoken');
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || ''
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let bodyText;
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const json = await res.json();
+                bodyText = JSON.stringify(json, null, 2);
+            } else {
+                bodyText = await res.text();
+            }
+
+            alert(`[${action.toUpperCase()}] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
+        } catch (err) {
+            alert(action.toUpperCase() + ' failed: ' + err);
+        }
+    }
+
+    // Search Filter Function
+    function filterProjectList() {
+        let input = document.getElementById("searchProject").value.toLowerCase();
+        let rows = document.querySelectorAll("table tbody tr");
+
+        rows.forEach(row => {
+            let name = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+            row.style.display = name.includes(input) ? "" : "none";
+        });
+    }
+
+    document.getElementById("searchProject").addEventListener("keyup", filterProjectList);
+</script>
+
+{% endblock %}

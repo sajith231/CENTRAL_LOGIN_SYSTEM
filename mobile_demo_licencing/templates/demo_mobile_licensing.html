@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card" style="padding:20px; background:#0f172a; color:white;">
+
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h2 style="margin:0; font-size:20px; color:white;">
+      Mobile Demo Licensing
+    </h2>
+
+    <div style="display:flex; gap:8px;">
+      <!-- OG Based Demo -->
+      <a href="{% url 'DemoLicensing:demo_add' %}" class="btn"
+        style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
+        <i class="fa-solid fa-plus"></i> Add Demo License
+      </a>
+
+      <!-- Manual Demo -->
+      <a href="{% url 'DemoLicensing:demo_add_manual' %}" class="btn"
+        style="background:#f59e0b; color:black; padding:8px 16px; border-radius:6px;">
+        <i class="fa-solid fa-pen"></i> Manual Demo
+      </a>
+    </div>
+  </div>
+
+  <!-- Table -->
+  {% if demos %}
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; color:white;">
+      <thead>
+        <tr style="background:#1e293b;">
+          <th style="padding:12px;">No</th>
+          <th style="padding:12px;">Created</th>
+          <th style="padding:12px;">Company</th>
+          <th style="padding:12px;">Project / OG License</th>
+          <th style="padding:12px;">Demo License</th>
+          <th style="padding:12px;">T.Lic</th>
+          <th style="padding:12px;">Reg.Dev</th>
+          <th style="padding:12px;">Bal.Lic</th>
+          <th style="padding:12px;">Demo Limit</th>
+          <th style="padding:12px;">Expiry Date</th>
+          <th style="padding:12px; text-align:center;">Device List</th>
+          <th style="padding:12px;">Status</th>
+          <th style="padding:12px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in demos %}
+        <tr style="background:#0f172a; border-bottom:1px solid #1e293b;">
+          <td style="padding:12px;">{{ forloop.counter }}</td>
+
+          <!-- Created -->
+          <td style="padding:12px;">
+            {{ d.created_at|date:"d-m-Y" }}
+          </td>
+
+          <!-- Company -->
+          <td style="padding:12px;">
+            {% if d.original_license %}
+            {{ d.original_license.customer_name }}
+            {% else %}
+            {{ d.company_name }}
+            {% endif %}
+          </td>
+
+          <!-- Project / OG -->
+          <td style="padding:12px;">
+            {% if d.original_license %}
+            <strong>{{ d.original_license.project.project_name }}</strong><br>
+            <small style="color:#9ca3af;">
+              ({{ d.original_license.license_key }})
+            </small>
+            {% else %}
+            <strong>{{ d.project.project_name }}</strong><br>
+            <small style="color:#9ca3af;">(Manual)</small>
+            {% endif %}
+          </td>
+
+          <!-- Demo License -->
+          <td style="padding:12px;">
+            <code style="color:#fbbf24;">
+              {{ d.demo_license }}
+            </code>
+          </td>
+
+          <!-- T.Lic -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.total_lic }}
+          </td>
+
+          <!-- Reg.Dev -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.reg_dev }}
+          </td>
+
+          <!-- Bal.Lic -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.bal_lic }}
+          </td>
+
+          <!-- Demo Limit -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.demo_login_limit }}
+          </td>
+
+          <!-- Expiry Date -->
+          <td style="padding:12px; text-align:center;">
+            {{ d.expires_at|date:"d-m-Y" }}
+          </td>
+
+          <!-- Devices -->
+          <td style="padding:12px; text-align:center;">
+            <button class="btn btn-sm" style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
+              data-bs-toggle="modal" data-bs-target="#deviceModal{{ d.id }}">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </td>
+
+          <!-- Status -->
+          <td style="padding:12px;">
+            {% if d.status %}
+            <span style="color:#16a34a; font-weight:bold;">Active</span>
+            {% else %}
+            <span style="color:#dc2626; font-weight:bold;">Inactive</span>
+            {% endif %}
+          </td>
+
+          <!-- Actions -->
+          <td style="padding:12px; display:flex; gap:6px;">
+            <a href="{% url 'DemoLicensing:demo_edit' d.id %}" class="btn btn-sm"
+              style="background:#2563eb; color:white;">
+              Edit
+            </a>
+
+            <a href="{% url 'DemoLicensing:demo_delete' d.id %}" class="btn btn-sm"
+              style="background:#b91c1c; color:white;" onclick="return confirm('Delete this demo license?');">
+              Delete
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:30px; text-align:center; color:#9ca3af;">
+    No demo licenses created yet.
+  </div>
+  {% endif %}
+
+  <!-- Modals for Devices -->
+  {% for d in demos %}
+  <div class="modal fade" id="deviceModal{{ d.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="background:#1e293b; color:white;">
+        <div class="modal-header" style="border-bottom:1px solid #334155;">
+          <h5 class="modal-title">
+            <i class="fa-solid fa-mobile-screen"></i>
+            Devices —
+            {% if d.original_license %}
+            {{ d.original_license.customer_name }}
+            {% else %}
+            {{ d.company_name }}
+            {% endif %}
+          </h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background:#0f172a; padding:12px; border-radius:8px;">
+          {% if d.devices %}
+          <table style="width:100%; font-size:13px; color:white;">
+            <tr style="border-bottom:1px solid #334155;">
+              <th style="padding:8px; text-align:left;">Device Name</th>
+              <th style="padding:8px; text-align:left;">Device ID</th>
+              <th style="padding:8px; text-align:left;">IP</th>
+              <th style="padding:8px; text-align:left;">Logged at</th>
+              <th style="padding:8px; text-align:center;">#</th>
+            </tr>
+            {% for dev in d.devices %}
+            <tr style="border-bottom:1px solid #334155;">
+              <td style="padding:8px;">{{ dev.device_name|default:'-' }}</td>
+              <td style="padding:8px;">{{ dev.device_id }}</td>c
+              <td style="padding:8px;">{{ dev.ip_address|default:'-' }}</td>
+              <td style="padding:8px;">{{ dev.logged_in_at|date:"d-m-Y H:i" }}</td>
+              <td style="padding:8px; text-align:center;">
+                <a href="{% url 'DemoLicensing:demo_device_delete' dev.id %}" class="btn btn-sm"
+                  style="background:#ef4444; color:white; padding:4px 8px; font-size:12px; border-radius:4px;"
+                  onclick="return confirm('Remove this device?');">
+                  <i class="fa-solid fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}
+          <p style="color:#9ca3af; text-align:center; margin:10px;">No devices registered.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+
+</div>
+{% endblock %}
