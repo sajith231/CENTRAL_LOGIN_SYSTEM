@@ -639,33 +639,42 @@
       <div class="files-list">
         {% for file in files %}
         <div class="file-item" onclick="window.location.href='{% url 'downloads:download_file' folder file.name %}'">
+
           <div class="file-icon-wrapper">
-            {% if file.name|slice:"-4:"|lower == ".pdf" %}
+            {% with fname=file.name|lower %}
+            {% if fname|slice:"-4:" == ".pdf" %}
+            <!-- PDF -->
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            {% elif file.name|slice:"-4:"|lower == ".zip" or file.name|slice:"-4:"|lower == ".rar" %}
+
+            {% elif fname|slice:"-4:" == ".zip" or fname|slice:"-4:" == ".rar" %}
+            <!-- ZIP -->
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
-            {% elif file.name|slice:"-4:"|lower == ".jpg" or file.name|slice:"-4:"|lower == ".png" or
-            file.name|slice:"-5:"|lower == ".jpeg" %}
+
+            {% elif fname|slice:"-4:" == ".jpg" or fname|slice:"-4:" == ".png" or fname|slice:"-5:" == ".jpeg" %}
+            <!-- IMAGE -->
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
+
             {% else %}
+            <!-- DEFAULT -->
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             {% endif %}
+            {% endwith %}
           </div>
 
           <div class="file-details">
@@ -682,9 +691,11 @@
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </button>
+
         </div>
         {% endfor %}
       </div>
+
     </div>
     {% endfor %}
   </div>
@@ -778,20 +789,20 @@
         {% for file in files %}
         <div class="file-item" onclick="window.location.href='{% url 'downloads:download_file' folder file.name %}'">
           <div class="file-icon-wrapper">
-            {% if file.name|slice:"-4:"|lower == ".pdf" %}
+            {% with fname=file.name|lower %}
+            {% if fname|slice:"-4:" == ".pdf" %}
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            {% elif file.name|slice:"-4:"|lower == ".zip" or file.name|slice:"-4:"|lower == ".rar" %}
+            {% elif fname|slice:"-4:" == ".zip" or fname|slice:"-4:" == ".rar" %}
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
-            {% elif file.name|slice:"-4:"|lower == ".jpg" or file.name|slice:"-4:"|lower == ".png" or
-            file.name|slice:"-5:"|lower == ".jpeg" %}
+            {% elif fname|slice:"-4:" == ".jpg" or fname|slice:"-4:" == ".png" or fname|slice:"-5:" == ".jpeg" %}
             <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -804,6 +815,7 @@
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             {% endif %}
+            {% endwith %}
           </div>
 
           <div class="file-details">
