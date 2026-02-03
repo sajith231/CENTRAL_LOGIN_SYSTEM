@@ -483,7 +483,24 @@
     </li>
   {% endif %}
 
-  {# 5) MASTER #}
+  {# 5) DOWNLOADS #}
+  <li>
+    <button class="menu-toggle" aria-expanded="false" data-target="submenu-downloads">
+      <i class="fa-solid fa-cloud-arrow-down"></i>
+      <span>Downloads</span>
+      <i class="fa-solid fa-chevron-right chev"></i>
+    </button>
+    <div id="submenu-downloads" class="submenu">
+      <a href="{% url 'downloads:upload' %}">
+        <i class="fa-solid fa-upload"></i> Upload
+      </a>
+      <a href="{% url 'downloads:download' %}">
+        <i class="fa-solid fa-download"></i> Download
+      </a>
+    </div>
+  </li>
+
+  {# 6) MASTER #}
   {% if request.user.is_superuser or 'branch_list' in am %}
     <li>
       <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">

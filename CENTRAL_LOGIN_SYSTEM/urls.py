@@ -31,5 +31,6 @@ urlpatterns = [
     path("client-id-list/", include("client_id_list.urls")),
     path('corporate-clientid/', include('coporate_and_clientid.urls')),
     path("mobile-demo/", include("mobile_demo_licencing.urls")),
+    path("downloads/", include("downloads.urls")),
     
 ]+ (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG and not settings.CLOUDFLARE_R2_ENABLED else [])
