@@ -3,7 +3,7 @@ from .models import Store, Shop
 
 # --- Existing Store Views ---
 def stores_list(request):
-    stores = Store.objects.all()
+    stores = Store.objects.all().order_by('-created_at')
     return render(request, "stores.html", {"stores": stores})
 
 from branch.models import Branch
@@ -21,7 +21,8 @@ def add_store(request):
         Store.objects.create(
             name=name,
             branch=branch,
-            place=place
+            place=place,
+            created_by=request.user
         )
         return redirect("stores_list")
 
@@ -55,7 +56,7 @@ def delete_store(request, id):
 
 # --- New Shop Views ---
 def shop_list(request):
-    shops = Shop.objects.select_related('store').all()
+    shops = Shop.objects.select_related('store').all().order_by('-created_at')
     return render(request, "shops.html", {"shops": shops})
 
 from branch.models import Branch
@@ -84,6 +85,7 @@ def add_shop(request):
             email=email,
             contact_no=contact_no,
             is_active=is_active,
+            created_by=request.user
         )
         return redirect("shop_list")
 

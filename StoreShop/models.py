@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import random
 import string
 from branch.models import Branch
@@ -10,6 +11,8 @@ class Store(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
     place = models.CharField(max_length=150, null=True, blank=True)
     store_id = models.CharField(max_length=10, unique=True, editable=False, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
 
     def save(self, *args, **kwargs):
@@ -40,6 +43,9 @@ class Shop(models.Model):
 
     # 13 characters now
     client_id = models.CharField(max_length=13, unique=True, editable=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
 
