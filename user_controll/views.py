@@ -14,10 +14,6 @@ def is_superuser_or_logged(request):
 
 # 🔴 COMMON MENU STRUCTURE – IDs must match what we check in base.html
 def get_all_menus():
-    """
-    These IDs will be stored in Users.allowed_menus
-    and checked in base.html.
-    """
     return [
         {
             "name": "Web App",
@@ -35,13 +31,14 @@ def get_all_menus():
                 {"id": "mobileapp_list", "name": "Mobile App List", "icon": "fa-solid fa-list-check"},
                 {"id": "module_list", "name": "Module", "icon": "fa-solid fa-puzzle-piece"},
                 {"id": "package_list", "name": "Package", "icon": "fa-solid fa-box-open"},
+                {"id": "mobile_demo", "name": "Mobile Demo Licensing", "icon": "fa-solid fa-mobile-screen"},
             ],
         },
         {
             "name": "Clients",
             "icon": "fa-solid fa-building-user",
             "submenus": [
-                {"id": "stores_list", "name": "Coporate", "icon": "fa-solid fa-store"},
+                {"id": "stores_list", "name": "Corporate", "icon": "fa-solid fa-store"},
                 {"id": "shop_list", "name": "Company", "icon": "fa-solid fa-shop"},
             ],
         },
@@ -50,8 +47,15 @@ def get_all_menus():
             "icon": "fa-solid fa-users-gear",
             "submenus": [
                 {"id": "users_table", "name": "Users", "icon": "fa-solid fa-users"},
-                # You can also control access to this page itself:
                 {"id": "user_menu_control", "name": "User Menu Control", "icon": "fa-solid fa-user-gear"},
+            ],
+        },
+        {
+            "name": "Downloads",
+            "icon": "fa-solid fa-cloud-arrow-down",
+            "submenus": [
+                {"id": "downloads_upload", "name": "Upload", "icon": "fa-solid fa-upload"},
+                {"id": "downloads_download", "name": "Download", "icon": "fa-solid fa-download"},
             ],
         },
         {
@@ -59,10 +63,10 @@ def get_all_menus():
             "icon": "fa-solid fa-layer-group",
             "submenus": [
                 {"id": "branch_list", "name": "Branch", "icon": "fa-solid fa-code-branch"},
-                # Add more here later if you create more master pages
             ],
         },
     ]
+
 
 
 # ---------- 1) LIST USERS FOR MENU CONTROL ----------

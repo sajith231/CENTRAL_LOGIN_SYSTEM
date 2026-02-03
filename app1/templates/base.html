@@ -428,10 +428,11 @@
               </a>
               {% endif %}
 
+              {% if request.user.is_superuser or 'mobile_demo' in am %}
               <a href="/mobile-demo/">
                 <i class="fa-solid fa-mobile-screen-button"></i> Mobile Demo Licensing
               </a>
-
+              {% endif %}
 
             </div>
           </li>
@@ -486,22 +487,32 @@
           </li>
           {% endif %}
 
+
           {# 5) DOWNLOADS #}
+          {% if request.user.is_superuser or 'downloads_upload' in am or 'downloads_download' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-downloads">
               <i class="fa-solid fa-cloud-arrow-down"></i>
               <span>Downloads</span>
               <i class="fa-solid fa-chevron-right chev"></i>
             </button>
+
             <div id="submenu-downloads" class="submenu">
+              {% if request.user.is_superuser or 'downloads_upload' in am %}
               <a href="{% url 'downloads:upload' %}">
                 <i class="fa-solid fa-upload"></i> Upload
               </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'downloads_download' in am %}
               <a href="{% url 'downloads:download' %}">
                 <i class="fa-solid fa-download"></i> Download
               </a>
+              {% endif %}
             </div>
           </li>
+          {% endif %}
+
 
           {# 6) MASTER #}
           {% if request.user.is_superuser or 'branch_list' in am %}
