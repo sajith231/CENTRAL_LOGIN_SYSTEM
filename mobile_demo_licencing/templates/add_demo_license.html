@@ -17,10 +17,7 @@
     </label>
 
     <!-- Dropdown -->
-    <select name="og_license"
-            class="form-control"
-            required
-            style="
+    <select name="og_license" class="form-control" required style="
               background:#ffffff;
               color:#000000;
               border:1px solid #334155;
@@ -30,9 +27,9 @@
       <option value="" style="color:#000;">Select</option>
 
       {% for lic in og_licenses %}
-        <option value="{{ lic.id }}" style="color:#000;">
-          {{ lic.customer_name }} — {{ lic.project.project_name }} ({{ lic.license_key }})
-        </option>
+      <option value="{{ lic.id }}" style="color:#000;">
+        {{ lic.customer_name }} — {{ lic.project.project_name }} ({{ lic.license_key }})
+      </option>
       {% endfor %}
     </select>
 
@@ -40,6 +37,8 @@
     <button class="btn btn-primary mt-3">
       Create Demo
     </button>
+    <a href="{% url 'DemoLicensing:demo_list' %}" class="btn btn-secondary mt-3"
+      style="background:#64748b; border:none; margin-left:10px;">Back</a>
 
   </form>
 </div>

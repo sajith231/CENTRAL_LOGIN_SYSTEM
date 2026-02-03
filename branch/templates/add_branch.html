@@ -11,21 +11,21 @@
         <div class="mb-3">
             <label>Branch Name</label>
             <input type="text" name="name" required class="form-control"
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
         <!-- Place -->
         <div class="mb-3">
             <label>Place</label>
             <input type="text" name="place" required class="form-control"
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
         <!-- Country Dropdown -->
         <div class="mb-3">
             <label>Country</label>
-            <select name="country" class="form-control" id="countrySelect"
-                    required style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <select name="country" class="form-control" id="countrySelect" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="India" selected>India</option>
                 <option value="United Arab Emirates">UAE</option>
                 <option value="Saudi Arabia">Saudi Arabia</option>
@@ -43,13 +43,13 @@
         <!-- Currency Code (Auto Display) -->
         <div class="mb-3">
             <label>Currency Code</label>
-            <input type="text" id="currencyDisplay"
-                   class="form-control" readonly
-                   value="INR"
-                   style="background:#0f1b31; font-family:monospace; color:#00ff9d; border:1px solid #334155;">
+            <input type="text" id="currencyDisplay" class="form-control" readonly value="INR"
+                style="background:#0f1b31; font-family:monospace; color:#00ff9d; border:1px solid #334155;">
         </div>
 
         <button type="submit" class="btn btn-success">Save</button>
+        <a href="{% url 'branch_list' %}" class="btn btn-secondary"
+            style="background:#64748b; border:none; margin-left:10px;">Back</a>
     </form>
 </div>
 
@@ -68,7 +68,7 @@
         "Australia": "AUD"
     };
 
-    document.getElementById("countrySelect").addEventListener("change", function() {
+    document.getElementById("countrySelect").addEventListener("change", function () {
         document.getElementById("currencyDisplay").value =
             currencyMap[this.value] || "INR";
     });
