@@ -35,6 +35,15 @@ def get_all_menus():
                 {"id": "mobileapp_list", "name": "Mobile App List", "icon": "fa-solid fa-list-check"},
                 {"id": "module_list", "name": "Module", "icon": "fa-solid fa-puzzle-piece"},
                 {"id": "package_list", "name": "Package", "icon": "fa-solid fa-box-open"},
+                {"id": "mobile_demo", "name": "Mobile Demo Licensing", "icon": "fa-solid fa-mobile-screen-button"},
+            ],
+        },
+        {
+            "name": "Downloads",
+            "icon": "fa-solid fa-cloud-arrow-down",
+            "submenus": [
+                {"id": "downloads_upload", "name": "Upload", "icon": "fa-solid fa-upload"},
+                {"id": "downloads_download", "name": "Download", "icon": "fa-solid fa-download"},
             ],
         },
         {
