@@ -398,8 +398,8 @@
           {% endif %}
 
           {# 2) MOBILE APP #}
-          {% if request.user.is_superuser or 'mobile_control' in am or 'mobileapp_list' in am or 'module_list' in am or
-          'package_list' in am %}
+          {% if request.user.is_superuser or 'mobile_control' in am or 'mobileapp_list' in am or 'module_list' in am or 'package_list' in am %}
+
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
               <i class="fa-solid fa-mobile-screen-button"></i>
