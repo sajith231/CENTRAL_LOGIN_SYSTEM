@@ -34,7 +34,7 @@ def demo_license_list(request):
 
 
 def add_mobile_demo_licencing(request):
-    og_licenses = MobileControl.objects.all()
+    og_licenses = MobileControl.objects.select_related('shop', 'project').all()
 
     if request.method == "POST":
         og_id = request.POST.get("og_license")

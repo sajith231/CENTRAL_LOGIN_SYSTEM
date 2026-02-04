@@ -4,7 +4,8 @@ from .models import Store, Shop
 # --- Existing Store Views ---
 def stores_list(request):
     stores = Store.objects.all().order_by('-created_at')
-    return render(request, "stores.html", {"stores": stores})
+    branches = Branch.objects.all()
+    return render(request, "stores.html", {"stores": stores, "branches": branches})
 
 from branch.models import Branch
 
@@ -57,7 +58,8 @@ def delete_store(request, id):
 # --- New Shop Views ---
 def shop_list(request):
     shops = Shop.objects.select_related('store').all().order_by('-created_at')
-    return render(request, "shops.html", {"shops": shops})
+    branches = Branch.objects.all()
+    return render(request, "shops.html", {"shops": shops, "branches": branches})
 
 from branch.models import Branch
 

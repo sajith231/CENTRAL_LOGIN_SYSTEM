@@ -15,18 +15,31 @@
   <div style="padding:12px 20px;">
     <input type="text" id="storeSearch" placeholder="Search store..." style="padding:8px 12px; width:250px; border-radius:6px;
                     border:1px solid #334155; background:#0f1b31; color:white;">
+    <select id="branchFilter" style="padding:8px 12px; margin-left:10px; border-radius:6px; border:1px solid #334155; background:#0f1b31; color:white;">
+      <option value="">All Branches</option>
+      {% for branch in branches %}
+      <option value="{{ branch.name }}">{{ branch.name }}</option>
+      {% endfor %}
+    </select>
   </div>
 
   <script>
-    document.getElementById("storeSearch").addEventListener("keyup", function () {
-      let keyword = this.value.toLowerCase();
+    function filterStores() {
+      let keyword = document.getElementById("storeSearch").value.toLowerCase();
+      let selectedBranch = document.getElementById("branchFilter").value.toLowerCase();
       let rows = document.querySelectorAll("table tbody tr");
 
       rows.forEach(row => {
-        let name = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
-        row.style.display = name.includes(keyword) ? "" : "none";
+        let name = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
+        let branch = row.querySelector("td:nth-child(6)").innerText.toLowerCase();
+        let nameMatch = name.includes(keyword);
+        let branchMatch = selectedBranch === "" || branch === selectedBranch;
+        row.style.display = nameMatch && branchMatch ? "" : "none";
       });
-    });
+    }
+
+    document.getElementById("storeSearch").addEventListener("keyup", filterStores);
+    document.getElementById("branchFilter").addEventListener("change", filterStores);
   </script>
 
   <div style="padding:0 20px 20px;">

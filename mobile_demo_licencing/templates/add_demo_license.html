@@ -28,7 +28,7 @@
 
       {% for lic in og_licenses %}
       <option value="{{ lic.id }}" style="color:#000;">
-        {{ lic.customer_name }} — {{ lic.project.project_name }} ({{ lic.license_key }})
+        {{ lic.customer_name }} ({{ lic.shop.place }}) — {{ lic.project.project_name }} ({{ lic.license_key }})
       </option>
       {% endfor %}
     </select>
