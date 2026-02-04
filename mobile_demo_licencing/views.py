@@ -119,3 +119,27 @@ def delete_demo_device(request, pk):
     device.delete()
     messages.success(request, "Device removed successfully")
     return redirect("DemoLicensing:demo_list")
+
+
+# -----------------------------------------------------
+# AJAX views for Manual Demo License (Dependent Dropdowns)
+# -----------------------------------------------------
+
+from branch.models import Branch
+from StoreShop.models import Store, Shop
+
+def get_all_branches(request):
+    """Return all branches as JSON."""
+    branches = Branch.objects.values("id", "name")
+    return JsonResponse(list(branches), safe=False)
+
+def get_corporates_by_branch(request, branch_id):
+    """Return Stores (Corporates) for a given Branch."""
+    stores = Store.objects.filter(branch_id=branch_id).values("id", "name")
+    return JsonResponse(list(stores), safe=False)
+
+def get_shops_by_corporate(request, corporate_id):
+    """Return Shops (Companies) for a given Store (Corporate)."""
+    # Note: We return 'name' because the frontend will use the name as value
+    shops = Shop.objects.filter(store_id=corporate_id).values("id", "name")
+    return JsonResponse(list(shops), safe=False)

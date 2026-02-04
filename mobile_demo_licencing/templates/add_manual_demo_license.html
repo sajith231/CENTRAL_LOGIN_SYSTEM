@@ -1,19 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  /* Ensure all dropdowns on this page have black text */
+  select.form-control {
+    color: black !important;
+    background-color: white !important;
+  }
+
+  select.form-control option {
+    color: black !important;
+    background-color: white !important;
+  }
+</style>
 <div class="card" style="background:#0f172a; padding:20px; color:white;">
   <h2>Manual Demo License</h2>
 
   <form method="POST">
     {% csrf_token %}
 
-    <label>Company</label>
-    <input type="text" name="company" class="form-control" required>
+    <!-- Branch (Filter) -->
+    <label>Branch</label>
+    <select id="branchSelect" class="form-control mb-2">
+      <option value="">Select Branch</option>
+    </select>
+
+    <!-- Corporate / Store (Filter) -->
+    <label class="mt-2">Corporate</label>
+    <select id="corporateSelect" class="form-control mb-2">
+      <option value="">Select Corporate</option>
+    </select>
+
+    <!-- Company / Shop (Actual Field) -->
+    <label class="mt-2">Company</label>
+    <select name="company" id="companySelect" class="form-control" required>
+      <option value="">Select Company</option>
+    </select>
 
     <label class="mt-2">Project</label>
     <select name="project" id="projectSelect" class="form-control" required>
       <option value="">Select Project</option>
       {% for p in projects %}
-        <option value="{{ p.id }}">{{ p.project_name }}</option>
+      <option value="{{ p.id }}">{{ p.project_name }}</option>
       {% endfor %}
     </select>
 
@@ -30,45 +57,108 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const projectSelect = document.getElementById("projectSelect");
-  const packageSelect = document.getElementById("packageSelect");
+  document.addEventListener("DOMContentLoaded", function () {
+    const branchSelect = document.getElementById("branchSelect");
+    const corporateSelect = document.getElementById("corporateSelect");
+    const companySelect = document.getElementById("companySelect");
 
-  // Django dynamic URL
-  const urlTemplate = "{% url 'ModuleAndPackage:get_packages' 0 %}";
+    const projectSelect = document.getElementById("projectSelect");
+    const packageSelect = document.getElementById("packageSelect");
 
-  projectSelect.addEventListener("change", function () {
-    const projectId = this.value;
+    // URLs
+    const urlGetBranches = "{% url 'DemoLicensing:get_all_branches' %}";
+    const urlGetCorporates = "{% url 'DemoLicensing:get_corporates_by_branch' 0 %}";
+    const urlGetShops = "{% url 'DemoLicensing:get_shops_by_corporate' 0 %}";
+    const urlGetPackages = "{% url 'ModuleAndPackage:get_packages' 0 %}";
 
-    if (!projectId) {
-      packageSelect.innerHTML = "<option value=''>Select Package</option>";
-      return;
-    }
-
-    packageSelect.innerHTML = "<option>Loading...</option>";
-
-    const url = urlTemplate.replace("/0/", "/" + projectId + "/");
-
-    fetch(url)
+    // 1. Initial Load: Fetch Branches
+    fetch(urlGetBranches)
       .then(res => res.json())
       .then(data => {
-        packageSelect.innerHTML = "<option value=''>Select Package</option>";
-        if (!data.length) {
-          packageSelect.innerHTML += "<option>No packages found</option>";
-        }
-        data.forEach(pkg => {
+        data.forEach(item => {
           const opt = document.createElement("option");
-          opt.value = pkg.id;
-          opt.textContent = pkg.package_name;
-          packageSelect.appendChild(opt);
+          opt.value = item.id;
+          opt.textContent = item.name;
+          branchSelect.appendChild(opt);
         });
       })
-      .catch(err => {
-        console.error(err);
-        packageSelect.innerHTML = "<option>Error loading packages</option>";
-      });
+      .catch(err => console.error("Error loading branches:", err));
+
+    // 2. Branch -> Corporate
+    branchSelect.addEventListener("change", function () {
+      const branchId = this.value;
+      corporateSelect.innerHTML = "<option value=''>Select Corporate</option>";
+      companySelect.innerHTML = "<option value=''>Select Company</option>"; // Reset company too
+
+      if (branchId) {
+        const url = urlGetCorporates.replace("/0/", "/" + branchId + "/");
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            data.forEach(item => {
+              const opt = document.createElement("option");
+              opt.value = item.id;
+              opt.textContent = item.name;
+              corporateSelect.appendChild(opt);
+            });
+          });
+      }
+    });
+
+    // 3. Corporate -> Company (Shop)
+    corporateSelect.addEventListener("change", function () {
+      const corpId = this.value;
+      companySelect.innerHTML = "<option value=''>Select Company</option>";
+
+      if (corpId) {
+        const url = urlGetShops.replace("/0/", "/" + corpId + "/");
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            data.forEach(item => {
+              const opt = document.createElement("option");
+              // Use NAME as value because backend expects string name
+              opt.value = item.name;
+              opt.textContent = item.name;
+              companySelect.appendChild(opt);
+            });
+          });
+      }
+    });
+
+
+    // 4. Project -> Package (Existing Logic)
+    projectSelect.addEventListener("change", function () {
+      const projectId = this.value;
+
+      if (!projectId) {
+        packageSelect.innerHTML = "<option value=''>Select Package</option>";
+        return;
+      }
+
+      packageSelect.innerHTML = "<option>Loading...</option>";
+      const url = urlGetPackages.replace("/0/", "/" + projectId + "/");
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          packageSelect.innerHTML = "<option value=''>Select Package</option>";
+          if (!data.length) {
+            packageSelect.innerHTML += "<option>No packages found</option>";
+          }
+          data.forEach(pkg => {
+            const opt = document.createElement("option");
+            opt.value = pkg.id;
+            opt.textContent = pkg.package_name;
+            packageSelect.appendChild(opt);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          packageSelect.innerHTML = "<option>Error loading packages</option>";
+        });
+    });
   });
-});
 </script>
 
 {% endblock %}
