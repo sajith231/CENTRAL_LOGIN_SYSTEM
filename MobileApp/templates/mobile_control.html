@@ -19,10 +19,8 @@
             style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
             <option value="">All Projects</option>
 
-            {% regroup controls by project.project_name as project_list %}
-
-            {% for p in project_list %}
-            <option value="{{ p.grouper }}">{{ p.grouper }}</option>
+            {% for name in project_names %}
+            <option value="{{ name }}">{{ name }}</option>
             {% endfor %}
         </select>
         <input type="text" id="clientIdFilter" placeholder="Search Client ID" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;

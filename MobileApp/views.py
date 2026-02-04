@@ -111,8 +111,13 @@ def mobile_control_list(request):
             control.remaining_days = None
             control.is_expired = False
 
+    
+    # Get unique project names for the dropdown filter
+    project_names = MobileControl.objects.values_list('project__project_name', flat=True).distinct().order_by('project__project_name')
+
     context = {
-        "controls": controls
+        "controls": controls,
+        "project_names": project_names,
     }
     return render(request, "mobile_control.html", context)
 
