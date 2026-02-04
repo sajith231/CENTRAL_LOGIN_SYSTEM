@@ -26,6 +26,17 @@
         <input type="text" id="clientIdFilter" placeholder="Search Client ID" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white; width:220px;">
 
+        <!-- Branch Filter -->
+        <select id="branchFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All Branches</option>
+            {% for b in branch_names %}
+            {% if b %}
+            <option value="{{ b }}">{{ b }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+
         <!-- Status Filter -->
         <select id="statusFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white;">
@@ -35,17 +46,7 @@
         </select>
     </div>
 
-    <script>
-        document.getElementById("projectFilter").addEventListener("change", function () {
-            let selected = this.value.toLowerCase();
-            let rows = document.querySelectorAll("table tbody tr");
 
-            rows.forEach(row => {
-                let project = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
-                row.style.display = (selected === "" || project === selected) ? "" : "none";
-            });
-        });
-    </script>
 
 
 
@@ -100,7 +101,8 @@
         <tbody>
             {% for c in controls %}
             <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
-                data-status="{% if c.status %}active{% else %}inactive{% endif %}">
+                data-status="{% if c.status %}active{% else %}inactive{% endif %}"
+                data-project="{{ c.project.project_name }}" data-branch="{{ c.shop.branch.name|default:'' }}">
                 <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
                 <td style="padding:12px;white-space: nowrap">
                     {{ c.created_date|date:"d-m-Y" }}
@@ -137,7 +139,7 @@
                     <button class="btn btn-sm"
                         style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
                         data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
-                        data-corporate="{{ c.store.name }}" data-branch="{{ c.branch.name|default:'-' }}"
+                        data-corporate="{{ c.store.name }}" data-branch="{{ c.shop.branch.name|default:'-' }}"
                         data-client="{{ c.client_id }}" onclick="openMoreDetails(this)">
                         <i class="fa-solid fa-eye"></i>
                     </button>
@@ -549,24 +551,31 @@
     function applyFilters() {
         const clientFilter = document.getElementById("clientIdFilter").value.toLowerCase();
         const statusFilter = document.getElementById("statusFilter").value;
+        const projectFilter = document.getElementById("projectFilter").value;
+        const branchFilter = document.getElementById("branchFilter").value;
 
         const rows = document.querySelectorAll("table tbody tr");
 
         rows.forEach(row => {
             const clientId = (row.dataset.clientId || "").toLowerCase();
             const status = row.dataset.status || "";
+            const project = row.dataset.project || "";
+            const branch = row.dataset.branch || "";
 
             const clientMatch = clientId.includes(clientFilter);
-            const statusMatch =
-                statusFilter === "" || status === statusFilter;
+            const statusMatch = statusFilter === "" || status === statusFilter;
+            const projectMatch = projectFilter === "" || project === projectFilter;
+            const branchMatch = branchFilter === "" || branch === branchFilter;
 
-            row.style.display = (clientMatch && statusMatch) ? "" : "none";
+            row.style.display = (clientMatch && statusMatch && projectMatch && branchMatch) ? "" : "none";
         });
     }
 
     // listeners
     document.getElementById("clientIdFilter").addEventListener("keyup", applyFilters);
     document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("projectFilter").addEventListener("change", applyFilters);
+    document.getElementById("branchFilter").addEventListener("change", applyFilters);
 </script>
 
 

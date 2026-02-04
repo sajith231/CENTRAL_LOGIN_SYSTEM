@@ -83,7 +83,7 @@ def mobile_control_list(request):
     """Shows table of MobileControl entries"""
     controls = (
         MobileControl.objects
-        .select_related('project', 'package')
+        .select_related('project', 'package', 'shop__branch')
         .prefetch_related('active_devices')
         .order_by('-updated_date')   # ✅ SORT BY LATEST UPDATE
     )
@@ -114,10 +114,14 @@ def mobile_control_list(request):
     
     # Get unique project names for the dropdown filter
     project_names = MobileControl.objects.values_list('project__project_name', flat=True).distinct().order_by('project__project_name')
+    
+    # Get unique branch names
+    branch_names = Branch.objects.values_list('name', flat=True).distinct().order_by('name')
 
     context = {
         "controls": controls,
         "project_names": project_names,
+        "branch_names": branch_names,
     }
     return render(request, "mobile_control.html", context)
 
