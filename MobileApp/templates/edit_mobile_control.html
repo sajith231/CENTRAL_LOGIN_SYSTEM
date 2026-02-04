@@ -13,7 +13,7 @@
             <select name="project" id="projectSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for project in projects %}
-                <option value="{{ project.id }}" {% if project.id==control.project.id %}selected{% endif %}>
+                <option value="{{ project.id }}" {% if project.id == control.project.id %}selected{% endif %}>
                     {{ project.project_name }}
                 </option>
                 {% endfor %}
@@ -35,8 +35,8 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Branch</option>
                 {% for b in branches %}
-                <option value="{{ b.id }}" {% if control.shop.branch and control.shop.branch.id==b.id %}selected{% endif
-                    %}>
+                <option value="{{ b.id }}" {% if control.shop.branch and control.shop.branch.id == b.id %}selected{% endif %}>
+
                     {{ b.name }} - {{ b.place }}
                 </option>
                 {% endfor %}
@@ -49,8 +49,8 @@
             <select id="storeSelect" name="store" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for store in stores %}
-                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if control.store.id==store.id
-                    %}selected{% endif %}>
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if control.store.id == store.id %}selected{% endif %}>
+
                     {{ store.name }}
                 </option>
                 {% endfor %}
@@ -64,7 +64,7 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for shop in shops %}
                 <option value="{{ shop.id }}" data-client="{{ shop.client_id }}" data-store="{{ shop.store_id }}"
-                    data-branch="{{ shop.branch_id }}" {% if shop.id==control.shop.id %}selected{% endif %}>
+                    data-branch="{{ shop.branch_id }}" {% if shop.id == control.shop.id %}selected{% endif %}
                     {{ shop.name }}
                 </option>
                 {% endfor %}

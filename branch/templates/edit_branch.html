@@ -24,14 +24,21 @@
         <!-- Country Dropdown -->
         <div class="mb-3">
             <label>Country</label>
-            <select name="country" class="form-control" id="countrySelect"
-                    style="background:#0f1b31; color:white; border:1px solid #334155;">
-                {% for c,code in branch._meta.get_field('country').choices %}
-                <option value="{{ c }}" {% if branch.country == c %}selected{% endif %}>
-                    {{ code }}
-                </option>
-                {% endfor %}
-            </select>
+            <select name="country" class="form-control" id="countrySelect" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <option value="India">India</option>
+            <option value="United Arab Emirates">UAE</option>
+            <option value="Saudi Arabia">Saudi Arabia</option>
+            <option value="Qatar">Qatar</option>
+            <option value="Kuwait">Kuwait</option>
+            <option value="Oman">Oman</option>
+            <option value="Bahrain">Bahrain</option>
+            <option value="United States">USA</option>
+            <option value="United Kingdom">UK</option>
+            <option value="Canada">Canada</option>
+            <option value="Australia">Australia</option>
+        </select>
+
         </div>
 
         <!-- Currency Code (Auto Display) -->
