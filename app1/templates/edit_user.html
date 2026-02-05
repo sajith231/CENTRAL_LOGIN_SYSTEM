@@ -5,107 +5,77 @@
 {% block active_users %}active{% endblock %}
 
 {% block content %}
-  {% if messages %}
-    {% for message in messages %}
-      <div class="card" style="margin-bottom:12px;">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+{% if messages %}
+{% for message in messages %}
+<div class="card" style="margin-bottom:12px;">{{ message }}</div>
+{% endfor %}
+{% endif %}
 
-  <div class="card">
+<div class="card">
     <h2 style="margin-top:0;">Edit User</h2>
     <form method="post" action="{% url 'edit_user' u.id %}" enctype="multipart/form-data">
-      {% csrf_token %}
+        {% csrf_token %}
 
-      <!-- Name -->
-      <label style="display:block; margin-top:12px;">Name</label>
-      <input 
-        name="name" 
-        type="text" 
-        value="{{ u.name }}" 
-        required 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
+        <!-- Name -->
+        <label style="display:block; margin-top:12px;">Name</label>
+        <input name="name" type="text" value="{{ u.name }}" required
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
 
-      <!-- Current Profile Image -->
-      {% if u.profile_image %}
+        <!-- Current Profile Image -->
+        {% if u.profile_image %}
         <label style="display:block; margin-top:12px;">Current Profile Picture</label>
         <div style="margin-bottom:10px;">
-          <img 
-            src="{{ u.profile_image.url }}" 
-            alt="{{ u.name }}" 
-            style="height:80px; width:80px; border-radius:50%; object-fit:cover; border:1px solid #1e293b;"
-          >
+            <img src="{{ u.profile_image.url }}" alt="{{ u.name }}"
+                style="height:80px; width:80px; border-radius:50%; object-fit:cover; border:1px solid #1e293b;">
         </div>
-      {% endif %}
+        {% endif %}
 
-      <!-- Upload New Profile Image -->
-      <label style="display:block; margin-top:12px;">Change Profile Picture <span class="muted">(optional)</span></label>
-      <input 
-        name="profile_image" 
-        type="file" 
-        accept="image/*" 
-        style="width:100%; padding:8px;"
-      >
+        <!-- Upload New Profile Image -->
+        <label style="display:block; margin-top:12px;">Change Profile Picture <span
+                class="muted">(optional)</span></label>
+        <input name="profile_image" type="file" accept="image/*" style="width:100%; padding:8px;">
 
-      <!-- Email -->
-      <label style="display:block; margin-top:12px;">Email</label>
-      <input 
-        name="email" 
-        type="email" 
-        value="{{ u.email }}" 
-        required 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
+        <!-- Email -->
+        <label style="display:block; margin-top:12px;">Email</label>
+        <input name="email" type="email" value="{{ u.email }}" required
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
 
-      <!-- Password -->
-      <label style="display:block; margin-top:12px;">Password <span class="muted">(leave blank to keep current)</span></label>
-      <input 
-        name="password" 
-        type="text" 
-        placeholder="••••••••" 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
+        <!-- Password -->
+        <label style="display:block; margin-top:12px;">Password <span class="muted">(leave blank to keep
+                current)</span></label>
+        <input name="password" type="text" placeholder="••••••••"
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
 
-      <!-- Branch -->
-      <label style="display:block; margin-top:12px;">Branch</label>
-      <select 
-        name="branch" 
-        required 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
-        <option value="" disabled {% if not u.branch %}selected{% endif %}>-- select branch --</option>
-        {% for b in branches %}
-          <option value="{{ b.id }}" {% if u.branch and u.branch.id == b.id %}selected{% endif %}>{{ b.name }}{% if b.place %} - {{ b.place }}{% endif %}</option>
-        {% endfor %}
-      </select>
+        <!-- Branch -->
+        <label style="display:block; margin-top:12px;">Branches <span class="muted"
+                style="font-size:0.9em; opacity:0.7;">(Hold Ctrl/Cmd to select multiple)</span></label>
+        <select name="branch" multiple required
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb; min-height: 120px;">
+            {% for b in branches %}
+            <option value="{{ b.id }}" {% if b in u.branches.all %}selected{% endif %}>{{ b.name }}{% if b.place %} - {{
+                b.place }}{% endif %}</option>
+            {% endfor %}
+        </select>
 
-      <!-- User Role -->
-      <label style="display:block; margin-top:12px;">User Role</label>
-      <input 
-        name="user_role" 
-        type="text" 
-        value="{{ u.user_role }}" 
-        required 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
+        <!-- User Role -->
+        <label style="display:block; margin-top:12px;">User Role</label>
+        <input name="user_role" type="text" value="{{ u.user_role }}" required
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
 
-      <!-- Level -->
-      <label style="display:block; margin-top:12px;">Level</label>
-      <select 
-        name="level" 
-        required 
-        style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;"
-      >
-        {% for l in levels %}
-          <option value="{{ l }}" {% if u.level == l %}selected{% endif %}>{{ l }}</option>
-        {% endfor %}
-      </select>
+        <!-- Level -->
+        <label style="display:block; margin-top:12px;">Level</label>
+        <select name="level" required
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid #374151; background:#0f172a; color:#e5e7eb;">
+            {% for l in levels %}
+            <option value="{{ l }}" {% if u.level == l %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+        </select>
 
-      <!-- Buttons -->
-      <div style="margin-top:16px; display:flex; gap:10px;">
-        <button class="btn" type="submit">Update</button>
-        <a class="btn" href="{% url 'users_table' %}">Cancel</a>
-      </div>
+        <!-- Buttons -->
+        <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn" type="submit">Update</button>
+            <a class="btn" href="{% url 'users_table' %}">Cancel</a>
+        </div>
     </form>
-  </div>
+</div>
 {% endblock %}

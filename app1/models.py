@@ -17,7 +17,7 @@ class Users(models.Model):
     name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-    branch = models.ForeignKey('branch.Branch', on_delete=models.SET_NULL, null=True, blank=True)
+    branches = models.ManyToManyField('branch.Branch', blank=True)
     user_role = models.CharField(max_length=100)
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
     profile_image = models.ImageField(

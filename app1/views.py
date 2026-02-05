@@ -40,7 +40,10 @@ def login_view(request):
                 request.session['custom_user_id'] = custom_user.id
                 request.session['custom_user_name'] = custom_user.name
                 request.session['custom_user_email'] = custom_user.email
-                request.session['custom_user_branch'] = custom_user.branch.name if custom_user.branch else None
+                # request.session['custom_user_branch'] = custom_user.branch.name if custom_user.branch else None
+                # Store list of branches
+                request.session['custom_user_branches'] = [b.name for b in custom_user.branches.all()]
+                request.session['custom_user_branch'] = ", ".join([b.name for b in custom_user.branches.all()])
                 request.session['custom_user_role'] = custom_user.user_role
                 request.session['custom_user_level'] = custom_user.level
 
@@ -148,12 +151,12 @@ def add_user(request):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        branch_id = request.POST.get("branch", "")
+        branch_ids = request.POST.getlist("branch")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
         image_file = request.FILES.get("profile_image")  # NEW
 
-        if not all([name, email, password, branch_id, user_role, level]):
+        if not all([name, email, password, branch_ids, user_role, level]):
             messages.error(request, "Please fill in all fields.")
             return redirect("add_user")
 
@@ -161,9 +164,8 @@ def add_user(request):
             messages.error(request, "A user with this email already exists.")
             return redirect("add_user")
 
-        try:
-            branch_obj = Branch.objects.get(id=branch_id)
-        except Branch.DoesNotExist:
+        selected_branches = Branch.objects.filter(id__in=branch_ids)
+        if not selected_branches.exists():
             messages.error(request, "Invalid branch selected.")
             return redirect("add_user")
 
@@ -171,13 +173,16 @@ def add_user(request):
             name=name,
             email=email,
             password=password,  # NOTE: still plain text in your schema
-            branch=branch_obj,
+            # branch=branch_obj, # REMOVED
             user_role=user_role,
             level=level,
         )
         if image_file:
             u.profile_image = image_file   # this triggers R2 upload on save
         u.save()
+        
+        # Add branches
+        u.branches.set(selected_branches)
 
         messages.success(request, f"User '{name}' saved.")
         return redirect("users_table")
@@ -200,12 +205,12 @@ def edit_user(request, pk):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        branch_id = request.POST.get("branch", "")
+        branch_ids = request.POST.getlist("branch")
         user_role = request.POST.get("user_role", "").strip()
         level = request.POST.get("level", "")
         image_file = request.FILES.get("profile_image")  # ✅ handle image update
 
-        if not all([name, email, branch_id, user_role, level]):
+        if not all([name, email, branch_ids, user_role, level]):
             messages.error(request, "Please fill in all required fields.")
             return redirect("edit_user", pk=pk)
 
@@ -213,16 +218,16 @@ def edit_user(request, pk):
             messages.error(request, "A user with this email already exists.")
             return redirect("edit_user", pk=pk)
 
-        try:
-            branch_obj = Branch.objects.get(id=branch_id)
-        except Branch.DoesNotExist:
+        selected_branches = Branch.objects.filter(id__in=branch_ids)
+        if not selected_branches.exists():
             messages.error(request, "Invalid branch selected.")
             return redirect("edit_user", pk=pk)
 
         # Update fields
         u.name = name
         u.email = email
-        u.branch = branch_obj
+        # u.branch = branch_obj # REMOVED
+        u.branches.set(selected_branches)
         u.user_role = user_role
         u.level = level
         if password:
