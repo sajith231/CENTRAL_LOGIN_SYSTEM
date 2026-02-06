@@ -429,54 +429,83 @@
         return cookieValue;
     }
 </script>
+<script>
+    const canRemoveDevice =
+        {% if request.user.is_superuser or 'mobile_device_remove' in request.session.allowed_menus %}
+            true
+        {% else %}
+            false
+        {% endif %};
+</script>
 
 <!-- DEVICE ACTION SCRIPTS -->
 <script>
     async function loadDeviceList(endpoint, license, index) {
-        const url = `/mobileapp/api/project/${endpoint}/`;
-        const container = document.getElementById("deviceList" + index);
+    const container = document.getElementById("deviceList" + index);
+    container.innerHTML = "<em>Loading...</em>";
 
+    try {
+        const url = `/mobileapp/api/project/${endpoint}/`;
         const res = await fetch(url);
+
+        if (!res.ok) {
+            throw new Error(`Request failed: ${res.status}`);
+        }
+
         const data = await res.json();
+
+        if (!data.customers) {
+            throw new Error("Invalid response format");
+        }
+
         const customer = data.customers.find(item => item.license_key === license);
-        let devices = customer?.registered_devices || [];
+        const devices = customer?.registered_devices || [];
 
         if (devices.length === 0) {
             container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
             return;
         }
 
-        // Sort devices by logged_in_at (latest first)
         devices.sort((a, b) => new Date(b.logged_in_at) - new Date(a.logged_in_at));
 
         let html = `
         <table style="width:100%; font-size:13px; color:white;">
         <tr style="border-bottom:1px solid #334155;">
-        <th>Device Name</th>
-        <th>Device ID</th>
-        <th>IP</th>
-        <th>Logged at</th>
-        <th style="text-align:center;"></th>
+            <th>Device Name</th>
+            <th>Device ID</th>
+            <th>IP</th>
+            <th>Logged at</th>
+            <th style="text-align:center;"></th>
         </tr>`;
 
         devices.forEach(device => {
             html += `
             <tr style="border-bottom:1px solid #334155;">
-            <td>${device.device_name || '-'}</td>
-            <td>${device.device_id}</td>
-            <td>${device.ip_address || '-'}</td>
-            <td>${new Date(device.logged_in_at).toLocaleString()}</td>
-            <td style="text-align:center;">
-                <button onclick="removeDevice('${endpoint}','${license}','${device.device_id}', ${index})"
-                    class="btn btn-sm"
-                    style="background:#b91c1c; color:white;">Remove</button>
-            </td>
+                <td>${device.device_name || '-'}</td>
+                <td>${device.device_id}</td>
+                <td>${device.ip_address || '-'}</td>
+                <td>${new Date(device.logged_in_at).toLocaleString()}</td>
+                <td style="text-align:center;">
+                    ${canRemoveDevice ? `
+                    <button onclick="removeDevice('${endpoint}','${license}','${device.device_id}', ${index})"
+                        class="btn btn-sm"
+                        style="background:#b91c1c; color:white;">
+                        Remove
+                    </button>
+                    ` : `<span style="color:#9ca3af;">-</span>`}
+                </td>
             </tr>`;
         });
 
         html += `</table>`;
         container.innerHTML = html;
+
+    } catch (err) {
+        console.error("Device load error:", err);
+        container.innerHTML = `<p style="color:#dc2626;">Failed to load devices</p>`;
     }
+}
+
 
     async function removeDevice(endpoint, license, device_id, index) {
         if (!confirm("Are you sure?")) return;

@@ -13,6 +13,17 @@ from mobile_demo_licencing.models import DemoMobileLicense
 from django.db.models import Q
 
 
+def is_super_level_user(request):
+    # Django superuser
+    if request.user.is_authenticated and request.user.is_superuser:
+        return True
+
+    # Custom user with level = Super User
+    if request.session.get("custom_user_level") == "Super User":
+        return True
+
+    return False
+
 def mobile_home(request):
     """Display list of all mobile projects"""
     projects = MobileProject.objects.all()
@@ -80,50 +91,57 @@ from django.utils import timezone
 from datetime import timedelta
 
 def mobile_control_list(request):
-    """Shows table of MobileControl entries"""
+    # ---------------- BASE QUERY ----------------
     controls = (
         MobileControl.objects
         .select_related('project', 'package', 'shop__branch')
         .prefetch_related('active_devices')
-        .order_by('-updated_date')   # ✅ SORT BY LATEST UPDATE
+        .order_by('-updated_date')
     )
 
+    # ---------------- BRANCH BASED FILTER ----------------
+    # Apply restriction ONLY if NOT Django superuser AND NOT custom Super User
+    if not is_super_level_user(request):
+        user_branches = request.session.get('custom_user_branches', [])
 
+        if user_branches:
+            controls = controls.filter(shop__branch__name__in=user_branches)
+        else:
+            controls = controls.none()
+
+    # ---------------- CALCULATIONS ----------------
     now = timezone.now()
-
     for control in controls:
-        # -------- DEVICE COUNTS --------
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
 
-        # -------- EXPIRY / REMAINING DAYS --------
         if control.expiry_date:
             delta = control.expiry_date - now
             control.remaining_days = delta.days
             control.is_expired = delta.total_seconds() <= 0
-
-            # Auto deactivate when expired
-            if control.is_expired and control.status:
-                control.status = False
-                control.save(update_fields=["status"])
         else:
-            # Unlimited license
             control.remaining_days = None
             control.is_expired = False
 
-    
-    # Get unique project names for the dropdown filter
-    project_names = MobileControl.objects.values_list('project__project_name', flat=True).distinct().order_by('project__project_name')
-    
-    # Get unique branch names
-    branch_names = Branch.objects.values_list('name', flat=True).distinct().order_by('name')
+    # ---------------- FILTER DROPDOWNS ----------------
+    project_names = controls.values_list(
+        'project__project_name', flat=True
+    ).distinct().order_by('project__project_name')
 
-    context = {
+    if is_super_level_user(request):
+        branch_names = Branch.objects.values_list(
+            'name', flat=True
+        ).distinct().order_by('name')
+    else:
+        branch_names = request.session.get('custom_user_branches', [])
+
+    return render(request, "mobile_control.html", {
         "controls": controls,
         "project_names": project_names,
         "branch_names": branch_names,
-    }
-    return render(request, "mobile_control.html", context)
+    })
+
+
 
 
 from StoreShop.models import Store

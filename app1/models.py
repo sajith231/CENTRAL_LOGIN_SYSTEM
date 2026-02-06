@@ -3,8 +3,7 @@ import os
 import uuid
 
 LEVEL_CHOICES = [
-    ("Super Admin", "Super Admin"),
-    ("Admin", "Admin"),
+    ("Super User", "Super User"),
     ("User", "User"),
 ]
 
