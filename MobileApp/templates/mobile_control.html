@@ -72,7 +72,9 @@
             <tr style="background:#1e293b;">
                 <th style="padding:12px;white-space: nowrap;">No</th>
                 <th style="padding:12px;white-space: nowrap;">Created</th>
+                {% if request.user.is_superuser or 'mobile_control_status' in request.session.allowed_menus %}
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Status</th>
+                {% endif %}
                 <th style="padding:12px;white-space: nowrap;">Company</th>
                 <th style="padding:12px;white-space: nowrap;">Project</th>
                 <th style="padding:12px;white-space: nowrap;">More details</th>
@@ -82,7 +84,9 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
                 <th style="padding:12px;white-space: nowrap;">License Key</th>
+                {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
+                {% endif %}
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
@@ -115,12 +119,22 @@
                         Updated: {{ c.updated_date|date:"d-m-Y H:i" }}
                     </small>
                 </td>
+                {% if request.user.is_superuser or 'mobile_control_status' in request.session.allowed_menus %}
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm"
-                        style="{% if c.status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
+                    <button id="statusBtn_{{ c.id }}"
+                        onclick="toggleStatus({{ c.id }})"
+                        class="btn btn-sm"
+                        style="{% if c.status %}
+                            background:#16a34a; color:white;
+                            {% else %}
+                            background:#dc2626; color:white;
+                            {% endif %}
+                            padding:6px 12px; border-radius:6px; min-width:80px;">
                         {% if c.status %}Active{% else %}Inactive{% endif %}
                     </button>
                 </td>
+                {% endif %}
+
                 <td style="padding:12px;white-space: nowrap">
                     {{ c.customer_name }}
                     <br>
@@ -177,16 +191,20 @@
                 <td style="padding:12px;white-space: nowrap">
                     <span id="license_{{ c.id }}">{{ c.license_key }}</span>
                 </td>
+                {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
                 <td style="padding:12px;text-align:center;">
                     {% if c.id %}
-                    <a href="{% url 'MobileApp:mobile_control_billing' c.id %}" class="btn btn-sm"
-                        style="background:#0ea5e9; color:white;">
+                    <a href="{% url 'MobileApp:mobile_control_billing' c.id %}"
+                    class="btn btn-sm"
+                    style="background:#0ea5e9; color:white;">
                         Billing
                     </a>
                     {% else %}
                     <span style="color:#9ca3af;">-</span>
                     {% endif %}
                 </td>
+                {% endif %}
+
                 <td style="padding:12px;text-align:center;white-space: nowrap">
                     <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"
                         style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
