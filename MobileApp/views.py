@@ -153,8 +153,14 @@ def add_mobile_control(request):
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
     stores = Store.objects.all()
-    branches = Branch.objects.all()   # 👈 all branches
     packages = Package.objects.all()
+
+    # 🔑 BRANCH FILTERING
+    if is_super_level_user(request):
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
@@ -172,7 +178,6 @@ def add_mobile_control(request):
         store = get_object_or_404(Store, pk=store_id)
         package = get_object_or_404(Package, pk=package_id)
 
-        # Calculate expiry date if package has a limit
         expiry_date = None
         if package.days_limit > 0:
             expiry_date = timezone.now() + timedelta(days=package.days_limit)
@@ -195,9 +200,10 @@ def add_mobile_control(request):
         'projects': projects,
         'shops': shops,
         'stores': stores,
-        'branches': branches,   # 👈 pass branches
+        'branches': branches,   # ✅ filtered branches
         'packages': packages
     })
+
 
 
 def edit_mobile_control(request, pk):
@@ -205,8 +211,14 @@ def edit_mobile_control(request, pk):
     projects = MobileProject.objects.all()
     shops = Shop.objects.all()
     stores = Store.objects.all()
-    branches = Branch.objects.all()   # 👈 pass branches here too
     packages = Package.objects.all()
+
+    # 🔑 BRANCH FILTERING
+    if is_super_level_user(request):
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
@@ -220,10 +232,10 @@ def edit_mobile_control(request, pk):
         control.customer_name = shop.name
         control.client_id = shop.client_id
         control.package = package
-        
+
         login_limit = request.POST.get('login_limit', '0').strip()
         control.login_limit = int(login_limit)
-        
+
         control.save()
 
         messages.success(request, 'Mobile control updated successfully!')
@@ -234,7 +246,7 @@ def edit_mobile_control(request, pk):
         'projects': projects,
         'shops': shops,
         'stores': stores,
-        'branches': branches,   # 👈 here
+        'branches': branches,   # ✅ filtered branches
         'packages': packages
     })
 
