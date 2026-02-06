@@ -7,27 +7,6 @@
     <form method="POST">
         {% csrf_token %}
 
-        <!-- Project -->
-        <div class="mb-3">
-            <label>Project</label>
-            <select name="project" id="projectSelect" class="form-control" required
-                style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="">Select Project</option>
-                {% for project in projects %}
-                <option value="{{ project.id }}">{{ project.project_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Package -->
-        <div class="mb-3">
-            <label>Package</label>
-            <select name="package" id="packageSelect" class="form-control" required
-                style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="">Select Package</option>
-            </select>
-        </div>
-
         <!-- 🔹 Branch -->
         <div class="mb-3">
             <label>Branch</label>
@@ -66,6 +45,27 @@
                     {{ shop.name }}
                 </option>
                 {% endfor %}
+            </select>
+        </div>
+
+        <!-- Project -->
+        <div class="mb-3">
+            <label>Project</label>
+            <select name="project" id="projectSelect" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="">Select Project</option>
+                {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Package -->
+        <div class="mb-3">
+            <label>Package</label>
+            <select name="package" id="packageSelect" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="">Select Package</option>
             </select>
         </div>
 
