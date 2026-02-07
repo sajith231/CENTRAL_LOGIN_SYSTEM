@@ -38,8 +38,9 @@ class Shop(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     place = models.CharField(max_length=150, null=True, blank=True)
-    email = models.EmailField()
-    contact_no = models.CharField(max_length=15)
+    email = models.EmailField(blank=True, null=True)
+    contact_no = models.CharField(max_length=15, blank=True, null=True)
+
 
     # 13 characters now
     client_id = models.CharField(max_length=13, unique=True, editable=False)
