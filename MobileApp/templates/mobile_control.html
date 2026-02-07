@@ -121,10 +121,7 @@
                 </td>
                 {% if request.user.is_superuser or 'mobile_control_status' in request.session.allowed_menus %}
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    <button id="statusBtn_{{ c.id }}"
-                        onclick="toggleStatus({{ c.id }})"
-                        class="btn btn-sm"
-                        style="{% if c.status %}
+                    <button id="statusBtn_{{ c.id }}" onclick="toggleStatus({{ c.id }})" class="btn btn-sm" style="{% if c.status %}
                             background:#16a34a; color:white;
                             {% else %}
                             background:#dc2626; color:white;
@@ -194,9 +191,8 @@
                 {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
                 <td style="padding:12px;text-align:center;">
                     {% if c.id %}
-                    <a href="{% url 'MobileApp:mobile_control_billing' c.id %}"
-                    class="btn btn-sm"
-                    style="background:#0ea5e9; color:white;">
+                    <a href="{% url 'MobileApp:mobile_control_billing' c.id %}" class="btn btn-sm"
+                        style="background:#0ea5e9; color:white;">
                         Billing
                     </a>
                     {% else %}
@@ -236,10 +232,17 @@
                         style="background:#2563eb; color:white;">Edit</a>
 
                     {% if c.id %}
+                    {% if c.registered_count > 0 %}
+                    <button class="btn" disabled style="background:#6b7280; color:white; cursor:not-allowed;"
+                        title="Cannot delete with registered devices">
+                        Delete
+                    </button>
+                    {% else %}
                     <button class="btn" style="background:#b91c1c; color:white;" data-bs-toggle="modal"
                         data-bs-target="#deleteModal{{ c.id }}">
                         Delete
                     </button>
+                    {% endif %}
                     {% else %}
                     <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
                     {% endif %}
@@ -432,43 +435,43 @@
 <script>
     const canRemoveDevice =
         {% if request.user.is_superuser or 'mobile_device_remove' in request.session.allowed_menus %}
-            true
-        {% else %}
-            false
-        {% endif %};
+    true
+    {% else %}
+    false
+    {% endif %};
 </script>
 
 <!-- DEVICE ACTION SCRIPTS -->
 <script>
     async function loadDeviceList(endpoint, license, index) {
-    const container = document.getElementById("deviceList" + index);
-    container.innerHTML = "<em>Loading...</em>";
+        const container = document.getElementById("deviceList" + index);
+        container.innerHTML = "<em>Loading...</em>";
 
-    try {
-        const url = `/mobileapp/api/project/${endpoint}/`;
-        const res = await fetch(url);
+        try {
+            const url = `/mobileapp/api/project/${endpoint}/`;
+            const res = await fetch(url);
 
-        if (!res.ok) {
-            throw new Error(`Request failed: ${res.status}`);
-        }
+            if (!res.ok) {
+                throw new Error(`Request failed: ${res.status}`);
+            }
 
-        const data = await res.json();
+            const data = await res.json();
 
-        if (!data.customers) {
-            throw new Error("Invalid response format");
-        }
+            if (!data.customers) {
+                throw new Error("Invalid response format");
+            }
 
-        const customer = data.customers.find(item => item.license_key === license);
-        const devices = customer?.registered_devices || [];
+            const customer = data.customers.find(item => item.license_key === license);
+            const devices = customer?.registered_devices || [];
 
-        if (devices.length === 0) {
-            container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
-            return;
-        }
+            if (devices.length === 0) {
+                container.innerHTML = `<p style="color:#9ca3af;">No devices registered.</p>`;
+                return;
+            }
 
-        devices.sort((a, b) => new Date(b.logged_in_at) - new Date(a.logged_in_at));
+            devices.sort((a, b) => new Date(b.logged_in_at) - new Date(a.logged_in_at));
 
-        let html = `
+            let html = `
         <table style="width:100%; font-size:13px; color:white;">
         <tr style="border-bottom:1px solid #334155;">
             <th>Device Name</th>
@@ -478,8 +481,8 @@
             <th style="text-align:center;"></th>
         </tr>`;
 
-        devices.forEach(device => {
-            html += `
+            devices.forEach(device => {
+                html += `
             <tr style="border-bottom:1px solid #334155;">
                 <td>${device.device_name || '-'}</td>
                 <td>${device.device_id}</td>
@@ -495,16 +498,16 @@
                     ` : `<span style="color:#9ca3af;">-</span>`}
                 </td>
             </tr>`;
-        });
+            });
 
-        html += `</table>`;
-        container.innerHTML = html;
+            html += `</table>`;
+            container.innerHTML = html;
 
-    } catch (err) {
-        console.error("Device load error:", err);
-        container.innerHTML = `<p style="color:#dc2626;">Failed to load devices</p>`;
+        } catch (err) {
+            console.error("Device load error:", err);
+            container.innerHTML = `<p style="color:#dc2626;">Failed to load devices</p>`;
+        }
     }
-}
 
 
     async function removeDevice(endpoint, license, device_id, index) {
