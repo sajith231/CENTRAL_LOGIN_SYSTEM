@@ -151,16 +151,18 @@ from branch.models import Branch  # 👈 add this
 
 def add_mobile_control(request):
     projects = MobileProject.objects.all()
-    shops = Shop.objects.all()
-    stores = Store.objects.all()
     packages = Package.objects.all()
 
-    # 🔑 BRANCH FILTERING
+    # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
         branches = Branch.objects.all()
+        stores = Store.objects.all()
+        shops = Shop.objects.all()
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches)
+        stores = Store.objects.filter(branch__name__in=user_branches)
+        shops = Shop.objects.filter(branch__name__in=user_branches)
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
@@ -200,25 +202,28 @@ def add_mobile_control(request):
         'projects': projects,
         'shops': shops,
         'stores': stores,
-        'branches': branches,   # ✅ filtered branches
+        'branches': branches,
         'packages': packages
     })
+
 
 
 
 def edit_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
-    shops = Shop.objects.all()
-    stores = Store.objects.all()
     packages = Package.objects.all()
 
-    # 🔑 BRANCH FILTERING
+    # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
         branches = Branch.objects.all()
+        stores = Store.objects.all()
+        shops = Shop.objects.all()
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches)
+        stores = Store.objects.filter(branch__name__in=user_branches)
+        shops = Shop.objects.filter(branch__name__in=user_branches)
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
@@ -246,7 +251,7 @@ def edit_mobile_control(request, pk):
         'projects': projects,
         'shops': shops,
         'stores': stores,
-        'branches': branches,   # ✅ filtered branches
+        'branches': branches,
         'packages': packages
     })
 
