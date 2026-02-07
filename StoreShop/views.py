@@ -1,16 +1,47 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Store, Shop
 
+def is_super_level_user(request):
+    # Django superuser
+    if request.user.is_authenticated and request.user.is_superuser:
+        return True
+
+    # Custom user with level = Super User
+    if request.session.get("custom_user_level") == "Super User":
+        return True
+
+    return False
+
 # --- Existing Store Views ---
 def stores_list(request):
-    stores = Store.objects.all().order_by('-created_at')
-    branches = Branch.objects.all()
-    return render(request, "stores.html", {"stores": stores, "branches": branches})
+    # 🔑 Superuser → see all
+    if is_super_level_user(request):
+        stores = Store.objects.all().order_by('-created_at')
+        branches = Branch.objects.all()
+    else:
+        # 👤 Normal user → branch-based
+        user_branches = request.session.get("custom_user_branches", [])
+
+        branches = Branch.objects.filter(name__in=user_branches)
+        stores = Store.objects.filter(
+            branch__name__in=user_branches
+        ).order_by('-created_at')
+
+    return render(request, "stores.html", {
+        "stores": stores,
+        "branches": branches
+    })
+
 
 from branch.models import Branch
 
 def add_store(request):
-    branches = Branch.objects.all()
+    # 🔑 Branch filtering
+    if is_super_level_user(request):
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -27,12 +58,20 @@ def add_store(request):
         )
         return redirect("stores_list")
 
-    return render(request, "add_store.html", {"branches": branches})
+    return render(request, "add_store.html", {
+        "branches": branches
+    })
 
 
 def edit_store(request, id):
     store = get_object_or_404(Store, id=id)
-    branches = Branch.objects.all()
+
+    # 🔑 Branch filtering
+    if is_super_level_user(request):
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
 
     if request.method == "POST":
         store.name = request.POST.get("name")
@@ -49,6 +88,7 @@ def edit_store(request, id):
     })
 
 
+
 def delete_store(request, id):
     store = get_object_or_404(Store, id=id)
     store.delete()
@@ -57,15 +97,31 @@ def delete_store(request, id):
 
 # --- New Shop Views ---
 def shop_list(request):
-    shops = Shop.objects.select_related('store').all().order_by('-created_at')
-    branches = Branch.objects.all()
-    return render(request, "shops.html", {"shops": shops, "branches": branches})
+    if is_super_level_user(request):
+        shops = Shop.objects.select_related('store', 'branch').all().order_by('-created_at')
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
+        shops = Shop.objects.filter(
+            branch__name__in=user_branches
+        ).select_related('store', 'branch').order_by('-created_at')
+
+    return render(request, "shops.html", {
+        "shops": shops,
+        "branches": branches
+    })
 
 from branch.models import Branch
 
 def add_shop(request):
-    stores = Store.objects.all()
-    branches = Branch.objects.all()
+    if is_super_level_user(request):
+        stores = Store.objects.all()
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
+        stores = Store.objects.filter(branch__name__in=user_branches)
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -91,12 +147,22 @@ def add_shop(request):
         )
         return redirect("shop_list")
 
-    return render(request, "add_shop.html", {"stores": stores, "branches": branches})
+    return render(request, "add_shop.html", {
+        "stores": stores,
+        "branches": branches
+    })
+
 
 def edit_shop(request, id):
     shop = get_object_or_404(Shop, id=id)
-    stores = Store.objects.all()
-    branches = Branch.objects.all()
+
+    if is_super_level_user(request):
+        stores = Store.objects.all()
+        branches = Branch.objects.all()
+    else:
+        user_branches = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branches)
+        stores = Store.objects.filter(branch__name__in=user_branches)
 
     if request.method == "POST":
         shop.name = request.POST.get("name")
@@ -117,6 +183,7 @@ def edit_shop(request, id):
         "stores": stores,
         "branches": branches
     })
+
 
 
 def delete_shop(request, id):
