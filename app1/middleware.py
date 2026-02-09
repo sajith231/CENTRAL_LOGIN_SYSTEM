@@ -38,8 +38,7 @@ class MenuPermissionMiddleware:
         "ModuleAndPackage:save_package": "package_list",
         "ModuleAndPackage:edit_package": "package_list",
         "ModuleAndPackage:delete_package": "package_list",
-        "ModuleAndPackage:get_modules": "module_list",
-        "ModuleAndPackage:get_packages": "package_list",
+        # ModuleAndPackage:get_modules & get_packages removed to allow dropdown usage by all users
         # Store / Shop
         "stores_list": "stores_list",
         "add_store": "stores_list",

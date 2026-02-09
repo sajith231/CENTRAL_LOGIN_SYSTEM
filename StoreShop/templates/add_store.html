@@ -7,14 +7,6 @@
     <form method="POST">
         {% csrf_token %}
 
-        <!-- Store Name -->
-        <div class="mb-3">
-            <label>Corporate Name</label>
-            <input type="text" name="name" class="form-control" required
-                   style="background:#0f1b31; color:white; border:1px solid #334155;">
-        </div>
-
-        <!-- Branch Dropdown -->
         <div class="mb-3">
             <label>Branch</label>
             <select name="branch" class="form-control" required
@@ -28,6 +20,16 @@
                 {% endfor %}
             </select>
         </div>
+
+        <!-- Store Name -->
+        <div class="mb-3">
+            <label>Corporate Name</label>
+            <input type="text" name="name" class="form-control" required
+                   style="background:#0f1b31; color:white; border:1px solid #334155;">
+        </div>
+
+        <!-- Branch Dropdown -->
+        
 
         <!-- Place -->
         <div class="mb-3">
