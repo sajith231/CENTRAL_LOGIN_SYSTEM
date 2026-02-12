@@ -903,27 +903,109 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import MobileBillingHistory
+import json
 
 @csrf_exempt
 @require_POST
 def toggle_billing_history_status(request, pk):
-    try:
-        history = MobileBillingHistory.objects.get(pk=pk)
-        history.bill_status = not history.bill_status
-        history.save()
+    history = get_object_or_404(MobileBillingHistory, pk=pk)
 
-        # Update Parent Control Status
-        control = history.control
-        has_unbilled = control.billing_history.filter(bill_status=False).exists()
-        control.bill_status = not has_unbilled
-        control.save()
+    if not history.bill_status:
+        data = json.loads(request.body or "{}")
+        history.invoice_number = data.get("invoice_number")
+        history.invoice_amount = data.get("invoice_amount")
 
-        return JsonResponse({
-            "success": True,
-            "status": history.bill_status
+        if not history.invoice_number or not history.invoice_amount:
+            return JsonResponse({
+                "success": False,
+                "error": "Invoice details required"
+            })
+
+    history.bill_status = not history.bill_status
+    history.save()
+
+    control = history.control
+    control.bill_status = not control.billing_history.filter(bill_status=False).exists()
+    control.save()
+
+    return JsonResponse({"success": True, "status": history.bill_status})
+
+
+
+from django.shortcuts import render
+
+from .models import MobileControl
+from django.utils import timezone
+
+def billing_report(request):
+    from django.db.models import Sum, Count
+    
+    controls = (
+        MobileControl.objects
+        .select_related(
+            'project',
+            'package',
+            'shop',
+            'store',
+            'branch'
+        )
+        .prefetch_related('billing_history', 'active_devices')
+        .order_by('-updated_date')
+    )
+
+    report = []
+    total_customers = controls.count()
+    active_customers = controls.filter(status=True).count()
+    billed_customers = controls.filter(bill_status=True).count()
+    unbilled_customers = controls.filter(bill_status=False).count()
+    
+    # Calculate total revenue from billing history
+    total_revenue = 0
+    pending_revenue = 0
+    
+    for c in controls:
+        registered = c.active_devices.count()
+        balance = c.login_limit - registered
+
+        remaining_days = None
+        expired = False
+        if c.expiry_date:
+            delta = c.expiry_date - timezone.now()
+            remaining_days = delta.days
+            expired = delta.total_seconds() <= 0
+
+        # Get billing history with invoice details
+        history = c.billing_history.all().order_by('-created_at')
+        
+        # Calculate revenue from history
+        for h in history:
+            if h.invoice_amount:
+                if h.bill_status:
+                    total_revenue += float(h.invoice_amount)
+                else:
+                    pending_revenue += float(h.invoice_amount)
+
+        report.append({
+            "control": c,
+            "registered": registered,
+            "balance": balance,
+            "remaining_days": remaining_days,
+            "expired": expired,
+            "history": history
         })
-    except MobileBillingHistory.DoesNotExist:
-        return JsonResponse({
-            "success": False,
-            "error": "Record not found"
-        }, status=404)
+
+    context = {
+        "report": report,
+        "total_customers": total_customers,
+        "active_customers": active_customers,
+        "billed_customers": billed_customers,
+        "unbilled_customers": unbilled_customers,
+        "total_revenue": total_revenue,
+        "pending_revenue": pending_revenue,
+    }
+
+    return render(request, "billing_report.html", context)
+
+
+
+

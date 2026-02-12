@@ -30,6 +30,8 @@ urlpatterns = [
     path("mobile_control/billing/<int:pk>/",views.mobile_control_billing,name="mobile_control_billing"),
     path("billing-history/toggle-status/<int:pk>/",views.toggle_billing_history_status,name="toggle_billing_history_status"),
 
+    path('billing-report/', views.billing_report, name='billing_report'),
+
     
 
 ]

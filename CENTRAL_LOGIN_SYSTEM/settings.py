@@ -117,12 +117,12 @@ WSGI_APPLICATION = 'CENTRAL_LOGIN_SYSTEM.wsgi.application'
 # -------------------- Database ------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'central_login_system',  # Your DB name
-        'USER': 'postgres',           # Your DB username
-        'PASSWORD': 'info@imc',   # Your DB password
-        'HOST': '88.222.212.14',          # Or server IP if remote
-        'PORT': '5432',               # Default PostgreSQL port
+        'ENGINE': os.getenv('DB_ENGINE'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 # 
