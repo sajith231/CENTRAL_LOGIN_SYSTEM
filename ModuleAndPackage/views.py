@@ -1,11 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from MobileApp.models import MobileProject
+from MobileApp.models import MobileProject, MobileControl
 from .models import Module
 from django.http import JsonResponse
+from django.db.models import Exists, OuterRef
 
 def module_list(request):
-    modules = Module.objects.select_related('project').all()
+    # Check if module is part of any package used by an active mobile control to prevent deletion
+    is_used_subquery = MobileControl.objects.filter(
+        package__modules=OuterRef('pk'),
+        active_devices__isnull=False
+    )
+    
+    modules = Module.objects.annotate(
+        is_used=Exists(is_used_subquery)
+    ).select_related('project').all()
+    
     return render(request, "module_list.html", {
         "modules": modules
     })
@@ -66,7 +76,16 @@ from .models import Module, Package
 from MobileApp.models import MobileProject
 
 def package_list(request):
-    packages = Package.objects.all().prefetch_related("modules", "project")
+    # Check if package is used by any active mobile control
+    is_used_subquery = MobileControl.objects.filter(
+        package=OuterRef('pk'),
+        active_devices__isnull=False
+    )
+
+    packages = Package.objects.annotate(
+        is_used=Exists(is_used_subquery)
+    ).prefetch_related("modules", "project")
+    
     return render(request, "packages.html", {"packages": packages})
 
 

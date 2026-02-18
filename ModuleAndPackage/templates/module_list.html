@@ -11,21 +11,20 @@
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <h2 style="margin:0;">Modules</h2>
 
-        <a href="{% url 'ModuleAndPackage:add_module_page' %}"
-           class="btn" style="background:#16a34a; color:white;">
-           <i class="fa-solid fa-plus"></i> Add Module
+        <a href="{% url 'ModuleAndPackage:add_module_page' %}" class="btn" style="background:#16a34a; color:white;">
+            <i class="fa-solid fa-plus"></i> Add Module
         </a>
     </div>
 
     <!-- Project Filter Dropdown -->
     <div style="margin-bottom:15px;">
         <select id="projectFilter"
-                style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+            style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
             <option value="">All Projects</option>
 
             {% regroup modules|dictsort:"project.project_name" by project.project_name as project_list %}
             {% for p in project_list %}
-                <option value="{{ p.grouper }}">{{ p.grouper }}</option>
+            <option value="{{ p.grouper }}">{{ p.grouper }}</option>
             {% endfor %}
         </select>
 
@@ -44,11 +43,11 @@
     </script>
 
     {% if messages %}
-        {% for message in messages %}
-        <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:8px;">
-            {{ message }}
-        </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:8px;">
+        {{ message }}
+    </div>
+    {% endfor %}
     {% endif %}
 
     <table style="width:100%; border-collapse:collapse;">
@@ -62,30 +61,37 @@
         </thead>
 
         <tbody>
-        {% for m in modules %}
-        <tr style="border-bottom:1px solid #1e293b; background:#0f172a;">
-            <td style="padding:12px;">{{ forloop.counter }}</td>
+            {% for m in modules %}
+            <tr style="border-bottom:1px solid #1e293b; background:#0f172a;">
+                <td style="padding:12px;">{{ forloop.counter }}</td>
 
-            <td style="padding:12px;">{{ m.project.project_name }}</td>
+                <td style="padding:12px;">{{ m.project.project_name }}</td>
 
-            <td style="padding:12px;">
-                <strong>{{ m.module_name }}</strong><br>
-                <span style="color:#9ca3af; font-size:12px;">Code: {{ m.module_code }}</span>
-            </td>
+                <td style="padding:12px;">
+                    <strong>{{ m.module_name }}</strong><br>
+                    <span style="color:#9ca3af; font-size:12px;">Code: {{ m.module_code }}</span>
+                </td>
 
-            <td style="padding:12px; text-align:center;">
-                <a href="{% url 'ModuleAndPackage:edit_module' m.id %}"
-                   class="btn" style="background:#2563eb; color:white; padding:6px 12px;">
-                    Edit
-                </a>
+                <td style="padding:12px; text-align:center;">
+                    <a href="{% url 'ModuleAndPackage:edit_module' m.id %}" class="btn"
+                        style="background:#2563eb; color:white; padding:6px 12px;">
+                        Edit
+                    </a>
 
-                <a href="{% url 'ModuleAndPackage:delete_module' m.id %}"
-                   class="btn" style="background:#b91c1c; color:white; padding:6px 12px;">
-                    Delete
-                </a>
-            </td>
-        </tr>
-        {% endfor %}
+                    {% if m.is_used %}
+                    <button class="btn" style="background:#6b7280; color:white; padding:6px 12px; cursor:not-allowed;"
+                        disabled title="Cannot delete: In use by active devices">
+                        Delete
+                    </button>
+                    {% else %}
+                    <a href="{% url 'ModuleAndPackage:delete_module' m.id %}" class="btn"
+                        style="background:#b91c1c; color:white; padding:6px 12px;">
+                        Delete
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
 
     </table>

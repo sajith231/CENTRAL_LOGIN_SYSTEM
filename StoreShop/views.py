@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Store, Shop
+from django.db.models import Exists, OuterRef
+from MobileApp.models import MobileControl
 
 def is_super_level_user(request):
     # Django superuser
@@ -14,9 +16,17 @@ def is_super_level_user(request):
 
 # --- Existing Store Views ---
 def stores_list(request):
+    # Subquery to check if any MobileControl linked to this Store has active devices
+    has_devices_subquery = MobileControl.objects.filter(
+        store=OuterRef('pk'),
+        active_devices__isnull=False
+    )
+
     # 🔑 Superuser → see all
     if is_super_level_user(request):
-        stores = Store.objects.all().order_by('-created_at')
+        stores = Store.objects.annotate(
+            has_active_devices=Exists(has_devices_subquery)
+        ).order_by('-created_at')
         branches = Branch.objects.all()
     else:
         # 👤 Normal user → branch-based
@@ -25,6 +35,8 @@ def stores_list(request):
         branches = Branch.objects.filter(name__in=user_branches)
         stores = Store.objects.filter(
             branch__name__in=user_branches
+        ).annotate(
+            has_active_devices=Exists(has_devices_subquery)
         ).order_by('-created_at')
 
     return render(request, "stores.html", {
@@ -97,14 +109,24 @@ def delete_store(request, id):
 
 # --- New Shop Views ---
 def shop_list(request):
+    # Subquery to check if any MobileControl linked to this Shop has active devices
+    has_devices_subquery = MobileControl.objects.filter(
+        shop=OuterRef('pk'),
+        active_devices__isnull=False
+    )
+
     if is_super_level_user(request):
-        shops = Shop.objects.select_related('store', 'branch').all().order_by('-created_at')
+        shops = Shop.objects.annotate(
+            has_active_devices=Exists(has_devices_subquery)
+        ).select_related('store', 'branch').order_by('-created_at')
         branches = Branch.objects.all()
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches)
         shops = Shop.objects.filter(
             branch__name__in=user_branches
+        ).annotate(
+            has_active_devices=Exists(has_devices_subquery)
         ).select_related('store', 'branch').order_by('-created_at')
 
     return render(request, "shops.html", {

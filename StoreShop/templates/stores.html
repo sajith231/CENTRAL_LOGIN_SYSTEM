@@ -15,21 +15,20 @@
   <div style="padding:12px 20px;">
     <input type="text" id="storeSearch" placeholder="Search store..." style="padding:8px 12px; width:250px; border-radius:6px;
                     border:1px solid #334155; background:#0f1b31; color:white;">
-    <select id="branchFilter"
-        style="padding:8px 12px;
+    <select id="branchFilter" style="padding:8px 12px;
               margin-left:10px;
               border-radius:6px;
               border:1px solid #334155;
               background:#0f1b31;
               color:white;">
-              
-        <option value="">All Branches</option>
 
-        {% for branch in branches %}
-            <option value="{{ branch.name }}">
-                {{ branch.name }}
-            </option>
-        {% endfor %}
+      <option value="">All Branches</option>
+
+      {% for branch in branches %}
+      <option value="{{ branch.name }}">
+        {{ branch.name }}
+      </option>
+      {% endfor %}
     </select>
 
   </div>
@@ -84,11 +83,16 @@
               <a href="{% url 'edit_store' store.id %}" class="btn btn-primary btn-sm">Edit</a>
             </td>
             <td style="padding:12px;">
+              {% if store.has_active_devices %}
+              <button class="btn btn-secondary btn-sm" disabled
+                title="Cannot delete: Active devices registered">Delete</button>
+              {% else %}
               <form method="post" action="{% url 'delete_store' store.id %}"
                 onsubmit="return confirm('Are you sure?');">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
               </form>
+              {% endif %}
             </td>
           </tr>
           {% empty %}

@@ -6,8 +6,8 @@
   <!-- Header row + Add New button -->
   <div style="display:flex; justify-content:space-between; align-items:center;
               padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
-      <h2 style="margin:0;">Packages</h2>
-      <a href="{% url 'ModuleAndPackage:add_package_page' %}" class="btn btn-success">Add New</a>
+    <h2 style="margin:0;">Packages</h2>
+    <a href="{% url 'ModuleAndPackage:add_package_page' %}" class="btn btn-success">Add New</a>
   </div>
 
   <!-- Table -->
@@ -34,29 +34,33 @@
 
           <!-- UPDATED MODULE DISPLAY -->
           <td style="padding:12px;">
-              {% for m in p.modules.all %}
-                <span class="badge bg-info" style="margin-right:4px;">
-                    {{ m.module_name }} ({{ m.module_code }})
-                </span>
-              {% endfor %}
+            {% for m in p.modules.all %}
+            <span class="badge bg-info" style="margin-right:4px;">
+              {{ m.module_name }} ({{ m.module_code }})
+            </span>
+            {% endfor %}
           </td>
 
           <td style="padding:12px;">
-              {% if p.days_limit == 0 %}
-                <span style="color:#9ca3af;">Unlimited</span>
-              {% else %}
-                <span style="color:#fbbf24;">{{ p.days_limit }} days</span>
-              {% endif %}
+            {% if p.days_limit == 0 %}
+            <span style="color:#9ca3af;">Unlimited</span>
+            {% else %}
+            <span style="color:#fbbf24;">{{ p.days_limit }} days</span>
+            {% endif %}
           </td>
 
           <td style="padding:12px;">
-              <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
+            <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
 
           <td style="padding:12px;">
-            <a href="{% url 'ModuleAndPackage:delete_package' p.id %}"
-               class="btn btn-danger btn-sm"
-               onclick="return confirm('Delete this package?')">Delete</a>
+            {% if p.is_used %}
+            <button class="btn btn-secondary btn-sm" disabled
+              title="Cannot delete: In use by active devices">Delete</button>
+            {% else %}
+            <a href="{% url 'ModuleAndPackage:delete_package' p.id %}" class="btn btn-danger btn-sm"
+              onclick="return confirm('Delete this package?')">Delete</a>
+            {% endif %}
           </td>
         </tr>
 
