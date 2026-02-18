@@ -85,16 +85,6 @@
 
   .stat-subtext { color: #64748b; font-size: 11px; }
 
-  .revenue-card {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    border-color: #10b981;
-  }
-
-  .pending-card {
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-    border-color: #f59e0b;
-  }
-
   .filter-bar {
     display: flex;
     gap: 10px;
@@ -253,6 +243,96 @@
   }
 
   .no-data-icon { font-size: 48px; margin-bottom: 16px; }
+
+  /* ── Pagination ── */
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 4px;
+  }
+
+  .pagination-info {
+    color: #9ca3af;
+    font-size: 13px;
+  }
+
+  .pagination-info span {
+    color: white;
+    font-weight: 600;
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pg-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .pg-btn:hover:not(:disabled) {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+  }
+
+  .pg-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .pg-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+  }
+
+  .pg-pages {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .rows-select {
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .rows-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  .rows-label {
+    color: #9ca3af;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 </style>
 
 <div class="billing-wrapper">
@@ -284,8 +364,6 @@
       <div class="stat-value">{{ pending_records }}</div>
       <div class="stat-subtext">Awaiting payment</div>
     </div>
-
-    
   </div>
 
   <!-- Filters -->
@@ -295,17 +373,29 @@
       id="searchInput"
       class="filter-input"
       placeholder="🔍 Search customer, client ID, invoice, project..."
-      oninput="filterTable()"
+      oninput="applyFilters()"
     >
 
-    <select id="billFilter" class="filter-select" onchange="filterTable()">
+    <select id="billFilter" class="filter-select" onchange="applyFilters()">
       <option value="">All Billing Status</option>
       <option value="billed">Billed</option>
       <option value="pending">Pending</option>
     </select>
+
+    <!-- Rows per page -->
+    <label class="rows-label">
+      <i class="fa-solid fa-table-list"></i> Rows:
+      <select id="rowsPerPage" class="rows-select" onchange="applyFilters()">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+      </select>
+    </label>
   </div>
 
-  <!-- Flat History Table -->
+  <!-- Table -->
   <div class="table-container">
     <table class="billing-table">
       <thead>
@@ -323,12 +413,12 @@
           <th>Remark</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tableBody">
         {% for h in billing_history %}
         <tr class="data-row"
             data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}">
 
-          <td style="color:#64748b; font-weight:600; white-space:nowrap;">{{ forloop.counter }}</td>
+          <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
 
           <td style="white-space:nowrap;">
             <strong style="color:white; font-size:13px; display:block;">{{ h.created_at|date:"d M Y" }}</strong>
@@ -444,19 +534,123 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Pagination Bar -->
+  <div class="pagination-bar">
+    <div class="pagination-info" id="paginationInfo">
+      Showing <span id="showingFrom">–</span> to <span id="showingTo">–</span> of <span id="totalVisible">–</span> records
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pg-btn" id="btnFirst" onclick="goToPage(1)" title="First">
+        <i class="fa-solid fa-angles-left"></i>
+      </button>
+      <button class="pg-btn" id="btnPrev" onclick="goToPage(currentPage - 1)" title="Previous">
+        <i class="fa-solid fa-angle-left"></i> Prev
+      </button>
+
+      <div class="pg-pages" id="pageNumbers"></div>
+
+      <button class="pg-btn" id="btnNext" onclick="goToPage(currentPage + 1)" title="Next">
+        Next <i class="fa-solid fa-angle-right"></i>
+      </button>
+      <button class="pg-btn" id="btnLast" onclick="goToPage(totalPages)" title="Last">
+        <i class="fa-solid fa-angles-right"></i>
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <script>
-  function filterTable() {
+  let currentPage  = 1;
+  let totalPages   = 1;
+  let filteredRows = [];
+
+  function applyFilters() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const bill   = document.getElementById('billFilter').value;
 
-    document.querySelectorAll('.data-row').forEach(row => {
+    filteredRows = Array.from(document.querySelectorAll('.data-row')).filter(row => {
       const matchSearch = !search || row.textContent.toLowerCase().includes(search);
       const matchBill   = !bill   || row.getAttribute('data-bill') === bill;
-      row.style.display = (matchSearch && matchBill) ? '' : 'none';
+      return matchSearch && matchBill;
     });
+
+    currentPage = 1;
+    renderPage();
   }
+
+  function renderPage() {
+    const rowsVal = document.getElementById('rowsPerPage').value;
+    const perPage = rowsVal === 'all' ? filteredRows.length || 1 : parseInt(rowsVal);
+
+    totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * perPage;
+    const end   = Math.min(start + perPage, filteredRows.length);
+
+    // Hide all rows first
+    document.querySelectorAll('.data-row').forEach(r => r.style.display = 'none');
+
+    // Show only current page rows and update serial number
+    filteredRows.forEach((row, idx) => {
+      if (idx >= start && idx < end) {
+        row.style.display = '';
+        const numCell = row.querySelector('.row-num');
+        if (numCell) numCell.textContent = idx + 1;
+      }
+    });
+
+    // Update info text
+    document.getElementById('showingFrom').textContent  = filteredRows.length ? start + 1 : 0;
+    document.getElementById('showingTo').textContent    = end;
+    document.getElementById('totalVisible').textContent = filteredRows.length;
+
+    // Prev / Next / First / Last buttons
+    document.getElementById('btnFirst').disabled = currentPage === 1;
+    document.getElementById('btnPrev').disabled  = currentPage === 1;
+    document.getElementById('btnNext').disabled  = currentPage === totalPages;
+    document.getElementById('btnLast').disabled  = currentPage === totalPages;
+
+    // Page number buttons (show up to 5 around current)
+    const pgContainer = document.getElementById('pageNumbers');
+    pgContainer.innerHTML = '';
+
+    if (rowsVal === 'all') {
+      pgContainer.innerHTML = '';
+      return;
+    }
+
+    let startPg = Math.max(1, currentPage - 2);
+    let endPg   = Math.min(totalPages, startPg + 4);
+    if (endPg - startPg < 4) startPg = Math.max(1, endPg - 4);
+
+    for (let p = startPg; p <= endPg; p++) {
+      const btn = document.createElement('button');
+      btn.className = 'pg-btn' + (p === currentPage ? ' active' : '');
+      btn.textContent = p;
+      btn.onclick = () => goToPage(p);
+      pgContainer.appendChild(btn);
+    }
+  }
+
+  function goToPage(page) {
+    const rowsVal  = document.getElementById('rowsPerPage').value;
+    const perPage  = rowsVal === 'all' ? filteredRows.length || 1 : parseInt(rowsVal);
+    totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderPage();
+  }
+
+  // Boot
+  document.addEventListener('DOMContentLoaded', () => {
+    filteredRows = Array.from(document.querySelectorAll('.data-row'));
+    renderPage();
+  });
 </script>
 
 {% endblock %}
