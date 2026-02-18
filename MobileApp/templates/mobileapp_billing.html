@@ -154,9 +154,9 @@
             <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
                 <i class="fas fa-box-open me-1"></i>{{ control.package.package_name|default:"No Package" }}
             </span>
-            <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
+            <!-- <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
                 <i class="fas fa-id-card me-1"></i>ID: {{ control.client_id }}
-            </span>
+            </span> -->
         </div>
     </div>
 
@@ -531,16 +531,30 @@
 
                             {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
                             <td style="padding:12px; background:transparent;">
-                                <button id="billingStatusBtn{{ h.id }}" onclick="toggleHistoryStatus({{ h.id }})"
-                                    class="btn billing-status-btn"
-                                    style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
-                                                   color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
-                                    {% if h.bill_status %}
-                                    <i class="fas fa-check-circle me-1"></i>Billed
-                                    {% else %}
-                                    <i class="fas fa-times-circle me-1"></i>Unbilled
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button id="billingStatusBtn{{ h.id }}" onclick="toggleHistoryStatus({{ h.id }})"
+                                        class="btn billing-status-btn"
+                                        style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
+                                                       color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
+                                        {% if h.bill_status %}
+                                        <i class="fas fa-check-circle me-1"></i>Billed
+                                        {% else %}
+                                        <i class="fas fa-times-circle me-1"></i>Unbilled
+                                        {% endif %}
+                                    </button>
+
+                                    {% if not h.bill_status %}
+                                    <form method="post" action="{% url 'MobileApp:delete_billing_history' h.id %}"
+                                        onsubmit="return confirm('Are you sure? This will revert usage data.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm"
+                                            style="background:rgba(220, 38, 38, 0.2); color:#ef4444; border:1px solid #dc2626; border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
+                                            title="Delete & Revert">
+                                            <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
+                                        </button>
+                                    </form>
                                     {% endif %}
-                                </button>
+                                </div>
                             </td>
                             {% endif %}
                             <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">

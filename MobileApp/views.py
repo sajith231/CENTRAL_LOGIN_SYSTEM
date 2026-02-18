@@ -914,6 +914,12 @@ import json
 def toggle_billing_history_status(request, pk):
     history = get_object_or_404(MobileBillingHistory, pk=pk)
 
+    if history.bill_status:
+        return JsonResponse({
+            "success": False,
+            "error": "Cannot revert Billed status"
+        })
+
     if not history.bill_status:
         data = json.loads(request.body or "{}")
         history.invoice_number = data.get("invoice_number")
@@ -925,7 +931,7 @@ def toggle_billing_history_status(request, pk):
                 "error": "Invoice details required"
             })
 
-    history.bill_status = not history.bill_status
+    history.bill_status = True
     history.save()
 
     control = history.control
@@ -984,3 +990,29 @@ def billing_report(request):
     }
 
     return render(request, "billing_report.html", context)
+
+
+def delete_billing_history(request, pk):
+    history = get_object_or_404(MobileBillingHistory, pk=pk)
+
+    if history.bill_status:
+        messages.error(request, "Cannot delete billed history records.")
+        return redirect("MobileApp:mobile_control_billing", pk=history.control.id)
+
+    if request.method == "POST":
+        control = history.control
+        
+        # Rollback data
+        if history.old_expiry_date:
+            control.expiry_date = history.old_expiry_date
+        
+        if history.old_login_limit is not None:
+            control.login_limit = history.old_login_limit
+            
+        control.save()
+        
+        history.delete()
+        messages.success(request, "Billing record deleted and changes reverted.")
+        return redirect("MobileApp:mobile_control_billing", pk=control.id)
+
+    return redirect("MobileApp:mobile_control_billing", pk=history.control.id)
