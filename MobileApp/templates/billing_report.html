@@ -48,8 +48,7 @@
   .stat-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 4px;
     height: 100%;
     background: linear-gradient(180deg, #3b82f6, #1d4ed8);
@@ -57,14 +56,12 @@
     transition: opacity 0.3s;
   }
 
-  .stat-card:hover::before {
-    opacity: 1;
-  }
+  .stat-card:hover::before { opacity: 1; }
 
   .stat-card:hover {
     border-color: #3b82f6;
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 10px 25px rgba(59,130,246,0.2);
   }
 
   .stat-label {
@@ -86,10 +83,7 @@
     margin-bottom: 4px;
   }
 
-  .stat-subtext {
-    color: #64748b;
-    font-size: 11px;
-  }
+  .stat-subtext { color: #64748b; font-size: 11px; }
 
   .revenue-card {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
@@ -123,12 +117,10 @@
   .filter-input:focus, .filter-select:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
   }
 
-  .filter-input::placeholder {
-    color: #64748b;
-  }
+  .filter-input::placeholder { color: #64748b; }
 
   .table-container {
     overflow-x: auto;
@@ -163,23 +155,20 @@
   .billing-table tbody tr {
     background: #0f172a;
     border-bottom: 1px solid #1e293b;
-    transition: all 0.2s;
+    transition: background 0.2s;
   }
 
-  .billing-table tbody tr:hover {
-    background: #1a2332;
-    transform: scale(1.001);
-  }
+  .billing-table tbody tr:hover { background: #1a2332; }
 
   .billing-table td {
-    padding: 14px 12px;
+    padding: 13px 12px;
     color: #e2e8f0;
     vertical-align: middle;
   }
 
-  .customer-cell {
-    white-space: nowrap;
-  }
+  .text-center { text-align: center; }
+  .text-success { color: #22c55e; font-weight: 600; }
+  .text-danger  { color: #ef4444; font-weight: 600; }
 
   .customer-name {
     color: white;
@@ -192,207 +181,41 @@
     color: #9ca3af;
     font-size: 12px;
     display: block;
-    margin-top: 3px;
-  }
-
-  .license-key {
-    font-family: 'Courier New', monospace;
-    color: #60a5fa;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
+    margin-top: 2px;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
   }
 
-  .badge-active {
-    background: #16a34a;
-    color: white;
-  }
+  .badge-billed  { background: #16a34a; color: white; }
+  .badge-pending { background: #f59e0b; color: white; }
 
-  .badge-inactive {
-    background: #dc2626;
-    color: white;
-  }
-
-  .badge-billed {
-    background: #3b82f6;
-    color: white;
-  }
-
-  .badge-unbilled {
-    background: #f59e0b;
-    color: white;
-  }
-
-  .badge-expired {
-    background: #dc2626;
-    color: white;
-  }
-
-  .badge-unlimited {
-    background: #8b5cf6;
-    color: white;
-  }
-
-  .expiry-cell {
-    white-space: nowrap;
-  }
-
-  .expiry-date {
-    color: white;
-    font-weight: 500;
-    display: block;
-    font-size: 13px;
-  }
-
-  .days-remaining {
-    color: #9ca3af;
-    font-size: 12px;
-    display: block;
-    margin-top: 3px;
-  }
-
-  .text-center {
-    text-align: center;
-  }
-
-  .text-success {
-    color: #22c55e;
-    font-weight: 600;
-  }
-
-  .text-warning {
-    color: #f59e0b;
-    font-weight: 600;
-  }
-
-  .text-danger {
-    color: #ef4444;
-    font-weight: 600;
-  }
-
-  .text-primary {
-    color: #3b82f6;
-    font-weight: 600;
-  }
-
-  .history-toggle-btn {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid #3b82f6;
-    color: #3b82f6;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    transition: all 0.2s;
-    font-weight: 600;
-  }
-
-  .history-toggle-btn:hover {
-    background: #3b82f6;
-    color: white;
-    transform: scale(1.05);
-  }
-
-  .history-row {
-    display: none;
-  }
-
-  .history-row.show {
-    display: table-row;
-  }
-
-  .history-content {
-    background: #0a0f1e;
-    padding: 20px;
-    border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    margin: 8px;
-  }
-
-  .history-title {
-    color: white;
-    font-weight: 700;
-    margin-bottom: 16px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #0f172a;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .history-table th {
-    background: #1e293b;
-    padding: 12px;
-    text-align: left;
-    color: #9ca3af;
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    border-bottom: 2px solid #334155;
-  }
-
-  .history-table td {
-    padding: 12px;
-    color: #cbd5e1;
-    border-bottom: 1px solid #1e293b;
-  }
-
-  .history-table tbody tr:hover {
-    background: #1a2332;
-  }
-
-  .change-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-
-  .change-increase {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-  }
-
-  .change-decrease {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-  }
-
-  .change-neutral {
-    background: rgba(148, 163, 184, 0.1);
-    color: #94a3b8;
+  .badge-project {
+    background: rgba(139,92,246,0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139,92,246,0.3);
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
   }
 
   .invoice-badge {
     display: inline-block;
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 6px;
     font-weight: 600;
     font-size: 11px;
     font-family: 'Courier New', monospace;
+    margin-bottom: 4px;
   }
 
   .amount-badge {
@@ -401,15 +224,27 @@
     gap: 4px;
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 6px;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
   }
 
-  .amount-pending {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+  .amount-pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+  .change-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
   }
+
+  .change-increase { background: rgba(34,197,94,0.1);   color: #22c55e; }
+  .change-decrease { background: rgba(239,68,68,0.1);   color: #ef4444; }
+  .change-neutral  { background: rgba(148,163,184,0.1); color: #94a3b8; }
 
   .no-data {
     text-align: center;
@@ -417,317 +252,192 @@
     color: #64748b;
   }
 
-  .no-data-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
+  .no-data-icon { font-size: 48px; margin-bottom: 16px; }
 </style>
 
 <div class="billing-wrapper">
-  <!-- Page Header -->
+
+  <!-- Header -->
   <div class="page-header">
     <h1 class="page-title">
-      <i class="fa-solid fa-chart-line"></i>
-      Billing Report
+      <i class="fa-solid fa-receipt"></i>
+      Billing History
     </h1>
   </div>
 
-  <!-- Statistics Cards -->
+  <!-- Stats -->
   <div class="stats-container">
     <div class="stat-card">
-      <div class="stat-label">
-        <i class="fa-solid fa-users"></i>
-        Total Customers
-      </div>
-      <div class="stat-value">{{ total_customers }}</div>
-      <div class="stat-subtext">All registered customers</div>
+      <div class="stat-label"><i class="fa-solid fa-list"></i> Total Records</div>
+      <div class="stat-value">{{ total_records }}</div>
+      <div class="stat-subtext">All billing entries</div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-label">
-        <i class="fa-solid fa-circle-check"></i>
-        Active
-      </div>
-      <div class="stat-value" id="activeCount">{{ active_customers }}</div>
-      <div class="stat-subtext">Currently active licenses</div>
+      <div class="stat-label"><i class="fa-solid fa-circle-check"></i> Billed</div>
+      <div class="stat-value">{{ billed_records }}</div>
+      <div class="stat-subtext">Invoice paid</div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-label">
-        <i class="fa-solid fa-check-circle"></i>
-        Billed
-      </div>
-      <div class="stat-value" id="billedCount">{{ billed_customers }}</div>
-      <div class="stat-subtext">Payment completed</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">
-        <i class="fa-solid fa-clock"></i>
-        Pending
-      </div>
-      <div class="stat-value" id="unbilledCount">{{ unbilled_customers }}</div>
+      <div class="stat-label"><i class="fa-solid fa-clock"></i> Pending</div>
+      <div class="stat-value">{{ pending_records }}</div>
       <div class="stat-subtext">Awaiting payment</div>
     </div>
+
+    
   </div>
 
-  <!-- Filter Bar -->
+  <!-- Filters -->
   <div class="filter-bar">
-    <input 
-      type="text" 
-      id="searchInput" 
-      class="filter-input" 
-      placeholder="🔍 Search customer, client ID, license key..."
+    <input
+      type="text"
+      id="searchInput"
+      class="filter-input"
+      placeholder="🔍 Search customer, client ID, invoice, project..."
       oninput="filterTable()"
     >
-    
-    <select id="statusFilter" class="filter-select" onchange="filterTable()">
-      <option value="">All Status</option>
-      <option value="active">Active</option>
-      <option value="inactive">Inactive</option>
-    </select>
 
     <select id="billFilter" class="filter-select" onchange="filterTable()">
       <option value="">All Billing Status</option>
       <option value="billed">Billed</option>
-      <option value="unbilled">Pending</option>
-    </select>
-
-    <select id="expiryFilter" class="filter-select" onchange="filterTable()">
-      <option value="">All Expiry Status</option>
-      <option value="expired">Expired</option>
-      <option value="active">Active</option>
-      <option value="unlimited">Unlimited</option>
+      <option value="pending">Pending</option>
     </select>
   </div>
 
-  <!-- Billing Table -->
+  <!-- Flat History Table -->
   <div class="table-container">
-    <table class="billing-table" id="billingTable">
+    <table class="billing-table">
       <thead>
         <tr>
           <th>#</th>
-          <th>Customer Details</th>
-          <th>License Key</th>
+          <th>Date & Time</th>
+          <th>Customer</th>
           <th>Project</th>
-          <th>Package</th>
-          <th class="text-center">Login Limit</th>
-          <th class="text-center">Registered</th>
-          <th class="text-center">Balance</th>
-          <th>Expiry Date</th>
-          <th>Status</th>
-          <th>Bill Status</th>
-          <th class="text-center">History</th>
+          <th>Invoice Details</th>
+          <th>User Limit Change</th>
+          <th>Days Extended</th>
+          <th>Old Expiry</th>
+          <th>New Expiry</th>
+          <th class="text-center">Status</th>
+          <th>Remark</th>
         </tr>
       </thead>
       <tbody>
-        {% for row in report %}
-        <tr class="data-row" 
-            data-status="{% if row.control.status %}active{% else %}inactive{% endif %}"
-            data-bill="{% if row.control.bill_status %}billed{% else %}unbilled{% endif %}"
-            data-expiry="{% if row.expired %}expired{% elif row.control.expiry_date %}active{% else %}unlimited{% endif %}">
-          
-          <td style="color: #64748b; font-weight: 600;">{{ forloop.counter }}</td>
+        {% for h in billing_history %}
+        <tr class="data-row"
+            data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}">
 
-          <td class="customer-cell">
-            <span class="customer-name">{{ row.control.customer_name }}</span>
-            <span class="customer-id">{{ row.control.client_id }}</span>
+          <td style="color:#64748b; font-weight:600; white-space:nowrap;">{{ forloop.counter }}</td>
+
+          <td style="white-space:nowrap;">
+            <strong style="color:white; font-size:13px; display:block;">{{ h.created_at|date:"d M Y" }}</strong>
+            <small style="color:#64748b;">{{ h.created_at|date:"h:i A" }}</small>
           </td>
 
-          <td style="white-space: nowrap;">
-            <span class="license-key">{{ row.control.license_key }}</span>
+          <td>
+            <span class="customer-name">{{ h.control.customer_name }}</span>
+            <span class="customer-id">{{ h.control.client_id }}</span>
           </td>
 
-          <td style="color: #cbd5e1; white-space: nowrap;">{{ row.control.project.project_name }}</td>
-
-          <td style="color: #cbd5e1; white-space: nowrap;">
-            {{ row.control.package.package_name|default:"—" }}
-          </td>
-
-          <td class="text-center text-primary">
-            {{ row.control.login_limit }}
-          </td>
-
-          <td class="text-center text-success">
-            {{ row.registered }}
-          </td>
-
-          <td class="text-center">
-            <span class="{% if row.balance > 0 %}text-success{% elif row.balance == 0 %}text-warning{% else %}text-danger{% endif %}">
-              {{ row.balance }}
+          <td>
+            <span class="badge badge-project">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              {{ h.control.project.project_name|default:"—" }}
             </span>
           </td>
 
-          <td class="expiry-cell">
-            {% if row.control.expiry_date %}
-              <span class="expiry-date">{{ row.control.expiry_date|date:"d M Y" }}</span>
-              {% if row.expired %}
-                <span class="badge badge-expired">Expired</span>
+          <td style="white-space:nowrap;">
+            {% if h.invoice_number %}
+              <div>
+                <span class="invoice-badge">
+                  <i class="fa-solid fa-file-invoice"></i> {{ h.invoice_number }}
+                </span>
+              </div>
+            {% endif %}
+            {% if h.invoice_amount %}
+              <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+                {{ h.invoice_amount|floatformat:2 }}
+              </span>
+            {% else %}
+              <span style="color:#64748b;">No invoice</span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if h.old_login_limit != h.new_login_limit %}
+              {% if h.new_login_limit > h.old_login_limit %}
+                <span class="change-indicator change-increase">
+                  {{ h.old_login_limit }} → {{ h.new_login_limit }}
+                  <i class="fa-solid fa-arrow-up"></i>
+                </span>
               {% else %}
-                <span class="days-remaining">{{ row.remaining_days }} days left</span>
+                <span class="change-indicator change-decrease">
+                  {{ h.old_login_limit }} → {{ h.new_login_limit }}
+                  <i class="fa-solid fa-arrow-down"></i>
+                </span>
               {% endif %}
             {% else %}
-              <span class="badge badge-unlimited">Unlimited</span>
+              <span class="change-indicator change-neutral">
+                {{ h.old_login_limit }} (No change)
+              </span>
             {% endif %}
           </td>
 
-          <td>
-            {% if row.control.status %}
-              <span class="badge badge-active">
-                <i class="fa-solid fa-circle-check"></i> Active
+          <td style="white-space:nowrap;">
+            {% if h.extended_days > 0 %}
+              <span class="text-success">
+                <i class="fa-solid fa-plus"></i> {{ h.extended_days }} days
+              </span>
+            {% elif h.extended_days < 0 %}
+              <span class="text-danger">
+                <i class="fa-solid fa-minus"></i> {{ h.extended_days|slice:"1:" }} days
               </span>
             {% else %}
-              <span class="badge badge-inactive">
-                <i class="fa-solid fa-circle-xmark"></i> Inactive
-              </span>
+              <span style="color:#64748b;">—</span>
             {% endif %}
           </td>
 
-          <td>
-            {% if row.control.bill_status %}
+          <td style="white-space:nowrap;">
+            {% if h.old_expiry_date %}
+              <strong style="color:#cbd5e1; font-size:13px;">{{ h.old_expiry_date|date:"d M Y" }}</strong>
+            {% else %}
+              <span style="color:#64748b;">—</span>
+            {% endif %}
+          </td>
+
+          <td style="white-space:nowrap;">
+            {% if h.new_expiry_date %}
+              <strong style="color:#cbd5e1; font-size:13px;">{{ h.new_expiry_date|date:"d M Y" }}</strong>
+            {% else %}
+              <span style="color:#64748b;">—</span>
+            {% endif %}
+          </td>
+
+          <td class="text-center">
+            {% if h.bill_status %}
               <span class="badge badge-billed">
                 <i class="fa-solid fa-check"></i> Billed
               </span>
             {% else %}
-              <span class="badge badge-unbilled">
+              <span class="badge badge-pending">
                 <i class="fa-solid fa-clock"></i> Pending
               </span>
             {% endif %}
           </td>
 
-          <td class="text-center">
-            {% if row.history %}
-              <button class="history-toggle-btn" onclick="toggleHistory({{ forloop.counter }})">
-                <i class="fa-solid fa-receipt" id="icon-{{ forloop.counter }}"></i>
-                View
-              </button>
-            {% else %}
-              <span style="color: #64748b;">—</span>
-            {% endif %}
+          <td style="font-style:italic; color:#9ca3af; max-width:160px;">
+            {{ h.remark|default:"—" }}
           </td>
         </tr>
-
-        <!-- Billing History Row (Collapsible) -->
-        {% if row.history %}
-        <tr class="history-row" id="history-{{ forloop.counter }}">
-          <td colspan="12">
-            <div class="history-content">
-              <div class="history-title">
-                <i class="fa-solid fa-history"></i> 
-                Billing History - {{ row.control.customer_name }}
-                <span style="color: #64748b; font-size: 13px; font-weight: 400; margin-left: 10px;">
-                  ({{ row.history.count }} record{{ row.history.count|pluralize }})
-                </span>
-              </div>
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date & Time</th>
-                    <th>Invoice Details</th>
-                    <th>User Limit Change</th>
-                    <th>Days Extended</th>
-                    <th>Old Expiry</th>
-                    <th>New Expiry</th>
-                    <th>Billed</th>
-                    <th>Remark</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for h in row.history %}
-                  <tr>
-                    <td>
-                      <strong style="color: white;">{{ h.created_at|date:"d M Y" }}</strong><br>
-                      <small style="color: #64748b;">{{ h.created_at|date:"h:i A" }}</small>
-                    </td>
-                    <td>
-                      {% if h.invoice_number %}
-                        <div style="margin-bottom: 6px;">
-                          <span class="invoice-badge">
-                            <i class="fa-solid fa-file-invoice"></i>
-                            {{ h.invoice_number }}
-                          </span>
-                        </div>
-                      {% endif %}
-                      {% if h.invoice_amount %}
-                        <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
-                          <i class="fa-solid fa-indian-rupee-sign"></i>
-                          {{ h.invoice_amount|floatformat:2 }}
-                        </span>
-                      {% else %}
-                        <span style="color: #64748b;">No invoice</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if h.old_login_limit != h.new_login_limit %}
-                        {% if h.new_login_limit > h.old_login_limit %}
-                          <span class="change-indicator change-increase">
-                            {{ h.old_login_limit }} → {{ h.new_login_limit }}
-                            <i class="fa-solid fa-arrow-up"></i>
-                          </span>
-                        {% else %}
-                          <span class="change-indicator change-decrease">
-                            {{ h.old_login_limit }} → {{ h.new_login_limit }}
-                            <i class="fa-solid fa-arrow-down"></i>
-                          </span>
-                        {% endif %}
-                      {% else %}
-                        <span class="change-indicator change-neutral">
-                          {{ h.old_login_limit }} (No change)
-                        </span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if h.extended_days > 0 %}
-                        <span class="text-success">
-                          <i class="fa-solid fa-plus"></i> {{ h.extended_days }} days
-                        </span>
-                      {% elif h.extended_days < 0 %}
-                        <span class="text-danger">
-                          <i class="fa-solid fa-minus"></i> {{ h.extended_days|slice:"1:" }} days
-                        </span>
-                      {% else %}
-                        <span style="color: #64748b;">—</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if h.old_expiry_date %}
-                        <strong style="color: #cbd5e1;">{{ h.old_expiry_date|date:"d M Y" }}</strong>
-                      {% else %}
-                        <span style="color: #64748b;">—</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if h.new_expiry_date %}
-                        <strong style="color: #cbd5e1;">{{ h.new_expiry_date|date:"d M Y" }}</strong>
-                      {% else %}
-                        <span style="color: #64748b;">—</span>
-                      {% endif %}
-                    </td>
-                    <td class="text-center">
-                      {% if h.bill_status %}
-                        <i class="fa-solid fa-circle-check" style="color: #22c55e; font-size: 18px;"></i>
-                      {% else %}
-                        <i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 18px;"></i>
-                      {% endif %}
-                    </td>
-                    <td style="font-style: italic; color: #9ca3af;">
-                      {{ h.remark|default:"—" }}
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-        {% endif %}
 
         {% empty %}
         <tr>
-          <td colspan="12" class="no-data">
+          <td colspan="11" class="no-data">
             <div class="no-data-icon">📭</div>
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: white;">No billing records found</div>
-            <div style="color: #64748b;">Start by adding customers to see their billing information here.</div>
+            <div style="font-size:18px; font-weight:600; margin-bottom:10px; color:white;">No billing records found</div>
+            <div style="color:#64748b;">Billing entries will appear here once added.</div>
           </td>
         </tr>
         {% endfor %}
@@ -737,63 +447,16 @@
 </div>
 
 <script>
-  // Toggle billing history visibility
-  function toggleHistory(id) {
-    const historyRow = document.getElementById('history-' + id);
-    const icon = document.getElementById('icon-' + id);
-    
-    historyRow.classList.toggle('show');
-    
-    if (historyRow.classList.contains('show')) {
-      icon.className = 'fa-solid fa-receipt-check';
-    } else {
-      icon.className = 'fa-solid fa-receipt';
-    }
-  }
-
-  // Filter table based on search and filters
   function filterTable() {
-    const searchInput = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const billFilter = document.getElementById('billFilter').value;
-    const expiryFilter = document.getElementById('expiryFilter').value;
-    
-    const rows = document.querySelectorAll('.data-row');
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const bill   = document.getElementById('billFilter').value;
 
-    rows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      const status = row.getAttribute('data-status');
-      const bill = row.getAttribute('data-bill');
-      const expiry = row.getAttribute('data-expiry');
-
-      const matchesSearch = text.includes(searchInput);
-      const matchesStatus = !statusFilter || status === statusFilter;
-      const matchesBill = !billFilter || bill === billFilter;
-      const matchesExpiry = !expiryFilter || expiry === expiryFilter;
-
-      if (matchesSearch && matchesStatus && matchesBill && matchesExpiry) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-        // Also hide corresponding history row
-        const historyRow = row.nextElementSibling;
-        if (historyRow && historyRow.classList.contains('history-row')) {
-          historyRow.classList.remove('show');
-        }
-      }
+    document.querySelectorAll('.data-row').forEach(row => {
+      const matchSearch = !search || row.textContent.toLowerCase().includes(search);
+      const matchBill   = !bill   || row.getAttribute('data-bill') === bill;
+      row.style.display = (matchSearch && matchBill) ? '' : 'none';
     });
   }
-
-  // Auto-open history if URL has hash
-  document.addEventListener('DOMContentLoaded', function() {
-    const hash = window.location.hash;
-    if (hash) {
-      const id = hash.replace('#history-', '');
-      if (id) {
-        toggleHistory(id);
-      }
-    }
-  });
 </script>
 
 {% endblock %}

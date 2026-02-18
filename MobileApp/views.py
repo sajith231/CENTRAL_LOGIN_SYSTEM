@@ -940,76 +940,47 @@ from django.shortcuts import render
 
 from .models import MobileControl
 from django.utils import timezone
+from django.shortcuts import render
+from .models import MobileControl, MobileBillingHistory
+from django.utils import timezone
 
 def billing_report(request):
-    from django.db.models import Sum, Count
-    
-    controls = (
-        MobileControl.objects
+
+    # Flat billing history across ALL customers, latest first — no project grouping
+    billing_history = (
+        MobileBillingHistory.objects
         .select_related(
-            'project',
-            'package',
-            'shop',
-            'store',
-            'branch'
+            'control',
+            'control__project',
+            'control__package',
+            'control__shop',
+            'control__store',
+            'control__branch',
         )
-        .prefetch_related('billing_history', 'active_devices')
-        .order_by('-updated_date')
+        .order_by('-created_at')
     )
 
-    report = []
-    total_customers = controls.count()
-    active_customers = controls.filter(status=True).count()
-    billed_customers = controls.filter(bill_status=True).count()
-    unbilled_customers = controls.filter(bill_status=False).count()
-    
-    # Calculate total revenue from billing history
-    total_revenue = 0
+    # Summary stats
+    total_records   = billing_history.count()
+    billed_records  = billing_history.filter(bill_status=True).count()
+    pending_records = billing_history.filter(bill_status=False).count()
+
+    total_revenue   = 0
     pending_revenue = 0
-    
-    for c in controls:
-        registered = c.active_devices.count()
-        balance = c.login_limit - registered
-
-        remaining_days = None
-        expired = False
-        if c.expiry_date:
-            delta = c.expiry_date - timezone.now()
-            remaining_days = delta.days
-            expired = delta.total_seconds() <= 0
-
-        # Get billing history with invoice details
-        history = c.billing_history.all().order_by('-created_at')
-        
-        # Calculate revenue from history
-        for h in history:
-            if h.invoice_amount:
-                if h.bill_status:
-                    total_revenue += float(h.invoice_amount)
-                else:
-                    pending_revenue += float(h.invoice_amount)
-
-        report.append({
-            "control": c,
-            "registered": registered,
-            "balance": balance,
-            "remaining_days": remaining_days,
-            "expired": expired,
-            "history": history
-        })
+    for h in billing_history:
+        if h.invoice_amount:
+            if h.bill_status:
+                total_revenue   += float(h.invoice_amount)
+            else:
+                pending_revenue += float(h.invoice_amount)
 
     context = {
-        "report": report,
-        "total_customers": total_customers,
-        "active_customers": active_customers,
-        "billed_customers": billed_customers,
-        "unbilled_customers": unbilled_customers,
-        "total_revenue": total_revenue,
-        "pending_revenue": pending_revenue,
+        "billing_history":  billing_history,
+        "total_records":    total_records,
+        "billed_records":   billed_records,
+        "pending_records":  pending_records,
+        "total_revenue":    total_revenue,
+        "pending_revenue":  pending_revenue,
     }
 
     return render(request, "billing_report.html", context)
-
-
-
-
