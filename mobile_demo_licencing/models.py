@@ -18,6 +18,13 @@ class DemoMobileLicense(models.Model):
     )
 
     company_name = models.CharField(max_length=255, null=True, blank=True)
+
+    client_id = models.CharField(          # ✅ ADD THIS
+        max_length=200,
+        null=True,
+        blank=True
+    )
+
     project = models.ForeignKey(MobileProject, on_delete=models.SET_NULL, null=True, blank=True)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -26,8 +33,6 @@ class DemoMobileLicense(models.Model):
 
     status = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # 🔹 NEW
     expires_at = models.DateTimeField(null=True, blank=True)
 
     def _generate_demo_key(self):

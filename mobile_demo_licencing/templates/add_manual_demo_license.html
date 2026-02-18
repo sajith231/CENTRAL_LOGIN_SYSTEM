@@ -118,7 +118,7 @@
             data.forEach(item => {
               const opt = document.createElement("option");
               // Use NAME as value because backend expects string name
-              opt.value = item.name;
+              opt.value = item.id;
               opt.textContent = item.name;
               companySelect.appendChild(opt);
             });

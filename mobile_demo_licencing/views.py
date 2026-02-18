@@ -82,29 +82,53 @@ def delete_demo_license(request, pk):
 from MobileApp.models import MobileProject
 from ModuleAndPackage.models import Package
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+from MobileApp.models import MobileProject
+from ModuleAndPackage.models import Package
+from StoreShop.models import Shop
+from .models import DemoMobileLicense
+
+
 def add_manual_demo_license(request):
     projects = MobileProject.objects.all()
 
     if request.method == "POST":
-        company = request.POST.get("company")
+        # 🔹 company = SHOP ID (from dropdown)
+        shop_id = request.POST.get("company")
         project_id = request.POST.get("project")
         package_id = request.POST.get("package")
         demo_limit = request.POST.get("demo_login_limit", 1)
 
+        # 🔹 validations
+        if not shop_id or not project_id or not package_id:
+            messages.error(request, "All fields are required")
+            return redirect("DemoLicensing:demo_add_manual")
+
+        # 🔹 fetch objects
+        shop = get_object_or_404(Shop, id=shop_id)
         project = get_object_or_404(MobileProject, id=project_id)
         package = get_object_or_404(Package, id=package_id)
 
+        # 🔹 create manual demo license
         DemoMobileLicense.objects.create(
-            company_name=company,
+            company_name=shop.name,        # ✅ company name
+            client_id=shop.client_id,      # ✅ IMPORTANT (FIX)
             project=project,
             package=package,
             demo_login_limit=demo_limit
         )
 
-        messages.success(request, "Manual demo license created")
+        messages.success(request, "Manual demo license created successfully")
         return redirect("DemoLicensing:demo_list")
 
-    return render(request, "add_manual_demo_license.html", {"projects": projects})
+    return render(
+        request,
+        "add_manual_demo_license.html",
+        {"projects": projects}
+    )
+
 
 
 
