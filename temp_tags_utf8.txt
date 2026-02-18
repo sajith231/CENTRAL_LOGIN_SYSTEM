@@ -1,0 +1,122 @@
+﻿
+MobileApp\templates\mobileap
+p_billing.html:178:         
+                   {% if 
+control.license_key %}{{ 
+control.license_key }}{% 
+else %}No Key{% endif %}
+MobileApp\templates\mobileap
+p_billing.html:272:         
+   {% if 
+has_unbilled_history %}
+MobileApp\templates\mobileap
+p_billing.html:286:         
+   {% endif %}
+MobileApp\templates\mobileap
+p_billing.html:291:         
+       <fieldset {% if 
+has_unbilled_history 
+%}disabled{% endif %}>
+MobileApp\templates\mobileap
+p_billing.html:324:         
+                   {% if 
+request.user.is_superuser %}
+MobileApp\templates\mobileap
+p_billing.html:335:         
+                   {% endif 
+%}
+MobileApp\templates\mobileap
+p_billing.html:373:         
+               <button 
+type="submit" class="btn 
+submit-btn px-5 py-2" {% if 
+has_unbilled_history 
+%}disabled{%
+MobileApp\templates\mobileap
+p_billing.html:375:         
+                   
+style="background:#3b82f6; 
+color:white; border:none; 
+border-radius:8px; 
+font-weight:600; 
+font-size:0.95rem; {% if 
+has_unbilled_history 
+%}opacity:0.5; 
+cursor:not-allowed;{% endif 
+%}">
+MobileApp\templates\mobileap
+p_billing.html:513:         
+                            
+   color:{% if 
+h.extended_days >= 0 
+%}#3b82f6{% else 
+%}#dc2626{% endif %}; 
+font-weight:600;">
+MobileApp\templates\mobileap
+p_billing.html:514:         
+                           
+{% if h.extended_days >= 0 
+%}+{% endif %}{{ 
+h.extended_days }}
+MobileApp\templates\mobileap
+p_billing.html:521:         
+                            
+   color:{% if 
+h.extended_login_limit >= 0 
+%}#8b5cf6{% else 
+%}#dc2626{% endif %}; 
+font-weight:600;">
+MobileApp\templates\mobileap
+p_billing.html:522:         
+                           
+{% if 
+h.extended_login_limit >= 0 
+%}+{% endif %}{{ 
+h.extended_login_limit }}
+MobileApp\templates\mobileap
+p_billing.html:533:         
+                   {% if 
+request.user.is_superuser 
+or 'mobile_billing' in reque
+st.session.allowed_menus %}
+MobileApp\templates\mobileap
+p_billing.html:537:         
+                           
+style="background:{% if 
+h.bill_status %}#16a34a{% 
+else %}#dc2626{% endif %};
+MobileApp\templates\mobileap
+p_billing.html:539:         
+                           
+{% if h.bill_status %}
+MobileApp\templates\mobileap
+p_billing.html:543:         
+                           
+{% endif %}
+MobileApp\templates\mobileap
+p_billing.html:546:         
+                   {% endif 
+%}
+MobileApp\templates\mobileap
+p_billing.html:548:         
+                       {% 
+if h.bill_status and 
+h.invoice_number %}
+MobileApp\templates\mobileap
+p_billing.html:552:         
+                       {% 
+endif %}
+MobileApp\templates\mobileap
+p_billing.html:555:         
+                       {% 
+if h.bill_status and 
+h.invoice_amount %}
+MobileApp\templates\mobileap
+p_billing.html:561:         
+                       {% 
+endif %}
+MobileApp\templates\mobileap
+p_billing.html:661:{% 
+endblock %}
+
+

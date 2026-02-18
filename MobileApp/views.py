@@ -860,7 +860,7 @@ def mobile_control_billing(request, pk):
             else:
                 new_expiry = timezone.now() + timedelta(days=extend_days)
 
-            if new_expiry < timezone.now():
+            if new_expiry < timezone.now() and not request.user.is_superuser:
                 messages.error(request, "Expiry date cannot be in the past")
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
 

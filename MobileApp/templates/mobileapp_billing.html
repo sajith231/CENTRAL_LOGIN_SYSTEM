@@ -237,26 +237,21 @@
 
             <div class="mb-3">
                 <label style="color:#94a3b8;">Invoice Number *</label>
-                <input type="text" id="popup_invoice_number"
-                    class="form-control"
+                <input type="text" id="popup_invoice_number" class="form-control"
                     style="background:#1e293b; color:white;">
             </div>
 
             <div class="mb-3">
                 <label style="color:#94a3b8;">Invoice Amount *</label>
-                <input type="number" step="0.01"
-                    id="popup_invoice_amount"
-                    class="form-control"
+                <input type="number" step="0.01" id="popup_invoice_amount" class="form-control"
                     style="background:#1e293b; color:white;">
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-                <button onclick="closeInvoiceModal()"
-                        class="btn btn-secondary btn-sm">
+                <button onclick="closeInvoiceModal()" class="btn btn-secondary btn-sm">
                     Cancel
                 </button>
-                <button onclick="submitInvoice()"
-                        class="btn btn-primary btn-sm">
+                <button onclick="submitInvoice()" class="btn btn-primary btn-sm">
                     Save & Mark Billed
                 </button>
             </div>
@@ -325,6 +320,19 @@
                                     {% endfor %}
                                 </select>
                             </div>
+
+                            {% if request.user.is_superuser %}
+                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                Manual Days Adjustment (Superuser Only)
+                            </label>
+                            <div class="input-group-icon mb-3">
+                                <i class="fas fa-calendar-minus"></i>
+                                <input type="number" name="extend_days" id="manualDaysInput" class="form-control"
+                                    placeholder="e.g. -10 or 5"
+                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
+                                    oninput="handleManualDaysChange(this)">
+                            </div>
+                            {% endif %}
                             <small id="helperText" style="color:#64748b; font-size:0.75rem; display:block;">
                                 <i class="fas fa-info-circle me-1"></i>Select a package to extend validity period
                             </small>
@@ -407,12 +415,27 @@
 
                 function handlePackageChange(select) {
                     const helper = document.getElementById('helperText');
+                    const manualInput = document.getElementById('manualDaysInput');
+
                     if (select.value) {
+                        if (manualInput) manualInput.value = ''; // Clear manual input
                         const option = select.options[select.selectedIndex];
                         const days = option.getAttribute('data-days');
                         helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Selected package adds <b>${days} days</b>`;
                     } else {
-                        helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package to extend validity period`;
+                        helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
+                    }
+                }
+
+                function handleManualDaysChange(input) {
+                    const select = document.getElementById('packageSelect');
+                    const helper = document.getElementById('helperText');
+
+                    if (input.value) {
+                        select.value = ""; // Clear package selection
+                        helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Manual adjustment: <b>${input.value} days</b>`;
+                    } else {
+                        helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
                     }
                 }
             </script>
@@ -458,19 +481,17 @@
                                 style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                 <i class="fas fa-credit-card me-1"></i>Status
                             </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem;
+                            <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
                                         text-transform:uppercase; letter-spacing:0.5px; padding:10px;
                                         background:#0a0f1e;">
-                                    <i class="fas fa-file-invoice me-1"></i>Invoice No
-                                </th>
+                                <i class="fas fa-file-invoice me-1"></i>Invoice No
+                            </th>
 
-                                <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem;
+                            <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
                                         text-transform:uppercase; letter-spacing:0.5px; padding:10px;
                                         background:#0a0f1e;">
-                                    <i class="fas fa-rupee-sign me-1"></i>Amount
-                                </th>
+                                <i class="fas fa-rupee-sign me-1"></i>Amount
+                            </th>
                             <th
                                 style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                 <i class="fas fa-comment me-1"></i>Remark
@@ -524,18 +545,18 @@
                             {% endif %}
                             <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                 {% if h.bill_status and h.invoice_number %}
-                                    <span style="font-weight:600;">{{ h.invoice_number }}</span>
+                                <span style="font-weight:600;">{{ h.invoice_number }}</span>
                                 {% else %}
-                                    <span style="color:#64748b;">—</span>
+                                <span style="color:#64748b;">—</span>
                                 {% endif %}
                             </td>
                             <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                 {% if h.bill_status and h.invoice_amount %}
-                                    <span style="font-weight:600;">
-                                        ₹ {{ h.invoice_amount }}
-                                    </span>
+                                <span style="font-weight:600;">
+                                    ₹ {{ h.invoice_amount }}
+                                </span>
                                 {% else %}
-                                    <span style="color:#64748b;">—</span>
+                                <span style="color:#64748b;">—</span>
                                 {% endif %}
                             </td>
 
@@ -565,74 +586,74 @@
 </div>
 
 <script>
-function toggleHistoryStatus(id) {
-    const btn = document.getElementById("billingStatusBtn" + id);
+    function toggleHistoryStatus(id) {
+        const btn = document.getElementById("billingStatusBtn" + id);
 
-    // If already billed → allow normal toggle
-    if (btn.innerText.includes("Billed")) {
-        if (!confirm("Mark as Unbilled?")) return;
-        toggleStatusRequest(id);
-        return;
-    }
-
-    // If unbilled → open popup
-    document.getElementById("history_id").value = id;
-    document.getElementById("popup_invoice_number").value = "";
-    document.getElementById("popup_invoice_amount").value = "";
-    document.getElementById("invoiceModal").style.display = "flex";
-}
-
-function closeInvoiceModal() {
-    document.getElementById("invoiceModal").style.display = "none";
-}
-
-function submitInvoice() {
-    const id = document.getElementById("history_id").value;
-    const invoiceNo = document.getElementById("popup_invoice_number").value.trim();
-    const invoiceAmt = document.getElementById("popup_invoice_amount").value.trim();
-
-    if (!invoiceNo || !invoiceAmt) {
-        alert("Invoice number and amount are required");
-        return;
-    }
-
-    fetch(`/mobileapp/billing-history/toggle-status/${id}/`, {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": getCookie("csrftoken"),
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            invoice_number: invoiceNo,
-            invoice_amount: invoiceAmt
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            alert(data.error || "Failed");
+        // If already billed → allow normal toggle
+        if (btn.innerText.includes("Billed")) {
+            if (!confirm("Mark as Unbilled?")) return;
+            toggleStatusRequest(id);
             return;
         }
-        closeInvoiceModal();
-        location.reload(); // safest
-    });
-}
+
+        // If unbilled → open popup
+        document.getElementById("history_id").value = id;
+        document.getElementById("popup_invoice_number").value = "";
+        document.getElementById("popup_invoice_amount").value = "";
+        document.getElementById("invoiceModal").style.display = "flex";
+    }
+
+    function closeInvoiceModal() {
+        document.getElementById("invoiceModal").style.display = "none";
+    }
+
+    function submitInvoice() {
+        const id = document.getElementById("history_id").value;
+        const invoiceNo = document.getElementById("popup_invoice_number").value.trim();
+        const invoiceAmt = document.getElementById("popup_invoice_amount").value.trim();
+
+        if (!invoiceNo || !invoiceAmt) {
+            alert("Invoice number and amount are required");
+            return;
+        }
+
+        fetch(`/mobileapp/billing-history/toggle-status/${id}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                invoice_number: invoiceNo,
+                invoice_amount: invoiceAmt
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.error || "Failed");
+                    return;
+                }
+                closeInvoiceModal();
+                location.reload(); // safest
+            });
+    }
 </script>
 <script>
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + "=")) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 </script>
 
 
