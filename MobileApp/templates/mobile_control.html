@@ -70,8 +70,41 @@
 {% endif %}
 
 {% if controls %}
+
+<!-- Top pagination bar -->
+<div style="display:flex; justify-content:space-between; align-items:center;
+            margin-bottom:10px; background:#1e293b; border:1px solid #334155;
+            border-radius:10px; padding:8px 16px; gap:12px;">
+    <!-- Left: Rows per page -->
+    <div style="display:flex; align-items:center; gap:8px;">
+        <label style="color:#9ca3af; font-size:13px; white-space:nowrap;">Rows per page:</label>
+        <select id="rowsPerPage" style="padding:5px 10px; border-radius:6px; border:1px solid #334155;
+                   background:#0f172a; color:white; font-size:13px; cursor:pointer;">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+    <!-- Center: Record info -->
+    <p id="paginationInfo" style="color:#9ca3af; margin:0; font-size:13px;">Loading...</p>
+    <!-- Right: Prev / Next -->
+    <div style="display:flex; gap:6px;">
+        <button id="btnPrev" onclick="prevPage()" style="padding:5px 14px; border-radius:6px; border:1px solid #334155;
+                   background:#1e293b; color:#cbd5e1; font-size:13px; cursor:pointer;
+                   transition:background 0.15s;">
+            &#8249; Prev
+        </button>
+        <button id="btnNext" onclick="nextPage()" style="padding:5px 14px; border-radius:6px; border:1px solid #334155;
+                   background:#1e293b; color:#cbd5e1; font-size:13px; cursor:pointer;
+                   transition:background 0.15s;">
+            Next &#8250;
+        </button>
+    </div>
+</div>
+
 <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse;">
+    <table id="mainDataTable" style="width:100%; border-collapse:collapse;">
         <thead>
             <tr style="background:#1e293b;">
                 <th style="padding:12px;white-space: nowrap;">No</th>
@@ -88,9 +121,9 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
                 <th style="padding:12px;white-space: nowrap;">License Key</th>
-                
+
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
-                
+
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
@@ -192,18 +225,18 @@
                 <td style="padding:12px;white-space: nowrap">
                     <span id="license_{{ c.id }}">{{ c.license_key }}</span>
                 </td>
-                
+
                 <td style="padding:12px;text-align:center;">
 
                     <a href="{% url 'MobileApp:mobile_control_billing' c.id %}" class="btn btn-sm"
                         style="background:#0ea5e9; color:white;">
                         Billing
                     </a>
-                    
-                    
-                    
+
+
+
                 </td>
-               
+
 
                 <td style="padding:12px;text-align:center;white-space: nowrap">
                     <button id="billBtn_{{ c.id }}" onclick="toggleBillStatus({{ c.id }})" class="btn btn-sm"
@@ -279,9 +312,6 @@
         </tbody>
     </table>
 </div>
-
-
-<p style="margin-top:16px; color:#9ca3af;">Total Controls: {{ controls.count }}</p>
 
 {% else %}
 <div style="padding:40px; text-align:center; color:#9ca3af;">
@@ -606,38 +636,88 @@
     }
 </script>
 <script>
+    let currentPage = 1;
+    let totalPages = 1; // always reflects the filtered total
+
+    function getRowsPerPage() {
+        return parseInt(document.getElementById("rowsPerPage").value, 10);
+    }
+
     function applyFilters() {
+        currentPage = 1; // Reset to first page on filter change
+        renderTable();
+    }
+
+    function renderTable() {
         const clientFilter = document.getElementById("clientIdFilter").value.toLowerCase();
-        const companyFilter = document.getElementById("companyFilter").value.toLowerCase(); // New
+        const companyFilter = document.getElementById("companyFilter").value.toLowerCase();
         const statusFilter = document.getElementById("statusFilter").value;
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
+        const rowsPerPage = getRowsPerPage();
 
-        const rows = document.querySelectorAll("table tbody tr");
+        const allRows = Array.from(document.querySelectorAll("#mainDataTable tbody tr"));
 
-        rows.forEach(row => {
+        // Determine which rows match the current filters
+        const matchedRows = allRows.filter(row => {
             const clientId = (row.dataset.clientId || "").toLowerCase();
-            const companyName = (row.dataset.company || "").toLowerCase(); // New
+            const companyName = (row.dataset.company || "").toLowerCase();
             const status = row.dataset.status || "";
             const project = row.dataset.project || "";
             const branch = row.dataset.branch || "";
 
-            const clientMatch = clientId.includes(clientFilter);
-            const companyMatch = companyName.includes(companyFilter); // New
-            const statusMatch = statusFilter === "" || status === statusFilter;
-            const projectMatch = projectFilter === "" || project === projectFilter;
-            const branchMatch = branchFilter === "" || branch === branchFilter;
-
-            row.style.display = (clientMatch && companyMatch && statusMatch && projectMatch && branchMatch) ? "" : "none";
+            return clientId.includes(clientFilter)
+                && companyName.includes(companyFilter)
+                && (statusFilter === "" || status === statusFilter)
+                && (projectFilter === "" || project === projectFilter)
+                && (branchFilter === "" || branch === branchFilter);
         });
+
+        // Update module-level totalPages from filtered results
+        totalPages = Math.max(1, Math.ceil(matchedRows.length / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = "none");
+
+        // Show only the paginated slice of matched rows
+        matchedRows.forEach((row, i) => {
+            row.style.display = (i >= startIndex && i < endIndex) ? "" : "none";
+        });
+
+        // Update info text
+        document.getElementById("paginationInfo").textContent =
+            `Showing ${matchedRows.length === 0 ? 0 : startIndex + 1}\u2013${Math.min(endIndex, matchedRows.length)} of ${matchedRows.length} record${matchedRows.length !== 1 ? 's' : ''}`;
+
+        // Update Prev/Next buttons
+        const btnPrev = document.getElementById("btnPrev");
+        const btnNext = document.getElementById("btnNext");
+        btnPrev.disabled = currentPage === 1;
+        btnPrev.style.opacity = currentPage === 1 ? "0.4" : "1";
+        btnPrev.style.cursor = currentPage === 1 ? "not-allowed" : "pointer";
+        btnNext.disabled = currentPage >= totalPages;
+        btnNext.style.opacity = currentPage >= totalPages ? "0.4" : "1";
+        btnNext.style.cursor = currentPage >= totalPages ? "not-allowed" : "pointer";
     }
 
-    // listeners
+    function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+    function nextPage() { if (currentPage < totalPages) { currentPage++; renderTable(); } }
+
+
+
+    // Event listeners
     document.getElementById("clientIdFilter").addEventListener("keyup", applyFilters);
-    document.getElementById("companyFilter").addEventListener("keyup", applyFilters); // New
+    document.getElementById("companyFilter").addEventListener("keyup", applyFilters);
     document.getElementById("statusFilter").addEventListener("change", applyFilters);
     document.getElementById("projectFilter").addEventListener("change", applyFilters);
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
+    document.getElementById("rowsPerPage").addEventListener("change", applyFilters);
+
+    // Initial render on page load
+    document.addEventListener("DOMContentLoaded", renderTable);
 </script>
 
 
