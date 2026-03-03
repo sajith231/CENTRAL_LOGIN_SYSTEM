@@ -60,12 +60,14 @@
             </select>
         </div>
 
-        <!-- Package -->
+        <!-- Type -->
         <div class="mb-3">
-            <label>Package</label>
-            <select name="package" id="packageSelect" class="form-control" required
+            <label>Type</label>
+            <select name="licence_type" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
-                <option value="">Select Package</option>
+                <option value="new">New Licence</option>
+                <option value="transfer">Transfer Licence</option>
+                <option value="developer">Developer Licence</option>
             </select>
         </div>
 
@@ -150,26 +152,5 @@
     });
 </script>
 
-<!-- Load Package On Project Select -->
-<script>
-    document.getElementById("projectSelect").addEventListener("change", function () {
-        const projectID = this.value;
-        let pkgSelect = document.getElementById("packageSelect");
-
-        pkgSelect.innerHTML = '<option value="">Loading.</option>';
-
-        fetch(`/module-package/get-packages/${projectID}/`)
-            .then(res => res.json())
-            .then(data => {
-                pkgSelect.innerHTML = '<option value="">Select Package</option>';
-                data.forEach(pkg => {
-                    pkgSelect.innerHTML += `
-                    <option value="${pkg.id}">
-                        ${pkg.package_name}
-                    </option>`;
-                });
-            });
-    });
-</script>
 
 {% endblock %}

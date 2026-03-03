@@ -57,6 +57,18 @@ class MobileControl(models.Model):
     license_key = models.CharField(max_length=19, unique=True, null=True, blank=True, editable=False)
 
     login_limit = models.PositiveIntegerField(default=0)
+
+    LICENCE_TYPE_CHOICES = [
+        ('new', 'New Licence'),
+        ('transfer', 'Transfer Licence'),
+        ('developer', 'Developer Licence'),
+    ]
+    licence_type = models.CharField(
+        max_length=20,
+        choices=LICENCE_TYPE_CHOICES,
+        default='new',
+    )
+
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
 

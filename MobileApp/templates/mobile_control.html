@@ -119,6 +119,7 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Type</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Licence Key Copy</th>
 
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
@@ -191,8 +192,9 @@
                         style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
                         data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
                         data-corporate="{{ c.store.name }}" data-branch="{{ c.shop.branch.name|default:'-' }}"
-                        data-client="{{ c.client_id }}" data-license="{{ c.license_key }}"
-                        onclick="openMoreDetails(this)">
+                        data-place="{{ c.shop.place|default:'-' }}"
+                        data-corporate-id="{{ c.store.store_id|default:'-' }}" data-client="{{ c.client_id }}"
+                        data-license="{{ c.license_key }}" onclick="openMoreDetails(this)">
                         <i class="fa-solid fa-eye"></i>
                     </button>
 
@@ -214,6 +216,25 @@
                     {{ c.balance_count }}
                 </td>
 
+
+                <td style="padding:12px;text-align:center;white-space:nowrap;">
+                    {% if c.licence_type == 'new' %}
+                    <span
+                        style="background:#1d4ed8; color:#bfdbfe; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">New
+                        Licence</span>
+                    {% elif c.licence_type == 'transfer' %}
+                    <span
+                        style="background:#7c3aed; color:#ede9fe; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Transfer
+                        Licence</span>
+                    {% elif c.licence_type == 'developer' %}
+                    <span
+                        style="background:#065f46; color:#a7f3d0; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Developer
+                        Licence</span>
+                    {% else %}
+                    <span
+                        style="background:#374151; color:#d1d5db; padding:3px 10px; border-radius:20px; font-size:0.75rem;">—</span>
+                    {% endif %}
+                </td>
 
                 <td style="padding:12px;text-align:center;white-space: nowrap">
                     <span id="license_{{ c.id }}" style="display:none;">{{ c.license_key }}</span>
@@ -388,16 +409,24 @@
             <div class="modal-body">
                 <table style="width:100%; font-size:14px;">
                     <tr>
+                        <td><strong>Branch</strong></td>
+                        <td id="md_branch"></td>
+                    </tr>
+                    <tr>
                         <td><strong>Company</strong></td>
                         <td id="md_company"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Place</strong></td>
+                        <td id="md_place"></td>
                     </tr>
                     <tr>
                         <td><strong>Corporate</strong></td>
                         <td id="md_corporate"></td>
                     </tr>
                     <tr>
-                        <td><strong>Branch</strong></td>
-                        <td id="md_branch"></td>
+                        <td><strong>Corporate ID</strong></td>
+                        <td id="md_corporate_id"></td>
                     </tr>
                     <tr>
                         <td><strong>Client ID</strong></td>
@@ -710,9 +739,11 @@
 
 <script>
     function openMoreDetails(btn) {
-        document.getElementById("md_company").innerText = btn.dataset.company || "-";
-        document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
         document.getElementById("md_branch").innerText = btn.dataset.branch || "-";
+        document.getElementById("md_company").innerText = btn.dataset.company || "-";
+        document.getElementById("md_place").innerText = btn.dataset.place || "-";
+        document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
+        document.getElementById("md_corporate_id").innerText = btn.dataset.corporateId || "-";
         document.getElementById("md_client").innerText = btn.dataset.client || "-";
         document.getElementById("md_license").innerText = btn.dataset.license || "-";
         // Reset copy all button
@@ -724,11 +755,13 @@
     function copyMdAll() {
         const company = document.getElementById("md_company").innerText;
         const corporate = document.getElementById("md_corporate").innerText;
+        const corporateId = document.getElementById("md_corporate_id").innerText;
         const branch = document.getElementById("md_branch").innerText;
+        const place = document.getElementById("md_place").innerText;
         const client = document.getElementById("md_client").innerText;
         const license = document.getElementById("md_license").innerText;
 
-        const text = `Company   : ${company}\nCorporate : ${corporate}\nBranch    : ${branch}\nClient ID : ${client}\nLicence Key: ${license}`;
+        const text = `Company      : ${company}\nCorporate    : ${corporate}\nCorporate ID : ${corporateId}\nBranch       : ${branch}\nPlace        : ${place}\nClient ID    : ${client}\nLicence Key  : ${license}`;
 
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.getElementById("md_copy_all_btn");

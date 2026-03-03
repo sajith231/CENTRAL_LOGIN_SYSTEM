@@ -276,7 +276,90 @@
 
                     <form method="POST">
                         {% csrf_token %}
+                        <input type="hidden" name="operation_type" id="operation_type"
+                            value="{% if not history %}both{% else %}validity{% endif %}">
 
+                        {% if not history %}
+                        {# ===== FIRST BILLING: combined validity + users in one form ===== #}
+                        <div
+                            style="background:#1e293b; border:1px solid #3b82f6; border-radius:10px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-info-circle" style="color:#3b82f6;"></i>
+                            <span style="color:#93c5fd; font-size:0.82rem; font-weight:500;">First billing — set the
+                                validity package <strong>and</strong> initial user count together.</span>
+                        </div>
+
+                        <fieldset>
+                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                Select Package Extension
+                            </label>
+                            <div class="input-group-icon mb-3">
+                                <i class="fas fa-box-open"></i>
+                                <select name="package" id="packageSelect" class="form-control form-select"
+                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;"
+                                    onchange="handlePackageChange(this)">
+                                    <option value="" selected disabled>-- Select Package --</option>
+                                    {% for p in packages %}
+                                    <option value="{{ p.id }}" data-days="{{ p.days_limit }}">
+                                        {{ p.package_name }} (+{{ p.days_limit }} days)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            {% if request.user.is_superuser %}
+                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                Manual Days Adjustment (Superuser Only)
+                            </label>
+                            <div class="input-group-icon mb-3">
+                                <i class="fas fa-calendar-minus"></i>
+                                <input type="number" name="extend_days" id="manualDaysInput" class="form-control"
+                                    placeholder="e.g. -10 or 5"
+                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
+                                    oninput="handleManualDaysChange(this)">
+                            </div>
+                            {% endif %}
+
+                            <small id="helperText"
+                                style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:16px;">
+                                <i class="fas fa-info-circle me-1"></i>Select a package to extend validity period
+                            </small>
+
+                            <hr style="border-color:#1e293b; margin:12px 0;">
+
+                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                Initial User Count
+                            </label>
+                            <div class="input-group-icon mb-3">
+                                <i class="fas fa-user-plus"></i>
+                                <input type="number" name="extend_login" id="extendUsersInput" class="form-control"
+                                    placeholder="e.g. 5"
+                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
+                            </div>
+                            <small style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:14px;">
+                                <i class="fas fa-info-circle me-1"></i>Set the starting number of users for this licence
+                            </small>
+
+                            <div class="mt-2">
+                                <label class="form-label mb-2"
+                                    style="color:#94a3b8; font-size:0.85rem; font-weight:500;">Remark / Notes</label>
+                                <div class="input-group-icon">
+                                    <i class="fas fa-comment-alt" style="top:20px;"></i>
+                                    <textarea name="remark" rows="2" class="form-control"
+                                        placeholder="Add notes about this billing update..."
+                                        style="background:#1e293b; color:white; border:1px solid #334155; padding:5px 10px; border-radius:8px; resize:none; font-size:0.85rem;"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn submit-btn px-5 py-2"
+                                    style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; font-size:0.95rem;">
+                                    <i class="fas fa-save me-2"></i>Create First Billing
+                                </button>
+                            </div>
+                        </fieldset>
+
+                        {% else %}
+                        {# ===== SUBSEQUENT BILLING: existing tabbed UI ===== #}
                         <fieldset>
                             <!-- OPERATION TYPE TABS -->
                             <div class="d-flex gap-2 mb-3">
@@ -288,8 +371,6 @@
                                     <i class="fas fa-users me-1"></i>Update Users
                                 </div>
                             </div>
-
-                            <input type="hidden" name="operation_type" id="operation_type" value="validity">
 
                             <div class="row g-4">
                                 <!-- VALIDITY SECTION -->
@@ -372,7 +453,9 @@
                                 </button>
                             </div>
                         </fieldset>
+                        {% endif %}
                     </form>
+
 
                     <script>
                         function toggleOperation(type) {
@@ -505,8 +588,7 @@
                                     <td style="padding:12px; color:#e2e8f0; background:transparent;">
                                         <div style="font-weight:500; font-size:0.85rem;">{{ h.created_at|date:"d M Y" }}
                                         </div>
-                                        <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i"
-                                            }}</small>
+                                        <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i" }}</small>
                                     </td>
 
                                     <td style="padding:12px; background:transparent;">

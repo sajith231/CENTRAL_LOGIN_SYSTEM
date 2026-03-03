@@ -13,20 +13,26 @@
             <select name="project" id="projectSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for project in projects %}
-                <option value="{{ project.id }}" {% if project.id == control.project.id %}selected{% endif %}>
+                <option value="{{ project.id }}" {% if project.id==control.project.id %}selected{% endif %}>
                     {{ project.project_name }}
                 </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Package -->
+        <!-- Type -->
         <div class="mb-3">
-            <label>Package</label>
-            <select name="package" id="packageSelect" class="form-control" required
+            <label>Type</label>
+            <select name="licence_type" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="new" {% if control.licence_type=='new' %}selected{% endif %}>New Licence</option>
+                <option value="transfer" {% if control.licence_type=='transfer' %}selected{% endif %}>Transfer Licence
+                </option>
+                <option value="developer" {% if control.licence_type=='developer' %}selected{% endif %}>Developer
+                    Licence</option>
             </select>
         </div>
+
 
         <!-- Branch -->
         <div class="mb-3">
@@ -35,7 +41,8 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Branch</option>
                 {% for b in branches %}
-                <option value="{{ b.id }}" {% if control.shop.branch and control.shop.branch.id == b.id %}selected{% endif %}>
+                <option value="{{ b.id }}" {% if control.shop.branch and control.shop.branch.id==b.id %}selected{% endif
+                    %}>
 
                     {{ b.name }} - {{ b.place }}
                 </option>
@@ -49,7 +56,8 @@
             <select id="storeSelect" name="store" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for store in stores %}
-                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if control.store.id == store.id %}selected{% endif %}>
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if control.store.id==store.id
+                    %}selected{% endif %}>
 
                     {{ store.name }}
                 </option>
@@ -64,10 +72,9 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for shop in shops %}
                 <option value="{{ shop.id }}" data-client="{{ shop.client_id }}" data-store="{{ shop.store_id }}"
-                    data-branch="{{ shop.branch_id }}" {% if shop.id == control.shop.id %}selected{% endif %}
-                    {{ shop.name }}
-                </option>
-                {% endfor %}
+                    data-branch="{{ shop.branch_id }}" {% if shop.id==control.shop.id %}selected{% endif %} {{ shop.name
+                    }} </option>
+                    {% endfor %}
             </select>
         </div>
 
@@ -155,33 +162,5 @@
     });
 </script>
 
-<!-- Load Packages -->
-<script>
-    let selectedPkg = "{{ control.package.id }}";
-    let selectedProject = "{{ control.project.id }}";
-
-    function loadPackages(projectID, selectedPkgID = null) {
-        fetch(`/module-package/get-packages/${projectID}/`)
-            .then(res => res.json())
-            .then(data => {
-                let pkgSelect = document.getElementById("packageSelect");
-                pkgSelect.innerHTML = "";
-
-                data.forEach(pkg => {
-                    pkgSelect.innerHTML += `
-                    <option value="${pkg.id}"
-                        ${selectedPkgID == pkg.id ? "selected" : ""}>
-                        ${pkg.package_name}
-                    </option>`;
-                });
-            });
-    }
-
-    loadPackages(selectedProject, selectedPkg);
-
-    document.getElementById("projectSelect").addEventListener("change", function () {
-        loadPackages(this.value);
-    });
-</script>
 
 {% endblock %}

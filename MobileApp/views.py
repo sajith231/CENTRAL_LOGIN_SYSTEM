@@ -168,21 +168,16 @@ def add_mobile_control(request):
         project_id = request.POST.get('project')
         shop_id = request.POST.get('shop')
         store_id = request.POST.get('store')
-        package_id = request.POST.get('package')
         login_limit = request.POST.get('login_limit', '0').strip()
+        licence_type = request.POST.get('licence_type', 'new')
 
-        if not project_id or not shop_id or not store_id or not package_id:
+        if not project_id or not shop_id or not store_id:
             messages.error(request, 'All fields are required.')
             return redirect("MobileApp:add_mobile_control")
 
         project = get_object_or_404(MobileProject, pk=project_id)
         shop = get_object_or_404(Shop, pk=shop_id)
         store = get_object_or_404(Store, pk=store_id)
-        package = get_object_or_404(Package, pk=package_id)
-
-        expiry_date = None
-        if package.days_limit > 0:
-            expiry_date = timezone.now() + timedelta(days=package.days_limit)
 
         MobileControl.objects.create(
             project=project,
@@ -191,8 +186,9 @@ def add_mobile_control(request):
             customer_name=shop.name,
             client_id=shop.client_id,
             login_limit=int(login_limit),
-            package=package,
-            expiry_date=expiry_date
+            licence_type=licence_type,
+            package=None,
+            expiry_date=None
         )
 
         messages.success(request, 'Mobile control saved successfully!')
@@ -229,14 +225,14 @@ def edit_mobile_control(request, pk):
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
         shop = get_object_or_404(Shop, pk=request.POST.get('shop'))
         store = get_object_or_404(Store, pk=request.POST.get('store'))
-        package = get_object_or_404(Package, pk=request.POST.get('package'))
 
         control.project = project
         control.shop = shop
         control.store = store
         control.customer_name = shop.name
         control.client_id = shop.client_id
-        control.package = package
+        control.licence_type = request.POST.get('licence_type', control.licence_type)
+        # Package is not updated here — managed via billing page only
 
         login_limit = request.POST.get('login_limit', '0').strip()
         control.login_limit = int(login_limit)
