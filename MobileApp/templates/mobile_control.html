@@ -119,8 +119,7 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
-                <th style="padding:12px;text-align:center;white-space: nowrap;">Copy</th>
-                <th style="padding:12px;white-space: nowrap;">License Key</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Licence Key Copy</th>
 
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
 
@@ -192,7 +191,8 @@
                         style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
                         data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
                         data-corporate="{{ c.store.name }}" data-branch="{{ c.shop.branch.name|default:'-' }}"
-                        data-client="{{ c.client_id }}" onclick="openMoreDetails(this)">
+                        data-client="{{ c.client_id }}" data-license="{{ c.license_key }}"
+                        onclick="openMoreDetails(this)">
                         <i class="fa-solid fa-eye"></i>
                     </button>
 
@@ -216,14 +216,13 @@
 
 
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    <button onclick="copyLicense('{{ c.id }}')" class="btn btn-sm"
+                    <span id="license_{{ c.id }}" style="display:none;">{{ c.license_key }}</span>
+                    <button
+                        onclick="openLicenceKeyPopup('{{ c.id }}', '{{ c.customer_name }}', '{{ c.client_id }}', '{{ c.license_key }}')"
+                        class="btn btn-sm"
                         style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
-                        <i class="fa-regular fa-copy"></i> Copy
+                        <i class="fa-solid fa-key"></i> Key
                     </button>
-                </td>
-
-                <td style="padding:12px;white-space: nowrap">
-                    <span id="license_{{ c.id }}">{{ c.license_key }}</span>
                 </td>
 
                 <td style="padding:12px;text-align:center;">
@@ -374,11 +373,16 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background:#1e293b; color:white;">
 
-            <div class="modal-header" style="border-bottom:1px solid #334155;">
-                <h5 class="modal-title">
-                    <i class="fa-solid fa-circle-info"></i> More Details
-                </h5>
-                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header"
+                style="border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between;">
+                <h5 class="modal-title"><i class="fa-solid fa-circle-info"></i> More Details</h5>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button onclick="copyMdAll()" id="md_copy_all_btn" style="background:#3b82f6; color:white; border:none; border-radius:6px;
+                               padding:5px 14px; font-size:0.8rem; font-weight:600; cursor:pointer;">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
             </div>
 
             <div class="modal-body">
@@ -399,6 +403,12 @@
                         <td><strong>Client ID</strong></td>
                         <td id="md_client"></td>
                     </tr>
+                    <tr>
+                        <td style="vertical-align:middle;"><strong>Licence Key</strong></td>
+                        <td style="word-break:break-all;">
+                            <code id="md_license" style="color:#38bdf8; font-size:0.85rem; font-weight:600;"></code>
+                        </td>
+                    </tr>
                 </table>
             </div>
 
@@ -409,12 +419,83 @@
 
 {% endfor %}
 
-<!-- Delete Copy Script -->
+<!-- Licence Key Popup Modal -->
+<div id="licenceKeyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65);
+     z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#0f172a; border:1px solid #334155; border-radius:14px;
+                padding:28px 28px 22px; width:420px; max-width:90vw; position:relative;">
+        <button onclick="closeLicenceKeyPopup()" style="position:absolute; top:12px; right:14px;
+                background:transparent; border:none; color:#94a3b8; font-size:1.2rem; cursor:pointer;"
+            title="Close">&times;</button>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="background:#1e293b; border-radius:8px; padding:8px 10px;">
+                <i class="fa-solid fa-key" style="color:#3b82f6;"></i>
+            </div>
+            <div>
+                <p style="color:#64748b; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px; margin:0;">
+                    Licence Key</p>
+                <p id="lkm_company" style="color:white; font-size:0.9rem; font-weight:600; margin:0;"></p>
+            </div>
+        </div>
+        <div
+            style="background:#1e293b; border-radius:8px; padding:8px 14px; margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-id-badge" style="color:#8b5cf6;"></i>
+            <span style="color:#94a3b8; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">Client
+                ID:</span>
+            <code id="lkm_client_id" style="color:#e2e8f0; font-size:0.9rem; font-weight:600;"></code>
+        </div>
+        <div
+            style="background:#1e293b; border-radius:10px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
+            <code id="lkm_key"
+                style="color:#38bdf8; font-size:1rem; font-weight:700; letter-spacing:2px; word-break:break-all;"></code>
+            <button onclick="copyLicenceKey()" id="lkm_copy_btn" style="background:#3b82f6; color:white; border:none; border-radius:8px; padding:6px 14px;
+                       font-size:0.8rem; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;"
+                title="Copy to clipboard">
+                <i class="fa-regular fa-copy"></i> Copy
+            </button>
+        </div>
+        <p style="color:#475569; font-size:0.75rem; text-align:center; margin:0;">
+            <i class="fa-solid fa-shield-halved me-1" style="color:#64748b;"></i>Keep this key secure and do not share
+            publicly.
+        </p>
+    </div>
+</div>
+
 <script>
+    function openLicenceKeyPopup(id, company, clientId, key) {
+        document.getElementById('lkm_company').innerText = company;
+        document.getElementById('lkm_client_id').innerText = clientId;
+        document.getElementById('lkm_key').innerText = key;
+        document.getElementById('lkm_copy_btn').innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        document.getElementById('lkm_copy_btn').style.background = '#3b82f6';
+        document.getElementById('licenceKeyModal').style.display = 'flex';
+    }
+
+    function closeLicenceKeyPopup() {
+        document.getElementById('licenceKeyModal').style.display = 'none';
+    }
+
+    function copyLicenceKey() {
+        const key = document.getElementById('lkm_key').innerText;
+        navigator.clipboard.writeText(key).then(() => {
+            const btn = document.getElementById('lkm_copy_btn');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            btn.style.background = '#16a34a';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                btn.style.background = '#3b82f6';
+            }, 2000);
+        });
+    }
+
+    // Close popup when clicking outside
+    document.getElementById('licenceKeyModal').addEventListener('click', function (e) {
+        if (e.target === this) closeLicenceKeyPopup();
+    });
+
     function copyLicense(id) {
         var text = document.getElementById("license_" + id).innerText;
         navigator.clipboard.writeText(text);
-        alert("Copied: " + text);
     }
 
     // Toggle Status Function
@@ -633,6 +714,31 @@
         document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
         document.getElementById("md_branch").innerText = btn.dataset.branch || "-";
         document.getElementById("md_client").innerText = btn.dataset.client || "-";
+        document.getElementById("md_license").innerText = btn.dataset.license || "-";
+        // Reset copy all button
+        const copyBtn = document.getElementById("md_copy_all_btn");
+        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        copyBtn.style.background = '#3b82f6';
+    }
+
+    function copyMdAll() {
+        const company = document.getElementById("md_company").innerText;
+        const corporate = document.getElementById("md_corporate").innerText;
+        const branch = document.getElementById("md_branch").innerText;
+        const client = document.getElementById("md_client").innerText;
+        const license = document.getElementById("md_license").innerText;
+
+        const text = `Company   : ${company}\nCorporate : ${corporate}\nBranch    : ${branch}\nClient ID : ${client}\nLicence Key: ${license}`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById("md_copy_all_btn");
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            btn.style.background = '#16a34a';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                btn.style.background = '#3b82f6';
+            }, 2000);
+        });
     }
 </script>
 <script>
