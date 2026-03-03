@@ -272,24 +272,7 @@
                         <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Update Billing</h5>
                     </div>
 
-                    {% if has_unbilled_history %}
-                    <div class="alert mb-3"
-                        style="background:rgba(245, 158, 11, 0.15); border:1px solid #f59e0b; color:#fcd34d; border-radius:8px; padding:12px;">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-exclamation-triangle mt-1 me-2" style="font-size:1rem;"></i>
-                            <div>
-                                <h6 style="color:#fde68a; font-weight:600; margin-bottom:4px; font-size:0.9rem;">
-                                    Unbilled Record
-                                    Exists
-                                </h6>
-                                <p class="mb-0" style="font-size:0.85rem;">
-                                    The latest entry is <strong>Unbilled</strong>. You may still add a new billing
-                                    entry.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
+
 
                     <form method="POST">
                         {% csrf_token %}
