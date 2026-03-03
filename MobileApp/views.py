@@ -815,16 +815,14 @@ def mobile_control_billing(request, pk):
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date
 
-    # Check for unbilled history
-    has_unbilled_history = control.billing_history.filter(bill_status=False).exists()
+    # Allow creating a new bill even if the latest record is unbilled.
+    # Only block if the latest record is already Billed-but-pending action needed.
+    latest_history = control.billing_history.order_by("-created_at").first()
+    # has_unbilled_history=True only if latest record exists AND is unbilled
+    # (used to show informational alert — but form is NOT disabled)
+    has_unbilled_history = latest_history is not None and latest_history.bill_status is False
 
     if request.method == "POST":
-        if has_unbilled_history:
-            messages.error(
-                request,
-                "Cannot update billing with outstanding unbilled items. Please clear pending bills first."
-            )
-            return redirect("MobileApp:mobile_control_billing", pk=pk)
 
         # ---------- INPUTS ----------
         extend_login = int(request.POST.get("extend_login") or 0)

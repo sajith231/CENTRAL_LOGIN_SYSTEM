@@ -110,7 +110,7 @@
 
     .input-group-icon {
         position: relative;
-        width: 1000px;
+        width: 100%;
     }
 
     .input-group-icon i {
@@ -193,8 +193,7 @@
                             style="color:#64748b; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.3px; font-weight:600;">
                             Current Users
                         </p>
-                        <h6 style="color:#3b82f6; font-size:1.2rem; font-weight:700; margin:0;">{{ control.login_limit
-                            }}</h6>
+                        <h6 style="color:#3b82f6; font-size:1.2rem; font-weight:700; margin:0;">{{ control.login_limit }}</h6>
                     </div>
                 </div>
             </div>
@@ -259,343 +258,367 @@
     </div>
 
 
-    <!-- UPDATE FORM SECTION -->
-    <div class="card mb-4" style="background:#0f172a; border:1px solid #1e293b; border-radius:10px;">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-3">
-                <div class="p-2 rounded me-2" style="background:#1e293b;">
-                    <i class="fas fa-edit" style="color:#3b82f6; font-size:1rem;"></i>
-                </div>
-                <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Update Billing</h5>
-            </div>
+    <!-- LEFT + RIGHT SPLIT ROW -->
+    <div class="row g-3 align-items-start">
 
-            {% if has_unbilled_history %}
-            <div class="alert mb-3"
-                style="background:rgba(220, 38, 38, 0.15); border:1px solid #dc2626; color:#fca5a5; border-radius:8px; padding:12px;">
-                <div class="d-flex align-items-start">
-                    <i class="fas fa-exclamation-triangle mt-1 me-2" style="font-size:1rem;"></i>
-                    <div>
-                        <h6 style="color:#fecaca; font-weight:600; margin-bottom:4px; font-size:0.9rem;">Action Required
-                        </h6>
-                        <p class="mb-0" style="font-size:0.85rem;">
-                            Outstanding <strong>Unbilled</strong> items exist. Mark them as "Billed" before proceeding.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <form method="POST">
-                {% csrf_token %}
-
-                <fieldset {% if has_unbilled_history %}disabled{% endif %}>
-                    <!-- OPERATION TYPE TABS -->
-                    <div class="d-flex gap-2 mb-3">
-                        <div class="operation-tab active" id="tab_validity" onclick="toggleOperation('validity')">
-                            <i class="fas fa-calendar-alt me-1"></i>Update Validity
+        <!-- LEFT: UPDATE FORM -->
+        <div class="col-lg-4">
+            <div class="card h-100" style="background:#0f172a; border:1px solid #1e293b; border-radius:10px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="p-2 rounded me-2" style="background:#1e293b;">
+                            <i class="fas fa-edit" style="color:#3b82f6; font-size:1rem;"></i>
                         </div>
-                        <div class="operation-tab" id="tab_users" onclick="toggleOperation('users')">
-                            <i class="fas fa-users me-1"></i>Update Users
-                        </div>
+                        <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Update Billing</h5>
                     </div>
 
-                    <input type="hidden" name="operation_type" id="operation_type" value="validity">
-
-                    <div class="row g-4">
-                        <!-- VALIDITY SECTION -->
-                        <div class="col-md-6" id="section_validity">
-                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                Select Package Extension
-                            </label>
-                            <div class="input-group-icon mb-3">
-                                <i class="fas fa-box-open"></i>
-                                <select name="package" id="packageSelect" class="form-control form-select"
-                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;"
-                                    onchange="handlePackageChange(this)">
-                                    <option value="" selected disabled>-- Select Package --</option>
-                                    {% for p in packages %}
-                                    <option value="{{ p.id }}" data-days="{{ p.days_limit }}">
-                                        {{ p.package_name }} (+{{ p.days_limit }} days)
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                    {% if has_unbilled_history %}
+                    <div class="alert mb-3"
+                        style="background:rgba(245, 158, 11, 0.15); border:1px solid #f59e0b; color:#fcd34d; border-radius:8px; padding:12px;">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle mt-1 me-2" style="font-size:1rem;"></i>
+                            <div>
+                                <h6 style="color:#fde68a; font-weight:600; margin-bottom:4px; font-size:0.9rem;">
+                                    Unbilled Record
+                                    Exists
+                                </h6>
+                                <p class="mb-0" style="font-size:0.85rem;">
+                                    The latest entry is <strong>Unbilled</strong>. You may still add a new billing
+                                    entry.
+                                </p>
                             </div>
-
-                            {% if request.user.is_superuser %}
-                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                Manual Days Adjustment (Superuser Only)
-                            </label>
-                            <div class="input-group-icon mb-3">
-                                <i class="fas fa-calendar-minus"></i>
-                                <input type="number" name="extend_days" id="manualDaysInput" class="form-control"
-                                    placeholder="e.g. -10 or 5"
-                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
-                                    oninput="handleManualDaysChange(this)">
-                            </div>
-                            {% endif %}
-                            <small id="helperText" style="color:#64748b; font-size:0.75rem; display:block;">
-                                <i class="fas fa-info-circle me-1"></i>Select a package to extend validity period
-                            </small>
-                        </div>
-
-                        <!-- USER LIMIT SECTION -->
-                        <div class="col-md-6" id="section_users" style="display:none;">
-                            <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                Extend / Reduce Users
-                            </label>
-                            <div class="input-group-icon mb-3">
-                                <i class="fas fa-user-plus"></i>
-                                <input type="number" name="extend_login" id="extendUsersInput" class="form-control"
-                                    placeholder="e.g. +5 or -2"
-                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
-                            </div>
-                            <small style="color:#64748b; font-size:0.75rem; display:block;">
-                                <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to remove
-                            </small>
                         </div>
                     </div>
+                    {% endif %}
 
-                    <!-- REMARK -->
-                    <div class="mt-3">
-                        <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                            Remark / Notes
-                        </label>
-                        <div class="input-group-icon">
-                            <i class="fas fa-comment-alt" style="top:20px;"></i>
-                            <textarea name="remark" rows="2" class="form-control"
-                                placeholder="Add notes about this billing update..."
-                                style="background:#1e293b; color:white; border:1px solid #334155; padding:5px 10px; border-radius:8px; resize:none; font-size:0.85rem;"></textarea>
-                        </div>
-                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
 
-                    <!-- SUBMIT BUTTON -->
-                    <div class="mt-3">
-                        <button type="submit" class="btn submit-btn px-5 py-2" {% if has_unbilled_history %}disabled{% endif %}
-                            style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; font-size:0.95rem; {% if has_unbilled_history %}opacity:0.5; cursor:not-allowed;{% endif %}">
-                            <i class="fas fa-save me-2"></i>Update Billing
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-
-            <script>
-                function toggleOperation(type) {
-                    const tabValidity = document.getElementById('tab_validity');
-                    const tabUsers = document.getElementById('tab_users');
-                    const secValidity = document.getElementById('section_validity');
-                    const secUsers = document.getElementById('section_users');
-                    const operationType = document.getElementById('operation_type');
-
-                    const selectPkg = document.getElementById('packageSelect');
-                    const inputUsers = document.getElementById('extendUsersInput');
-
-                    if (type === 'validity') {
-                        // Activate validity tab
-                        tabValidity.classList.add('active');
-                        tabUsers.classList.remove('active');
-
-                        secValidity.style.display = 'block';
-                        secUsers.style.display = 'none';
-
-                        operationType.value = 'validity';
-                        inputUsers.value = '';
-                    } else {
-                        // Activate users tab
-                        tabUsers.classList.add('active');
-                        tabValidity.classList.remove('active');
-
-                        secUsers.style.display = 'block';
-                        secValidity.style.display = 'none';
-
-                        operationType.value = 'users';
-                        selectPkg.value = '';
-                        handlePackageChange(selectPkg);
-                    }
-                }
-
-                function handlePackageChange(select) {
-                    const helper = document.getElementById('helperText');
-                    const manualInput = document.getElementById('manualDaysInput');
-
-                    if (select.value) {
-                        if (manualInput) manualInput.value = ''; // Clear manual input
-                        const option = select.options[select.selectedIndex];
-                        const days = option.getAttribute('data-days');
-                        helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Selected package adds <b>${days} days</b>`;
-                    } else {
-                        helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
-                    }
-                }
-
-                function handleManualDaysChange(input) {
-                    const select = document.getElementById('packageSelect');
-                    const helper = document.getElementById('helperText');
-
-                    if (input.value) {
-                        select.value = ""; // Clear package selection
-                        helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Manual adjustment: <b>${input.value} days</b>`;
-                    } else {
-                        helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
-                    }
-                }
-            </script>
-        </div>
-    </div>
-
-    <!-- BILLING HISTORY -->
-    <div class="card" style="background:#0f172a; border:1px solid #1e293b; border-radius:10px;">
-        <div class="card-body p-3">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div class="d-flex align-items-center">
-                    <div class="p-2 rounded me-2" style="background:#1e293b;">
-                        <i class="fas fa-history" style="color:#f59e0b; font-size:1rem;"></i>
-                    </div>
-                    <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Billing History</h5>
-                </div>
-                <span class="badge" style="background:#1e293b; color:#94a3b8; padding:6px 12px; font-size:0.8rem;">
-                    {{ history|length }} Record{{ history|length|pluralize }}
-                </span>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover" style="color:white; font-size:0.85rem;">
-                    <thead>
-                        <tr style="border-bottom:2px solid #1e293b; background:#0a0f1e;">
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-clock me-1"></i>Date
-                            </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-calendar me-1"></i>Days
-                            </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-users me-1"></i>Users
-                            </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-exchange-alt me-1"></i>Change
-                            </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-credit-card me-1"></i>Status
-                            </th>
-                            <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
-                                        text-transform:uppercase; letter-spacing:0.5px; padding:10px;
-                                        background:#0a0f1e;">
-                                <i class="fas fa-file-invoice me-1"></i>Invoice No
-                            </th>
-
-                            <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
-                                        text-transform:uppercase; letter-spacing:0.5px; padding:10px;
-                                        background:#0a0f1e;">
-                                <i class="fas fa-rupee-sign me-1"></i>Amount
-                            </th>
-                            <th
-                                style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
-                                <i class="fas fa-comment me-1"></i>Remark
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody style="background:transparent;">
-                        {% for h in history %}
-                        <tr class="history-row" style="border-bottom:1px solid #1e293b; background:transparent;">
-                            <td style="padding:12px; color:#e2e8f0; background:transparent;">
-                                <div style="font-weight:500; font-size:0.85rem;">{{ h.created_at|date:"d M Y" }}</div>
-                                <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i" }}</small>
-                            </td>
-
-                            <td style="padding:12px; background:transparent;">
-                                <span class="badge"
-                                    style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
-                                        color:{% if h.extended_days >= 0 %}#3b82f6{% else %}#dc2626{% endif %}; font-weight:600;">
-                                    {% if h.extended_days >= 0 %}+{% endif %}{{ h.extended_days }}
-                                </span>
-                            </td>
-
-                            <td style="padding:12px; background:transparent;">
-                                <span class="badge"
-                                    style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
-                                        color:{% if h.extended_login_limit >= 0 %}#8b5cf6{% else %}#dc2626{% endif %}; font-weight:600;">
-                                    {% if h.extended_login_limit >= 0 %}+{% endif %}{{ h.extended_login_limit }}
-                                </span>
-                            </td>
-
-                            <td
-                                style="padding:12px; font-family:monospace; background:transparent; color:#e2e8f0; font-size:0.85rem;">
-                                <span style="color:#94a3b8;">{{ h.old_login_limit }}</span>
-                                <i class="fas fa-arrow-right mx-1" style="color:#64748b; font-size:0.7rem;"></i>
-                                <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
-                            </td>
-
-                            {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
-                            <td style="padding:12px; background:transparent;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <button id="billingStatusBtn{{ h.id }}" onclick="toggleHistoryStatus({{ h.id }})"
-                                        class="btn billing-status-btn"
-                                        style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
-                                                       color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
-                                        {% if h.bill_status %}
-                                        <i class="fas fa-check-circle me-1"></i>Billed
-                                        {% else %}
-                                        <i class="fas fa-times-circle me-1"></i>Unbilled
-                                        {% endif %}
-                                    </button>
-
-                                    {% if not h.bill_status %}
-                                    <form method="post" action="{% url 'MobileApp:delete_billing_history' h.id %}"
-                                        onsubmit="return confirm('Are you sure? This will revert usage data.');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm"
-                                            style="background:rgba(220, 38, 38, 0.2); color:#ef4444; border:1px solid #dc2626; border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
-                                            title="Delete & Revert">
-                                            <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
+                        <fieldset>
+                            <!-- OPERATION TYPE TABS -->
+                            <div class="d-flex gap-2 mb-3">
+                                <div class="operation-tab active" id="tab_validity"
+                                    onclick="toggleOperation('validity')">
+                                    <i class="fas fa-calendar-alt me-1"></i>Update Validity
                                 </div>
-                            </td>
-                            {% endif %}
-                            <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
-                                {% if h.bill_status and h.invoice_number %}
-                                <span style="font-weight:600;">{{ h.invoice_number }}</span>
-                                {% else %}
-                                <span style="color:#64748b;">—</span>
-                                {% endif %}
-                            </td>
-                            <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
-                                {% if h.bill_status and h.invoice_amount %}
-                                <span style="font-weight:600;">
-                                    ₹ {{ h.invoice_amount }}
-                                </span>
-                                {% else %}
-                                <span style="color:#64748b;">—</span>
-                                {% endif %}
-                            </td>
+                                <div class="operation-tab" id="tab_users" onclick="toggleOperation('users')">
+                                    <i class="fas fa-users me-1"></i>Update Users
+                                </div>
+                            </div>
 
-                            <td
-                                style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
-                                {{ h.remark|default:"—" }}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr style="background:transparent;">
-                            <td colspan="6" class="text-center"
-                                style="padding:40px 20px; color:#64748b; background:transparent;">
-                                <i class="fas fa-inbox fa-2x mb-2" style="opacity:0.3;"></i>
-                                <div style="font-size:0.95rem; font-weight:500;">No billing history available</div>
-                                <small style="color:#475569; font-size:0.8rem;">Updates will appear here</small>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
+                            <input type="hidden" name="operation_type" id="operation_type" value="validity">
+
+                            <div class="row g-4">
+                                <!-- VALIDITY SECTION -->
+                                <div class="col-md-6" id="section_validity">
+                                    <label class="form-label mb-2"
+                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                        Select Package Extension
+                                    </label>
+                                    <div class="input-group-icon mb-3">
+                                        <i class="fas fa-box-open"></i>
+                                        <select name="package" id="packageSelect" class="form-control form-select"
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;"
+                                            onchange="handlePackageChange(this)">
+                                            <option value="" selected disabled>-- Select Package --</option>
+                                            {% for p in packages %}
+                                            <option value="{{ p.id }}" data-days="{{ p.days_limit }}">
+                                                {{ p.package_name }} (+{{ p.days_limit }} days)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    {% if request.user.is_superuser %}
+                                    <label class="form-label mb-2"
+                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                        Manual Days Adjustment (Superuser Only)
+                                    </label>
+                                    <div class="input-group-icon mb-3">
+                                        <i class="fas fa-calendar-minus"></i>
+                                        <input type="number" name="extend_days" id="manualDaysInput"
+                                            class="form-control" placeholder="e.g. -10 or 5"
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
+                                            oninput="handleManualDaysChange(this)">
+                                    </div>
+                                    {% endif %}
+                                    <small id="helperText" style="color:#64748b; font-size:0.75rem; display:block;">
+                                        <i class="fas fa-info-circle me-1"></i>Select a package to extend validity
+                                        period
+                                    </small>
+                                </div>
+
+                                <!-- USER LIMIT SECTION -->
+                                <div class="col-md-6" id="section_users" style="display:none;">
+                                    <label class="form-label mb-2"
+                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                        Extend / Reduce Users
+                                    </label>
+                                    <div class="input-group-icon mb-3">
+                                        <i class="fas fa-user-plus"></i>
+                                        <input type="number" name="extend_login" id="extendUsersInput"
+                                            class="form-control" placeholder="e.g. +5 or -2"
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
+                                    </div>
+                                    <small style="color:#64748b; font-size:0.75rem; display:block;">
+                                        <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to
+                                        remove
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- REMARK -->
+                            <div class="mt-3">
+                                <label class="form-label mb-2"
+                                    style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                    Remark / Notes
+                                </label>
+                                <div class="input-group-icon">
+                                    <i class="fas fa-comment-alt" style="top:20px;"></i>
+                                    <textarea name="remark" rows="2" class="form-control"
+                                        placeholder="Add notes about this billing update..."
+                                        style="background:#1e293b; color:white; border:1px solid #334155; padding:5px 10px; border-radius:8px; resize:none; font-size:0.85rem;"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- SUBMIT BUTTON -->
+                            <div class="mt-3">
+                                <button type="submit" class="btn submit-btn px-5 py-2"
+                                    style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; font-size:0.95rem;">
+                                    <i class="fas fa-save me-2"></i>Update Billing
+                                </button>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                    <script>
+                        function toggleOperation(type) {
+                            const tabValidity = document.getElementById('tab_validity');
+                            const tabUsers = document.getElementById('tab_users');
+                            const secValidity = document.getElementById('section_validity');
+                            const secUsers = document.getElementById('section_users');
+                            const operationType = document.getElementById('operation_type');
+
+                            const selectPkg = document.getElementById('packageSelect');
+                            const inputUsers = document.getElementById('extendUsersInput');
+
+                            if (type === 'validity') {
+                                // Activate validity tab
+                                tabValidity.classList.add('active');
+                                tabUsers.classList.remove('active');
+
+                                secValidity.style.display = 'block';
+                                secUsers.style.display = 'none';
+
+                                operationType.value = 'validity';
+                                inputUsers.value = '';
+                            } else {
+                                // Activate users tab
+                                tabUsers.classList.add('active');
+                                tabValidity.classList.remove('active');
+
+                                secUsers.style.display = 'block';
+                                secValidity.style.display = 'none';
+
+                                operationType.value = 'users';
+                                selectPkg.value = '';
+                                handlePackageChange(selectPkg);
+                            }
+                        }
+
+                        function handlePackageChange(select) {
+                            const helper = document.getElementById('helperText');
+                            const manualInput = document.getElementById('manualDaysInput');
+
+                            if (select.value) {
+                                if (manualInput) manualInput.value = ''; // Clear manual input
+                                const option = select.options[select.selectedIndex];
+                                const days = option.getAttribute('data-days');
+                                helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Selected package adds <b>${days} days</b>`;
+                            } else {
+                                helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
+                            }
+                        }
+
+                        function handleManualDaysChange(input) {
+                            const select = document.getElementById('packageSelect');
+                            const helper = document.getElementById('helperText');
+
+                            if (input.value) {
+                                select.value = ""; // Clear package selection
+                                helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Manual adjustment: <b>${input.value} days</b>`;
+                            } else {
+                                helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
+                            }
+                        }
+                    </script>
+                </div><!-- end card-body -->
+            </div><!-- end card -->
+        </div><!-- end col-lg-4 (LEFT) -->
+
+        <!-- RIGHT: BILLING HISTORY -->
+        <div class="col-lg-8">
+            <div class="card h-100" style="background:#0f172a; border:1px solid #1e293b; border-radius:10px;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="p-2 rounded me-2" style="background:#1e293b;">
+                                <i class="fas fa-history" style="color:#f59e0b; font-size:1rem;"></i>
+                            </div>
+                            <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Billing History
+                            </h5>
+                        </div>
+                        <span class="badge"
+                            style="background:#1e293b; color:#94a3b8; padding:6px 12px; font-size:0.8rem;">
+                            {{ history|length }} Record{{ history|length|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover" style="color:white; font-size:0.85rem;">
+                            <thead>
+                                <tr style="border-bottom:2px solid #1e293b; background:#0a0f1e;">
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-clock me-1"></i>Date
+                                    </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-calendar me-1"></i>Days
+                                    </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-users me-1"></i>Users
+                                    </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-exchange-alt me-1"></i>Change
+                                    </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-credit-card me-1"></i>Status
+                                    </th>
+                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
+                                        text-transform:uppercase; letter-spacing:0.5px; padding:10px;
+                                        background:#0a0f1e;">
+                                        <i class="fas fa-file-invoice me-1"></i>Invoice No
+                                    </th>
+
+                                    <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
+                                        text-transform:uppercase; letter-spacing:0.5px; padding:10px;
+                                        background:#0a0f1e;">
+                                        <i class="fas fa-rupee-sign me-1"></i>Amount
+                                    </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-comment me-1"></i>Remark
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody style="background:transparent;">
+                                {% for h in history %}
+                                <tr class="history-row"
+                                    style="border-bottom:1px solid #1e293b; background:transparent;">
+                                    <td style="padding:12px; color:#e2e8f0; background:transparent;">
+                                        <div style="font-weight:500; font-size:0.85rem;">{{ h.created_at|date:"d M Y" }}
+                                        </div>
+                                        <small style="color:#64748b; font-size:0.75rem;">{{ h.created_at|date:"H:i"
+                                            }}</small>
+                                    </td>
+
+                                    <td style="padding:12px; background:transparent;">
+                                        <span class="badge"
+                                            style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
+                                        color:{% if h.extended_days >= 0 %}#3b82f6{% else %}#dc2626{% endif %}; font-weight:600;">
+                                            {% if h.extended_days >= 0 %}+{% endif %}{{ h.extended_days }}
+                                        </span>
+                                    </td>
+
+                                    <td style="padding:12px; background:transparent;">
+                                        <span class="badge"
+                                            style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
+                                        color:{% if h.extended_login_limit >= 0 %}#8b5cf6{% else %}#dc2626{% endif %}; font-weight:600;">
+                                            {% if h.extended_login_limit >= 0 %}+{% endif %}{{ h.extended_login_limit }}
+                                        </span>
+                                    </td>
+
+                                    <td
+                                        style="padding:12px; font-family:monospace; background:transparent; color:#e2e8f0; font-size:0.85rem;">
+                                        <span style="color:#94a3b8;">{{ h.old_login_limit }}</span>
+                                        <i class="fas fa-arrow-right mx-1" style="color:#64748b; font-size:0.7rem;"></i>
+                                        <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
+                                    </td>
+
+                                    {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
+                                    <td style="padding:12px; background:transparent;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <button id="billingStatusBtn{{ h.id }}"
+                                                onclick="toggleHistoryStatus({{ h.id }})" class="btn billing-status-btn"
+                                                style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
+                                                       color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
+                                                {% if h.bill_status %}
+                                                <i class="fas fa-check-circle me-1"></i>Billed
+                                                {% else %}
+                                                <i class="fas fa-times-circle me-1"></i>Unbilled
+                                                {% endif %}
+                                            </button>
+
+                                            {% if not h.bill_status %}
+                                            <form method="post"
+                                                action="{% url 'MobileApp:delete_billing_history' h.id %}"
+                                                onsubmit="return confirm('Are you sure? This will revert usage data.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm"
+                                                    style="background:rgba(220, 38, 38, 0.2); color:#ef4444; border:1px solid #dc2626; border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
+                                                    title="Delete & Revert">
+                                                    <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                    <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
+                                        {% if h.bill_status and h.invoice_number %}
+                                        <span style="font-weight:600;">{{ h.invoice_number }}</span>
+                                        {% else %}
+                                        <span style="color:#64748b;">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
+                                        {% if h.bill_status and h.invoice_amount %}
+                                        <span style="font-weight:600;">
+                                            ₹ {{ h.invoice_amount }}
+                                        </span>
+                                        {% else %}
+                                        <span style="color:#64748b;">—</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td
+                                        style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
+                                        {{ h.remark|default:"—" }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr style="background:transparent;">
+                                    <td colspan="6" class="text-center"
+                                        style="padding:40px 20px; color:#64748b; background:transparent;">
+                                        <i class="fas fa-inbox fa-2x mb-2" style="opacity:0.3;"></i>
+                                        <div style="font-size:0.95rem; font-weight:500;">No billing history available
+                                        </div>
+                                        <small style="color:#475569; font-size:0.8rem;">Updates will appear here</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div><!-- end table-responsive -->
+                </div><!-- end card-body -->
+            </div><!-- end card (right) -->
+        </div><!-- end col-lg-8 (RIGHT) -->
+
+    </div><!-- end row -->
 
 </div>
 
