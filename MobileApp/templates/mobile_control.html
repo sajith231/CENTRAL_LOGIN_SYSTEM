@@ -121,6 +121,7 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Type</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Licence Key Copy</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">Licence QR</th>
 
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
 
@@ -243,6 +244,14 @@
                         class="btn btn-sm"
                         style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
                         <i class="fa-solid fa-key"></i> Key
+                    </button>
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    <button
+                        onclick="openQRPopup('{{ c.license_key }}', '{{ c.customer_name }}')"
+                        class="btn btn-sm"
+                        style="background:#7c3aed; color:white; padding:6px 12px; border-radius:6px;">
+                        <i class="fa-solid fa-qrcode"></i>
                     </button>
                 </td>
 
@@ -489,7 +498,30 @@
         </p>
     </div>
 </div>
-
+<!-- QR CODE POPUP MODAL -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+        <div class="modal-content" style="background:#1e293b; color:white; border:1px solid #334155; border-radius:12px;">
+            <div class="modal-header" style="border-bottom:1px solid #334155;">
+                <h5 class="modal-title"><i class="fa-solid fa-qrcode"></i> Licence QR Code</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="text-align:center; padding:24px;">
+                <p id="qrCustomerName" style="color:#94a3b8; font-size:13px; margin-bottom:4px;"></p>
+                <p id="qrLicenceKeyDisplay" style="font-family:monospace; font-size:15px; font-weight:bold; color:#e2e8f0; margin-bottom:16px; letter-spacing:2px;"></p>
+                <div id="qrCodeCanvas" style="display:inline-block; background:white; padding:12px; border-radius:8px;"></div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #334155; justify-content:center; gap:10px;">
+                <button onclick="downloadQR()" class="btn btn-sm" style="background:#16a34a; color:white; padding:8px 18px; border-radius:6px;">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+                <button onclick="shareQR()" class="btn btn-sm" style="background:#0ea5e9; color:white; padding:8px 18px; border-radius:6px;">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     function openLicenceKeyPopup(id, company, clientId, key) {
         document.getElementById('lkm_company').innerText = company;
@@ -858,6 +890,73 @@
     // Initial render on page load
     document.addEventListener("DOMContentLoaded", renderTable);
 </script>
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    let _currentQRKey = '';
 
+    function openQRPopup(licenceKey, customerName) {
+        _currentQRKey = licenceKey;
+
+        document.getElementById('qrCustomerName').innerText = customerName;
+        document.getElementById('qrLicenceKeyDisplay').innerText = licenceKey;
+
+        // Clear previous QR
+        const container = document.getElementById('qrCodeCanvas');
+        container.innerHTML = '';
+
+        // Generate fresh QR — encodes only the licence key string
+        new QRCode(container, {
+            text: licenceKey,
+            width: 220,
+            height: 220,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Open modal
+        const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+        modal.show();
+    }
+
+    function getQRCanvas() {
+        return document.querySelector('#qrCodeCanvas canvas');
+    }
+
+    function downloadQR() {
+        const canvas = getQRCanvas();
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = `licence-qr-${_currentQRKey}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    async function shareQR() {
+        const canvas = getQRCanvas();
+        if (!canvas) return;
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], `licence-qr-${_currentQRKey}.png`, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Licence QR Code',
+                        text: `Licence Key: ${_currentQRKey}`,
+                        files: [file]
+                    });
+                } catch (e) {
+                    if (e.name !== 'AbortError') alert('Share failed: ' + e.message);
+                }
+            } else {
+                // Fallback: trigger download if Web Share API not supported
+                const link = document.createElement('a');
+                link.download = `licence-qr-${_currentQRKey}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        }, 'image/png');
+    }
+</script>
 
 {% endblock %}
