@@ -294,8 +294,12 @@
                 </td>
 
                 <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
-                    <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
-                        style="background:#2563eb; color:white;">Edit</a>
+                    {% if c.registered_count > 0 %}
+                        <a class="btn" style="background:#475569; color:#94a3b8; cursor:not-allowed; pointer-events:none;">Edit</a>
+                    {% else %}
+                        <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
+                            style="background:#2563eb; color:white;">Edit</a>
+                    {% endif %}
 
                     {% if c.id %}
                     {% if c.registered_count > 0 %}

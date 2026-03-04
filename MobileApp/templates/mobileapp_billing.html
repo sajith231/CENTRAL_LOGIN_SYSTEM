@@ -220,6 +220,71 @@
     </div>
 
 
+    {% if request.user.is_superuser %}
+    <!-- SUPERUSER: EDIT UNBILLED MODAL -->
+    <div id="editUnbilledModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+        z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#0f172a; padding:28px; border-radius:14px; width:480px; max-width:95vw;
+                    border:1px solid #f59e0b; box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <div style="background:rgba(245,158,11,0.15); border-radius:8px; padding:6px 10px;">
+                    <i class="fas fa-pencil-alt" style="color:#f59e0b;"></i>
+                </div>
+                <h5 style="color:white; margin:0; font-weight:600;">Edit Unbilled Record</h5>
+            </div>
+            <p style="color:#64748b; font-size:0.8rem; margin-bottom:20px; padding-left:2px;">
+                Superuser only — updates this record in place. No new bill created.
+            </p>
+
+            <form method="POST" id="editUnbilledForm" action="">
+                {% csrf_token %}
+                <input type="hidden" name="edit_history_id" id="edit_history_id_modal">
+
+                <div class="mb-3">
+                    <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                        <i class="fas fa-calendar-alt me-1" style="color:#3b82f6;"></i>Extended Days
+                    </label>
+                    <input type="number" name="extend_days" id="edit_extend_days" class="form-control"
+                        placeholder="e.g. 30 or -10"
+                        style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px;">
+                    <small style="color:#64748b; font-size:0.75rem;">Days added/removed in this record</small>
+                </div>
+
+                <div class="mb-3">
+                    <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                        <i class="fas fa-users me-1" style="color:#8b5cf6;"></i>Extended Users
+                    </label>
+                    <input type="number" name="extend_login" id="edit_extend_login" class="form-control"
+                        placeholder="e.g. 5 or -2"
+                        style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px;">
+                    <small style="color:#64748b; font-size:0.75rem;">User count change in this record</small>
+                </div>
+
+                <div class="mb-4">
+                    <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                        <i class="fas fa-comment-alt me-1" style="color:#10b981;"></i>Remark / Notes
+                    </label>
+                    <textarea name="remark" id="edit_remark" rows="2" class="form-control"
+                        placeholder="Add notes..."
+                        style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; resize:none; font-size:0.85rem;"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="btn btn-sm"
+                        style="background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; padding:8px 18px;">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm"
+                        style="background:#f59e0b; color:#0f172a; border:none; border-radius:8px; padding:8px 20px; font-weight:700;">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- INVOICE MODAL -->
     <div id="invoiceModal" style="display:none;
         position:fixed; inset:0; background:rgba(0,0,0,.6);
@@ -272,9 +337,7 @@
                         <h5 class="mb-0" style="color:white; font-weight:600; font-size:1.1rem;">Update Billing</h5>
                     </div>
 
-
-
-                    <form method="POST">
+                    <form method="POST" id="billingForm">
                         {% csrf_token %}
                         <input type="hidden" name="operation_type" id="operation_type"
                             value="{% if not history %}both{% else %}validity{% endif %}">
@@ -618,7 +681,7 @@
                                     <td style="padding:12px; background:transparent;">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <button id="billingStatusBtn{{ h.id }}"
-                                                onclick="toggleHistoryStatus({{ h.id }})" class="btn billing-status-btn"
+                                                onclick="event.stopPropagation(); toggleHistoryStatus({{ h.id }})" class="btn billing-status-btn"
                                                 style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
                                                        color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
                                                 {% if h.bill_status %}
@@ -629,6 +692,15 @@
                                             </button>
 
                                             {% if not h.bill_status %}
+                                            {% if request.user.is_superuser %}
+                                            <button type="button"
+                                                onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}')"
+                                                class="btn btn-sm"
+                                                style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
+                                                title="Edit Unbilled Record">
+                                                <i class="fas fa-pencil-alt" style="font-size:0.75rem;"></i>
+                                            </button>
+                                            {% endif %}
                                             <form method="post"
                                                 action="{% url 'MobileApp:delete_billing_history' h.id %}"
                                                 onsubmit="return confirm('Are you sure? This will revert usage data.');">
@@ -688,17 +760,14 @@
 </div>
 
 <script>
+    // ── Billing status toggle (billed → unbilled popup) ──
     function toggleHistoryStatus(id) {
         const btn = document.getElementById("billingStatusBtn" + id);
-
-        // If already billed → allow normal toggle
         if (btn.innerText.includes("Billed")) {
             if (!confirm("Mark as Unbilled?")) return;
             toggleStatusRequest(id);
             return;
         }
-
-        // If unbilled → open popup
         document.getElementById("history_id").value = id;
         document.getElementById("popup_invoice_number").value = "";
         document.getElementById("popup_invoice_amount").value = "";
@@ -713,33 +782,41 @@
         const id = document.getElementById("history_id").value;
         const invoiceNo = document.getElementById("popup_invoice_number").value.trim();
         const invoiceAmt = document.getElementById("popup_invoice_amount").value.trim();
-
-        if (!invoiceNo || !invoiceAmt) {
-            alert("Invoice number and amount are required");
-            return;
-        }
+        if (!invoiceNo || !invoiceAmt) { alert("Invoice number and amount are required"); return; }
 
         fetch(`/mobileapp/billing-history/toggle-status/${id}/`, {
             method: "POST",
-            headers: {
-                "X-CSRFToken": getCookie("csrftoken"),
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                invoice_number: invoiceNo,
-                invoice_amount: invoiceAmt
-            })
+            headers: { "X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/json" },
+            body: JSON.stringify({ invoice_number: invoiceNo, invoice_amount: invoiceAmt })
         })
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    alert(data.error || "Failed");
-                    return;
-                }
-                closeInvoiceModal();
-                location.reload(); // safest
-            });
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || "Failed"); return; }
+            closeInvoiceModal();
+            location.reload();
+        });
     }
+
+    // ── Superuser: Edit unbilled record (separate modal → posts to edit URL) ──
+    function openEditModal(id, extDays, extUsers, remark) {
+        document.getElementById("edit_history_id_modal").value = id;
+        document.getElementById("edit_extend_days").value = extDays;
+        document.getElementById("edit_extend_login").value = extUsers;
+        document.getElementById("edit_remark").value = remark;
+        document.getElementById("editUnbilledForm").action = `/mobileapp/billing-history/edit/${id}/`;
+        document.getElementById("editUnbilledModal").style.display = "flex";
+    }
+
+    function closeEditModal() {
+        document.getElementById("editUnbilledModal").style.display = "none";
+    }
+
+    document.getElementById("editUnbilledModal")?.addEventListener("click", function(e) {
+        if (e.target === this) closeEditModal();
+    });
+    document.getElementById("invoiceModal")?.addEventListener("click", function(e) {
+        if (e.target === this) closeInvoiceModal();
+    });
 </script>
 <script>
     function getCookie(name) {
@@ -757,6 +834,5 @@
         return cookieValue;
     }
 </script>
-
 
 {% endblock %}

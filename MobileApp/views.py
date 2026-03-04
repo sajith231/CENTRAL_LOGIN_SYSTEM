@@ -897,6 +897,77 @@ def mobile_control_billing(request, pk):
         "has_unbilled_history": has_unbilled_history
     })
 
+
+
+def edit_billing_history(request, pk):
+    history_obj = get_object_or_404(MobileBillingHistory, pk=pk)
+    control = history_obj.control
+
+    if history_obj.bill_status:
+        messages.error(request, "Cannot edit a billed record.")
+        return redirect("MobileApp:mobile_control_billing", pk=control.id)
+
+    if request.method == "POST":
+        # Rollback old values on control before re-applying
+        if history_obj.old_expiry_date is not None:
+            control.expiry_date = history_obj.old_expiry_date
+        if history_obj.old_login_limit is not None:
+            control.login_limit = history_obj.old_login_limit
+
+        extend_login = int(request.POST.get("extend_login") or 0)
+        remark = request.POST.get("remark", "").strip()
+        package_id = request.POST.get("package")
+
+        if package_id:
+            package = get_object_or_404(Package, pk=package_id)
+            extend_days = package.days_limit
+            control.package = package
+        else:
+            extend_days = int(request.POST.get("extend_days") or 0)
+
+        old_login_limit = control.login_limit
+        old_expiry = control.expiry_date
+
+        # Apply new login limit
+        if extend_login != 0:
+            new_login_limit = control.login_limit + extend_login
+            if new_login_limit < 1:
+                messages.error(request, "Login limit cannot be less than 1")
+                return redirect("MobileApp:mobile_control_billing", pk=control.id)
+            control.login_limit = new_login_limit
+
+        # Apply new expiry
+        if extend_days != 0:
+            if control.expiry_date:
+                new_expiry = control.expiry_date + timedelta(days=extend_days)
+            else:
+                new_expiry = timezone.now() + timedelta(days=extend_days)
+
+            if new_expiry < timezone.now() and not request.user.is_superuser:
+                messages.error(request, "Expiry date cannot be in the past")
+                return redirect("MobileApp:mobile_control_billing", pk=control.id)
+
+            control.expiry_date = new_expiry
+
+        # Update the history record in place
+        history_obj.extended_days = extend_days
+        history_obj.extended_login_limit = extend_login
+        history_obj.old_expiry_date = old_expiry
+        history_obj.new_expiry_date = control.expiry_date
+        history_obj.old_login_limit = old_login_limit
+        history_obj.new_login_limit = control.login_limit
+        history_obj.remark = remark
+        history_obj.save()
+
+        # Recalculate control bill_status
+        control.bill_status = not control.billing_history.filter(bill_status=False).exists()
+        control.save()
+
+        messages.success(request, "Unbilled record updated successfully.")
+
+    return redirect("MobileApp:mobile_control_billing", pk=control.id)
+
+    
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
