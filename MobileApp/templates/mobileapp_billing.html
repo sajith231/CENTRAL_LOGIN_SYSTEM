@@ -127,6 +127,69 @@
     .input-group-icon textarea {
         padding-left: 42px !important;
     }
+
+    /* Eye icon + package select wrapper */
+    .pkg-select-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pkg-select-wrapper select {
+        flex: 1;
+    }
+
+    .pkg-eye-btn {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .pkg-eye-btn:hover {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: white;
+    }
+
+    .pkg-eye-btn.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: white;
+    }
+
+    /* Modules modal */
+    #pkgModulesModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .7);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pkg-module-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        color: #e2e8f0;
+        margin: 3px;
+    }
 </style>
 
 <div class="container-fluid px-4 py-4">
@@ -152,7 +215,9 @@
                 <i class="fas fa-layer-group me-1"></i>{{ control.project.project_name }}
             </span>
             <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
-                <i class="fas fa-box-open me-1"></i>{{ control.package.package_name|default:"No Package" }}
+                <i class="fas fa-box-open me-1"></i>{% if control.active_custom_package %}<span
+                    style="color:#10b981;">[Custom] {{ control.active_custom_package.package_name }}</span>{% else %}{{
+                control.package.package_name|default:"No Package" }}{% endif %}
             </span>
             <!-- <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
                 <i class="fas fa-id-card me-1"></i>ID: {{ control.client_id }}
@@ -265,8 +330,7 @@
                     <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                         <i class="fas fa-comment-alt me-1" style="color:#10b981;"></i>Remark / Notes
                     </label>
-                    <textarea name="remark" id="edit_remark" rows="2" class="form-control"
-                        placeholder="Add notes..."
+                    <textarea name="remark" id="edit_remark" rows="2" class="form-control" placeholder="Add notes..."
                         style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; resize:none; font-size:0.85rem;"></textarea>
                 </div>
 
@@ -355,18 +419,51 @@
                             <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                 Select Package Extension
                             </label>
-                            <div class="input-group-icon mb-3">
-                                <i class="fas fa-box-open"></i>
-                                <select name="package" id="packageSelect" class="form-control form-select"
-                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;"
-                                    onchange="handlePackageChange(this)">
+                            <div class="mb-3" style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <i class="fas fa-box-open"
+                                    style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; z-index:10; pointer-events:none;"></i>
+                                <select name="package" id="packageSelectFirst" class="form-control form-select"
+                                    style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px 10px 42px; border-radius:8px; font-size:0.9rem; cursor:pointer; flex:1;"
+                                    onchange="handlePackageChangeFirst(this)">
                                     <option value="" selected disabled>-- Select Package --</option>
-                                    {% for p in packages %}
-                                    <option value="{{ p.id }}" data-days="{{ p.days_limit }}">
-                                        {{ p.package_name }} (+{{ p.days_limit }} days)
-                                    </option>
-                                    {% endfor %}
+                                    {% if packages %}
+                                    <optgroup label="— Standard Packages —" style="color:#64748b;">
+                                        {% for p in packages %}
+                                        <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard">
+                                            {{ p.package_name }} (+{{ p.days_limit }} days)
+                                        </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endif %}
+                                    {% if custom_packages %}
+                                    <optgroup label="— Custom Packages —" style="color:#10b981;">
+                                        {% for cp in custom_packages %}
+                                        <option value="custom_{{ cp.id }}" data-days="{{ cp.days_limit }}"
+                                            data-type="custom" data-custom-id="{{ cp.id }}">
+                                            [Custom] {{ cp.package_name }} (+{{ cp.days_limit }} days)
+                                        </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endif %}
                                 </select>
+                                <button type="button" onclick="showPackageModules('packageSelectFirst')"
+                                    title="View modules in selected package"
+                                    style="flex-shrink:0; width:40px; height:40px; background:#3b82f6; border:none; border-radius:8px; color:white; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
+                                    onmouseover="this.style.background='#2563eb'"
+                                    onmouseout="this.style.background='#3b82f6'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <!-- hidden inputs: one of these will be set based on selection -->
+                            <input type="hidden" name="custom_package" id="customPkgInputFirst" value="">
+                            <!-- + Custom Package button -->
+                            <div class="mb-2">
+                                <button type="button" onclick="openCustomPkgModal()"
+                                    style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
+                                    onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
+                                    onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
+                                    <i class="fas fa-plus-circle"></i> Custom Package
+                                </button>
                             </div>
 
                             {% if request.user.is_superuser %}
@@ -442,18 +539,53 @@
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                         Select Package Extension
                                     </label>
-                                    <div class="input-group-icon mb-3">
-                                        <i class="fas fa-box-open"></i>
+                                    <div class="mb-3"
+                                        style="display:flex; align-items:center; gap:8px; position:relative;">
+                                        <i class="fas fa-box-open"
+                                            style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; z-index:10; pointer-events:none;"></i>
                                         <select name="package" id="packageSelect" class="form-control form-select"
-                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;"
-                                            onchange="handlePackageChange(this)">
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px 10px 42px; border-radius:8px; font-size:0.9rem; cursor:pointer; flex:1;"
+                                            onchange="handlePackageChangeSubseq(this)">
                                             <option value="" selected disabled>-- Select Package --</option>
-                                            {% for p in packages %}
-                                            <option value="{{ p.id }}" data-days="{{ p.days_limit }}">
-                                                {{ p.package_name }} (+{{ p.days_limit }} days)
-                                            </option>
-                                            {% endfor %}
+                                            {% if packages %}
+                                            <optgroup label="— Standard Packages —" style="color:#64748b;">
+                                                {% for p in packages %}
+                                                <option value="{{ p.id }}" data-days="{{ p.days_limit }}"
+                                                    data-type="standard">
+                                                    {{ p.package_name }} (+{{ p.days_limit }} days)
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                            {% if custom_packages %}
+                                            <optgroup label="— Custom Packages —" style="color:#10b981;">
+                                                {% for cp in custom_packages %}
+                                                <option value="custom_{{ cp.id }}" data-days="{{ cp.days_limit }}"
+                                                    data-type="custom" data-custom-id="{{ cp.id }}">
+                                                    [Custom] {{ cp.package_name }} (+{{ cp.days_limit }} days)
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
                                         </select>
+                                        <button type="button" onclick="showPackageModules('packageSelect')"
+                                            title="View modules in selected package"
+                                            style="flex-shrink:0; width:40px; height:40px; background:#3b82f6; border:none; border-radius:8px; color:white; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
+                                            onmouseover="this.style.background='#2563eb'"
+                                            onmouseout="this.style.background='#3b82f6'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <!-- hidden inputs for custom package selection -->
+                                    <input type="hidden" name="custom_package" id="customPkgInputSubseq" value="">
+                                    <!-- + Custom Package button -->
+                                    <div class="mb-2">
+                                        <button type="button" onclick="openCustomPkgModal()"
+                                            style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
+                                            onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
+                                            onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
+                                            <i class="fas fa-plus-circle"></i> Custom Package
+                                        </button>
                                     </div>
 
                                     {% if request.user.is_superuser %}
@@ -681,7 +813,8 @@
                                     <td style="padding:12px; background:transparent;">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <button id="billingStatusBtn{{ h.id }}"
-                                                onclick="event.stopPropagation(); toggleHistoryStatus({{ h.id }})" class="btn billing-status-btn"
+                                                onclick="event.stopPropagation(); toggleHistoryStatus({{ h.id }})"
+                                                class="btn billing-status-btn"
                                                 style="background:{% if h.bill_status %}#16a34a{% else %}#dc2626{% endif %};
                                                        color:white; border-radius:999px; padding:6px 14px; font-size:0.75rem; font-weight:600;">
                                                 {% if h.bill_status %}
@@ -759,6 +892,169 @@
 
 </div>
 
+<!-- PACKAGE MODULES MODAL -->
+<div id="pkgModulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+     z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:#0f172a; border:1px solid #3b82f6; border-radius:14px; width:480px;
+                max-width:95vw; max-height:80vh; display:flex; flex-direction:column;
+                box-shadow:0 20px 60px rgba(0,0,0,.6);">
+
+        <!-- Modal Header -->
+        <div
+            style="padding:20px 24px 14px; border-bottom:1px solid #1e293b; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:rgba(59,130,246,0.15); border-radius:8px; padding:6px 10px;">
+                    <i class="fas fa-eye" style="color:#3b82f6;"></i>
+                </div>
+                <div>
+                    <h5 style="color:white; margin:0; font-weight:600; font-size:1rem;">Package Modules</h5>
+                    <p id="pkgModalPackageName" style="color:#64748b; font-size:0.78rem; margin:0;">—</p>
+                </div>
+            </div>
+            <button type="button" onclick="closePkgModulesModal()" style="background:#1e293b; border:1px solid #334155; border-radius:8px; color:#94a3b8;
+                       width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                       cursor:pointer; font-size:1rem; flex-shrink:0;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Module List -->
+        <div id="pkgModulesBody" style="padding:20px 24px; overflow-y:auto; flex:1;">
+            <!-- filled by JS -->
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding:14px 24px; border-top:1px solid #1e293b; text-align:right;">
+            <button type="button" onclick="closePkgModulesModal()" style="background:#1e293b; color:#94a3b8; border:1px solid #334155;
+                       border-radius:8px; padding:8px 20px; font-size:0.85rem; cursor:pointer;">
+                <i class="fas fa-times me-1"></i>Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Package modules data (from Django context) -->
+<script id="packageModulesData" type="application/json">
+{
+    {% for p in packages %}
+    "{{ p.id }}": {
+        "name": "{{ p.package_name|escapejs }}",
+        "days": {{ p.days_limit }},
+        "modules": [{% for m in p.modules.all %}{"name":"{{ m.module_name|escapejs }}","code":"{{ m.module_code|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+    {% if packages and custom_packages %},{% endif %}
+    {% for cp in custom_packages %}
+    "custom_{{ cp.id }}": {
+        "name": "[Custom] {{ cp.package_name|escapejs }}",
+        "days": {{ cp.days_limit }},
+        "modules": [{% for m in cp.modules.all %}{"name":"{{ m.module_name|escapejs }}","code":""}{% if not forloop.last %},{% endif %}{% endfor %}]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+}
+</script>
+
+<!-- CREATE CUSTOM PACKAGE MODAL -->
+<div id="customPkgCreateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8);
+     z-index:10001; align-items:center; justify-content:center;">
+    <div style="background:#0f172a; border:1px solid #10b981; border-radius:14px; width:520px;
+                max-width:95vw; max-height:88vh; display:flex; flex-direction:column;
+                box-shadow:0 20px 60px rgba(0,0,0,.7);">
+
+        <!-- Header -->
+        <div
+            style="padding:20px 24px 14px; border-bottom:1px solid #1e293b; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:rgba(16,185,129,0.15); border-radius:8px; padding:6px 10px;">
+                    <i class="fas fa-cube" style="color:#10b981;"></i>
+                </div>
+                <div>
+                    <h5 style="color:white; margin:0; font-weight:600; font-size:1rem;">Create Custom Package</h5>
+                    <p style="color:#64748b; font-size:0.75rem; margin:0;">Only for this client — won't appear in global
+                        packages</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCustomPkgModal()" style="background:#1e293b; border:1px solid #334155; border-radius:8px; color:#94a3b8;
+                       width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                       cursor:pointer; font-size:1rem; flex-shrink:0;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:20px 24px; overflow-y:auto; flex:1;">
+            <!-- Package Name -->
+            <div class="mb-3">
+                <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; display:block; margin-bottom:6px;">
+                    <i class="fas fa-box-open me-1" style="color:#10b981;"></i>Package Name *
+                </label>
+                <input type="text" id="customPkgName" placeholder="e.g. Gold Plan"
+                    style="width:100%; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;">
+            </div>
+
+            <!-- Days Limit -->
+            <div class="mb-3">
+                <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; display:block; margin-bottom:6px;">
+                    <i class="fas fa-calendar-alt me-1" style="color:#3b82f6;"></i>Days Limit
+                    <span style="color:#64748b; font-weight:400;">(0 = unlimited)</span>
+                </label>
+                <input type="number" id="customPkgDays" min="0" value="365"
+                    style="width:100%; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;">
+            </div>
+
+            <!-- Modules — select from project modules -->
+            <div class="mb-2">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; margin:0;">
+                        <i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6;"></i>Modules
+                    </label>
+                    <button type="button" onclick="toggleAllCustomModules()" id="selectAllModulesBtn"
+                        style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); border-radius:6px; color:#8b5cf6; padding:4px 10px; font-size:0.75rem; cursor:pointer;">
+                        <i class="fas fa-check-double me-1"></i>Select All
+                    </button>
+                </div>
+
+                {% if project_modules %}
+                <div
+                    style="display:grid; grid-template-columns:1fr 1fr; gap:6px; max-height:200px; overflow-y:auto; padding:4px 2px;">
+                    {% for m in project_modules %}
+                    <label style="display:flex; align-items:center; gap:8px; background:#1e293b; border:1px solid #334155;
+                                 border-radius:7px; padding:7px 10px; cursor:pointer; font-size:0.82rem; color:#e2e8f0;
+                                 transition:border-color 0.15s;" onmouseover="this.style.borderColor='#8b5cf6'"
+                        onmouseout="this.style.borderColor=this.querySelector('input').checked?'#8b5cf6':'#334155'">
+                        <input type="checkbox" class="custom-mod-checkbox" value="{{ m.module_name|escapejs }}"
+                            style="accent-color:#8b5cf6; width:15px; height:15px; flex-shrink:0;"
+                            onchange="this.closest('label').style.borderColor=this.checked?'#8b5cf6':'#334155';">
+                        <span><i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6; font-size:0.65rem;"></i>
+                            {{ m.module_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div
+                    style="text-align:center; padding:18px; background:#1e293b; border-radius:8px; border:1px dashed #334155;">
+                    <i class="fas fa-info-circle"
+                        style="color:#475569; font-size:1.2rem; display:block; margin-bottom:6px;"></i>
+                    <p style="color:#64748b; font-size:0.82rem; margin:0;">No modules found for this project.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:14px 24px; border-top:1px solid #1e293b; display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" onclick="closeCustomPkgModal()"
+                style="background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; padding:9px 20px; font-size:0.85rem; cursor:pointer;">
+                <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="button" onclick="saveCustomPackage()"
+                style="background:#10b981; color:white; border:none; border-radius:8px; padding:9px 24px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                <i class="fas fa-save me-1"></i>Save Package
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ── Billing status toggle (billed → unbilled popup) ──
     function toggleHistoryStatus(id) {
@@ -789,12 +1085,12 @@
             headers: { "X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/json" },
             body: JSON.stringify({ invoice_number: invoiceNo, invoice_amount: invoiceAmt })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) { alert(data.error || "Failed"); return; }
-            closeInvoiceModal();
-            location.reload();
-        });
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) { alert(data.error || "Failed"); return; }
+                closeInvoiceModal();
+                location.reload();
+            });
     }
 
     // ── Superuser: Edit unbilled record (separate modal → posts to edit URL) ──
@@ -811,12 +1107,69 @@
         document.getElementById("editUnbilledModal").style.display = "none";
     }
 
-    document.getElementById("editUnbilledModal")?.addEventListener("click", function(e) {
+    document.getElementById("editUnbilledModal")?.addEventListener("click", function (e) {
         if (e.target === this) closeEditModal();
     });
-    document.getElementById("invoiceModal")?.addEventListener("click", function(e) {
+    document.getElementById("invoiceModal")?.addEventListener("click", function (e) {
         if (e.target === this) closeInvoiceModal();
     });
+</script>
+<script>
+    // ── Package modules modal ──
+    (function () {
+        var pkgData = {};
+        try {
+            pkgData = JSON.parse(document.getElementById('packageModulesData').textContent);
+        } catch (e) { }
+
+        window.showPackageModules = function (selectId) {
+            var sel = document.getElementById(selectId);
+            if (!sel || !sel.value) {
+                alert('Please select a package first.');
+                return;
+            }
+            var id = sel.value;
+            var info = pkgData[id];
+            var body = document.getElementById('pkgModulesBody');
+            var nameEl = document.getElementById('pkgModalPackageName');
+
+            if (!info) {
+                body.innerHTML = '<p style="color:#64748b; text-align:center;">No module data available.</p>';
+                nameEl.textContent = '—';
+            } else {
+                nameEl.textContent = info.name + ' · +' + info.days + ' days';
+                if (!info.modules || info.modules.length === 0) {
+                    body.innerHTML = '<div style="text-align:center; padding:24px 0;">'
+                        + '<i class="fas fa-cube fa-2x mb-2" style="color:#334155; display:block;"></i>'
+                        + '<p style="color:#64748b; margin:0; font-size:0.9rem;">No modules assigned to this package.</p>'
+                        + '</div>';
+                } else {
+                    var html = '<div style="margin-bottom:10px;">'
+                        + '<span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">'
+                        + '<i class="fas fa-list me-1"></i>' + info.modules.length + ' Module' + (info.modules.length !== 1 ? 's' : '') + '</span>'
+                        + '</div><div>';
+                    info.modules.forEach(function (m) {
+                        html += '<span class="pkg-module-tag">'
+                            + '<i class="fas fa-puzzle-piece" style="color:#3b82f6; font-size:0.7rem;"></i>'
+                            + m.name
+                            + (m.code ? ' <small style="color:#64748b;">(' + m.code + ')</small>' : '')
+                            + '</span>';
+                    });
+                    html += '</div>';
+                    body.innerHTML = html;
+                }
+            }
+            document.getElementById('pkgModulesModal').style.display = 'flex';
+        };
+
+        window.closePkgModulesModal = function () {
+            document.getElementById('pkgModulesModal').style.display = 'none';
+        };
+
+        document.getElementById('pkgModulesModal').addEventListener('click', function (e) {
+            if (e.target === this) closePkgModulesModal();
+        });
+    })();
 </script>
 <script>
     function getCookie(name) {
@@ -832,6 +1185,144 @@
             }
         }
         return cookieValue;
+    }
+</script>
+<script>
+    // ── Package selection handlers — routes standard vs custom selections ──
+    const CONTROL_PK = {{ control.pk }};
+    const SAVE_CUSTOM_URL = `/mobileapp/mobile_control/${CONTROL_PK}/custom-package/save/`;
+
+    // Runtime store of custom package data (grows as user creates new ones in-session)
+    var runtimeCustomPkgData = {};
+
+    function _handlePkgChange(sel, nameInputId, customInputId, helperTextId) {
+        const val = sel.value;
+        const helper = document.getElementById(helperTextId);
+        const pkgHidden = sel.form ? sel.form.querySelector('[name="package"]') : null;
+        const customHidden = document.getElementById(customInputId);
+
+        if (!val) return;
+
+        const opt = sel.options[sel.selectedIndex];
+        const days = opt.getAttribute('data-days');
+        const type = opt.getAttribute('data-type');
+
+        if (type === 'custom') {
+            // Clear the standard package field; set custom_package field
+            if (pkgHidden) pkgHidden.value = '';
+            const customId = opt.getAttribute('data-custom-id');
+            if (customHidden) customHidden.value = customId;
+            if (helper) helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Custom package adds <b>${days} days</b>`;
+        } else {
+            // Standard package — clear custom input
+            if (customHidden) customHidden.value = '';
+            const manualInput = document.getElementById('manualDaysInput');
+            if (manualInput) manualInput.value = '';
+            if (helper) helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Selected package adds <b>${days} days</b>`;
+        }
+    }
+
+    function handlePackageChangeFirst(sel) {
+        _handlePkgChange(sel, 'package', 'customPkgInputFirst', 'helperText');
+    }
+    function handlePackageChangeSubseq(sel) {
+        _handlePkgChange(sel, 'package', 'customPkgInputSubseq', 'helperText');
+    }
+
+    // ── Custom Package Modal ──
+    function openCustomPkgModal() {
+        document.getElementById('customPkgName').value = '';
+        document.getElementById('customPkgDays').value = '365';
+        // Uncheck all module checkboxes and reset border colours
+        document.querySelectorAll('.custom-mod-checkbox').forEach(function (cb) {
+            cb.checked = false;
+            cb.closest('label').style.borderColor = '#334155';
+        });
+        var btn = document.getElementById('selectAllModulesBtn');
+        if (btn) btn.dataset.allSelected = '0';
+        document.getElementById('customPkgCreateModal').style.display = 'flex';
+    }
+    function closeCustomPkgModal() {
+        document.getElementById('customPkgCreateModal').style.display = 'none';
+    }
+    document.getElementById('customPkgCreateModal').addEventListener('click', function (e) {
+        if (e.target === this) closeCustomPkgModal();
+    });
+
+    function toggleAllCustomModules() {
+        var btn = document.getElementById('selectAllModulesBtn');
+        var allSelected = btn.dataset.allSelected === '1';
+        document.querySelectorAll('.custom-mod-checkbox').forEach(function (cb) {
+            cb.checked = !allSelected;
+            cb.closest('label').style.borderColor = !allSelected ? '#8b5cf6' : '#334155';
+        });
+        btn.dataset.allSelected = allSelected ? '0' : '1';
+        btn.innerHTML = allSelected
+            ? '<i class="fas fa-check-double me-1"></i>Select All'
+            : '<i class="fas fa-times me-1"></i>Deselect All';
+    }
+
+    function saveCustomPackage() {
+        const name = document.getElementById('customPkgName').value.trim();
+        const days = parseInt(document.getElementById('customPkgDays').value) || 0;
+        if (!name) { alert('Package name is required.'); return; }
+
+        const modules = [];
+        document.querySelectorAll('.custom-mod-checkbox:checked').forEach(function (cb) {
+            modules.push(cb.value);
+        });
+
+        fetch(SAVE_CUSTOM_URL, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ package_name: name, days_limit: days, modules: modules })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) { alert(data.error || 'Failed to save'); return; }
+
+                // Store runtime data for eye modal
+                runtimeCustomPkgData['custom_' + data.id] = {
+                    name: '[Custom] ' + data.name,
+                    days: data.days,
+                    modules: data.modules
+                };
+
+                // Build the new option
+                const optText = `[Custom] ${data.name} (+${data.days} days)`;
+                const optVal = `custom_${data.id}`;
+
+                // Add to both selects (whichever exist)
+                ['packageSelectFirst', 'packageSelect'].forEach(function (selId) {
+                    const sel = document.getElementById(selId);
+                    if (!sel) return;
+                    // find or create the Custom optgroup
+                    let grp = sel.querySelector('optgroup[data-custom-grp]');
+                    if (!grp) {
+                        grp = document.createElement('optgroup');
+                        grp.label = '— Custom Packages —';
+                        grp.setAttribute('data-custom-grp', '1');
+                        grp.style.color = '#10b981';
+                        sel.appendChild(grp);
+                    }
+                    const opt = document.createElement('option');
+                    opt.value = optVal;
+                    opt.textContent = optText;
+                    opt.setAttribute('data-days', data.days);
+                    opt.setAttribute('data-type', 'custom');
+                    opt.setAttribute('data-custom-id', data.id);
+                    opt.selected = true;
+                    grp.appendChild(opt);
+                });
+
+                // Trigger the correct change handler to populate hidden inputs
+                const selFirst = document.getElementById('packageSelectFirst');
+                const selSub = document.getElementById('packageSelect');
+                if (selFirst && selFirst.closest('form')) handlePackageChangeFirst(selFirst);
+                if (selSub && selSub.closest('form')) handlePackageChangeSubseq(selSub);
+
+                closeCustomPkgModal();
+            });
     }
 </script>
 

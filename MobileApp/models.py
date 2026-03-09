@@ -70,6 +70,11 @@ class MobileControl(models.Model):
     )
 
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
+    # When billing uses a custom (one-off) package, this is set; standard package field is cleared
+    active_custom_package = models.ForeignKey(
+        'CustomPackage', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='active_controls'
+    )
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
 
     status = models.BooleanField(default=False)
@@ -180,3 +185,34 @@ class MobileBillingHistory(models.Model):
 
     def __str__(self):
         return f"{self.control.client_id} | {self.created_at}"
+
+
+# ── Custom (one-off) packages — per MobileControl, hidden from global Package tables ──
+
+class CustomPackage(models.Model):
+    """A one-off package created directly from the billing page for a specific client.
+    Not related to the global ModuleAndPackage.Package model."""
+    control = models.ForeignKey(
+        MobileControl,
+        on_delete=models.CASCADE,
+        related_name='custom_packages'
+    )
+    package_name = models.CharField(max_length=200)
+    days_limit = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[Custom] {self.package_name} ({self.control.customer_name})"
+
+
+class CustomPackageModule(models.Model):
+    """A module that belongs to a CustomPackage."""
+    package = models.ForeignKey(
+        CustomPackage,
+        on_delete=models.CASCADE,
+        related_name='modules'
+    )
+    module_name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.module_name

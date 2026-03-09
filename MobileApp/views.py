@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 import json
 
 from app1 import models
@@ -626,7 +626,7 @@ def api_post_logout(request, endpoint):
 
 from django.http import JsonResponse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
@@ -635,7 +635,9 @@ from django.db.models import Q
 def api_get_project_data(request, endpoint):
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
-        controls = MobileControl.objects.filter(project=project)
+        controls = MobileControl.objects.filter(project=project).select_related(
+            'package', 'active_custom_package'
+        ).prefetch_related('package__modules', 'active_custom_package__modules')
 
         now = timezone.now()
 
@@ -700,15 +702,26 @@ def api_get_project_data(request, endpoint):
                 "client_id": control.client_id,
                 "license_key": control.license_key,
 
-                "package": control.package.package_name if control.package else None,
+                "package": (
+                    "[Custom] " + control.active_custom_package.package_name
+                    if control.active_custom_package
+                    else (control.package.package_name if control.package else None)
+                ),
 
-                "modules": [
-                    {
-                        "module_name": m.module_name,
-                        "module_code": m.module_code
-                    }
-                    for m in control.package.modules.all()
-                ] if control.package else [],
+                "modules": (
+                    [
+                        {"module_name": m.module_name, "module_code": ""}
+                        for m in control.active_custom_package.modules.all()
+                    ]
+                    if control.active_custom_package
+                    else (
+                        [
+                            {"module_name": m.module_name, "module_code": m.module_code}
+                            for m in control.package.modules.all()
+                        ]
+                        if control.package else []
+                    )
+                ),
 
                 "license_summary": {
                     "registered_devices": registered_count,
@@ -803,7 +816,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .models import MobileControl, MobileBillingHistory
+from .models import MobileControl, MobileBillingHistory, CustomPackage, CustomPackageModule
 
 def mobile_control_billing(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
@@ -831,11 +844,18 @@ def mobile_control_billing(request, pk):
 
         # ---------- EXTEND DAYS LOGIC ----------
         package_id = request.POST.get("package")
+        custom_package_id = request.POST.get("custom_package")
 
         if package_id:
             package = get_object_or_404(Package, pk=package_id)
             extend_days = package.days_limit
             control.package = package
+            control.active_custom_package = None   # clear any previous custom pkg
+        elif custom_package_id:
+            custom_pkg = get_object_or_404(CustomPackage, pk=custom_package_id, control=control)
+            extend_days = custom_pkg.days_limit
+            control.active_custom_package = custom_pkg
+            control.package = None                 # clear standard package
         else:
             extend_days = int(request.POST.get("extend_days") or 0)
 
@@ -889,12 +909,57 @@ def mobile_control_billing(request, pk):
     # ---------- PACKAGES ----------
     packages = Package.objects.filter(project=control.project)
 
+    # ---------- CUSTOM PACKAGES (this control only) ----------
+    custom_packages = control.custom_packages.prefetch_related('modules').order_by('-created_at')
+
+    # ---------- PROJECT MODULES (for custom package creation) ----------
+    from ModuleAndPackage.models import Module
+    project_modules = Module.objects.filter(project=control.project).order_by('module_name')
+
     return render(request, "mobileapp_billing.html", {
         "control": control,
         "expiry_date": expiry_date,
         "history": history,
         "packages": packages,
+        "custom_packages": custom_packages,
+        "project_modules": project_modules,
         "has_unbilled_history": has_unbilled_history
+    })
+
+
+@csrf_exempt
+@require_POST
+def save_custom_package(request, control_pk):
+    """AJAX: Create a custom (one-off) package for a specific MobileControl."""
+    control = get_object_or_404(MobileControl, pk=control_pk)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    package_name = data.get('package_name', '').strip()
+    days_limit = int(data.get('days_limit') or 0)
+    module_names = [m.strip() for m in data.get('modules', []) if m.strip()]
+
+    if not package_name:
+        return JsonResponse({'success': False, 'error': 'Package name is required'}, status=400)
+
+    pkg = CustomPackage.objects.create(
+        control=control,
+        package_name=package_name,
+        days_limit=days_limit,
+    )
+    modules = []
+    for name in module_names:
+        m = CustomPackageModule.objects.create(package=pkg, module_name=name)
+        modules.append({'name': m.module_name})
+
+    return JsonResponse({
+        'success': True,
+        'id': pkg.id,
+        'name': pkg.package_name,
+        'days': pkg.days_limit,
+        'modules': modules,
     })
 
 

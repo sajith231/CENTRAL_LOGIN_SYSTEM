@@ -33,6 +33,8 @@ urlpatterns = [
     path("billing-history/edit/<int:pk>/", views.edit_billing_history, name="edit_billing_history"),
 
     path('billing-report/', views.billing_report, name='billing_report'),
+    path('mobile_control/<int:control_pk>/custom-package/save/', views.save_custom_package, name='save_custom_package'),
+
 
     
 

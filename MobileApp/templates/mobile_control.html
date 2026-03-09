@@ -180,7 +180,11 @@
                 <td style="padding:12px;white-space: nowrap">
                     <strong>{{ c.project.project_name }}</strong>
                     <br>
-                    {% if c.package %}
+                    {% if c.active_custom_package %}
+                    <small style="color:#9ca3af;">
+                        [Custom] {{ c.active_custom_package.package_name }}
+                    </small>
+                    {% elif c.package %}
                     <small style="color:#9ca3af;">
                         {{ c.package.package_name }}
                     </small>
@@ -247,9 +251,7 @@
                     </button>
                 </td>
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    <button
-                        onclick="openQRPopup('{{ c.license_key }}', '{{ c.customer_name }}')"
-                        class="btn btn-sm"
+                    <button onclick="openQRPopup('{{ c.license_key }}', '{{ c.customer_name }}')" class="btn btn-sm"
                         style="background:#7c3aed; color:white; padding:6px 12px; border-radius:6px;">
                         <i class="fa-solid fa-qrcode"></i>
                     </button>
@@ -295,10 +297,11 @@
 
                 <td style="padding:12px;text-align:center; display:flex; gap:4px;white-space: nowrap">
                     {% if c.registered_count > 0 %}
-                        <a class="btn" style="background:#475569; color:#94a3b8; cursor:not-allowed; pointer-events:none;">Edit</a>
+                    <a class="btn"
+                        style="background:#475569; color:#94a3b8; cursor:not-allowed; pointer-events:none;">Edit</a>
                     {% else %}
-                        <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
-                            style="background:#2563eb; color:white;">Edit</a>
+                    <a href="{% url 'MobileApp:edit_mobile_control' c.id %}" class="btn"
+                        style="background:#2563eb; color:white;">Edit</a>
                     {% endif %}
 
                     {% if c.id %}
@@ -505,21 +508,27 @@
 <!-- QR CODE POPUP MODAL -->
 <div class="modal fade" id="qrModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
-        <div class="modal-content" style="background:#1e293b; color:white; border:1px solid #334155; border-radius:12px;">
+        <div class="modal-content"
+            style="background:#1e293b; color:white; border:1px solid #334155; border-radius:12px;">
             <div class="modal-header" style="border-bottom:1px solid #334155;">
                 <h5 class="modal-title"><i class="fa-solid fa-qrcode"></i> Licence QR Code</h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="text-align:center; padding:24px;">
                 <p id="qrCustomerName" style="color:#94a3b8; font-size:13px; margin-bottom:4px;"></p>
-                <p id="qrLicenceKeyDisplay" style="font-family:monospace; font-size:15px; font-weight:bold; color:#e2e8f0; margin-bottom:16px; letter-spacing:2px;"></p>
-                <div id="qrCodeCanvas" style="display:inline-block; background:white; padding:12px; border-radius:8px;"></div>
+                <p id="qrLicenceKeyDisplay"
+                    style="font-family:monospace; font-size:15px; font-weight:bold; color:#e2e8f0; margin-bottom:16px; letter-spacing:2px;">
+                </p>
+                <div id="qrCodeCanvas" style="display:inline-block; background:white; padding:12px; border-radius:8px;">
+                </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid #334155; justify-content:center; gap:10px;">
-                <button onclick="downloadQR()" class="btn btn-sm" style="background:#16a34a; color:white; padding:8px 18px; border-radius:6px;">
+                <button onclick="downloadQR()" class="btn btn-sm"
+                    style="background:#16a34a; color:white; padding:8px 18px; border-radius:6px;">
                     <i class="fa-solid fa-download"></i> Download
                 </button>
-                <button onclick="shareQR()" class="btn btn-sm" style="background:#0ea5e9; color:white; padding:8px 18px; border-radius:6px;">
+                <button onclick="shareQR()" class="btn btn-sm"
+                    style="background:#0ea5e9; color:white; padding:8px 18px; border-radius:6px;">
                     <i class="fa-solid fa-share-nodes"></i> Share
                 </button>
             </div>
