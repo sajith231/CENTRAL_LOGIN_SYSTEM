@@ -1022,7 +1022,7 @@
                                  border-radius:7px; padding:7px 10px; cursor:pointer; font-size:0.82rem; color:#e2e8f0;
                                  transition:border-color 0.15s;" onmouseover="this.style.borderColor='#8b5cf6'"
                         onmouseout="this.style.borderColor=this.querySelector('input').checked?'#8b5cf6':'#334155'">
-                        <input type="checkbox" class="custom-mod-checkbox" value="{{ m.module_name|escapejs }}"
+                        <input type="checkbox" class="custom-mod-checkbox" value="{{ m.module_name|escapejs }}" data-code="{{ m.module_code|escapejs }}"
                             style="accent-color:#8b5cf6; width:15px; height:15px; flex-shrink:0;"
                             onchange="this.closest('label').style.borderColor=this.checked?'#8b5cf6':'#334155';">
                         <span><i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6; font-size:0.65rem;"></i>
@@ -1269,7 +1269,7 @@
 
         const modules = [];
         document.querySelectorAll('.custom-mod-checkbox:checked').forEach(function (cb) {
-            modules.push(cb.value);
+            modules.push({ name: cb.value, code: cb.dataset.code || '' });
         });
 
         fetch(SAVE_CUSTOM_URL, {

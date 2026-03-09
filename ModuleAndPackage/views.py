@@ -39,7 +39,8 @@ def add_module(request):
 
         Module.objects.create(
             project=project,
-            module_name=module_name
+            module_name=module_name,
+            module_code=request.POST.get('module_code')
         )
 
         messages.success(request, "Module added successfully")

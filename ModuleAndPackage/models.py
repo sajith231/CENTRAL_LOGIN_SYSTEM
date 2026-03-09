@@ -4,17 +4,17 @@ from django.db import models
 class Module(models.Model):
     project = models.ForeignKey("MobileApp.MobileProject", on_delete=models.CASCADE, related_name="modules")
     module_name = models.CharField(max_length=200)
-    module_code = models.CharField(max_length=255, unique=True, editable=False)
+    module_code = models.CharField(max_length=255, unique=True, editable=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['module_name']
 
     def save(self, *args, **kwargs):
-        # Auto-generate unique code
+        # Auto-generate unique code only if not provided
         if not self.module_code:
             last = Module.objects.all().order_by("-id").first()
-            if last and last.module_code.startswith("MOD"):
+            if last and last.module_code and last.module_code.startswith("MOD"):
                 number = int(last.module_code.replace("MOD", "")) + 1
             else:
                 number = 1

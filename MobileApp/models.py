@@ -213,6 +213,7 @@ class CustomPackageModule(models.Model):
         related_name='modules'
     )
     module_name = models.CharField(max_length=200)
+    module_code = models.CharField(max_length=255, blank=True, null=True)  # ← ADD THIS
 
     def __str__(self):
         return self.module_name

@@ -710,7 +710,7 @@ def api_get_project_data(request, endpoint):
 
                 "modules": (
                     [
-                        {"module_name": m.module_name, "module_code": ""}
+                        {"module_name": m.module_name, "module_code": m.module_code}  # ← use m.module_code
                         for m in control.active_custom_package.modules.all()
                     ]
                     if control.active_custom_package
@@ -722,7 +722,6 @@ def api_get_project_data(request, endpoint):
                         if control.package else []
                     )
                 ),
-
                 "license_summary": {
                     "registered_devices": registered_count,
                     "max_devices": control.login_limit,
@@ -930,7 +929,6 @@ def mobile_control_billing(request, pk):
 @csrf_exempt
 @require_POST
 def save_custom_package(request, control_pk):
-    """AJAX: Create a custom (one-off) package for a specific MobileControl."""
     control = get_object_or_404(MobileControl, pk=control_pk)
     try:
         data = json.loads(request.body)
@@ -939,7 +937,18 @@ def save_custom_package(request, control_pk):
 
     package_name = data.get('package_name', '').strip()
     days_limit = int(data.get('days_limit') or 0)
-    module_names = [m.strip() for m in data.get('modules', []) if m.strip()]
+
+    # Accept both string list (old) and {name, code} dict list (new)
+    raw_modules = data.get('modules', [])
+    module_list = []
+    for m in raw_modules:
+        if isinstance(m, dict):
+            name = m.get('name', '').strip()
+            code = m.get('code', '').strip()
+            if name:
+                module_list.append({'name': name, 'code': code})
+        elif isinstance(m, str) and m.strip():
+            module_list.append({'name': m.strip(), 'code': ''})
 
     if not package_name:
         return JsonResponse({'success': False, 'error': 'Package name is required'}, status=400)
@@ -950,9 +959,13 @@ def save_custom_package(request, control_pk):
         days_limit=days_limit,
     )
     modules = []
-    for name in module_names:
-        m = CustomPackageModule.objects.create(package=pkg, module_name=name)
-        modules.append({'name': m.module_name})
+    for item in module_list:
+        m = CustomPackageModule.objects.create(
+            package=pkg,
+            module_name=item['name'],
+            module_code=item['code'],
+        )
+        modules.append({'name': m.module_name, 'code': m.module_code})
 
     return JsonResponse({
         'success': True,
