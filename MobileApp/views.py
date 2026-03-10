@@ -38,17 +38,18 @@ def mobile_home(request):
     }
     return render(request, "mobileapp_list.html", context)
 
-
 def mobileproject_create(request):
     """Create a new mobile project"""
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
+        customized_package = request.POST.get('customized_package') == 'yes'
         
         if project_name:
             MobileProject.objects.create(
                 project_name=project_name,
-                description=description if description else None
+                description=description if description else None,
+                customized_package=customized_package
             )
             messages.success(request, 'Mobile project created successfully!')
             return redirect('MobileApp:mobileapp_list')
@@ -64,10 +65,12 @@ def mobileproject_edit(request, pk):
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
+        customized_package = request.POST.get('customized_package') == 'yes'
         
         if project_name:
             project.project_name = project_name
             project.description = description if description else None
+            project.customized_package = customized_package
             project.save()  # API endpoint will auto-update
             messages.success(request, 'Mobile project updated successfully!')
             return redirect('MobileApp:mobileapp_list')
@@ -922,7 +925,8 @@ def mobile_control_billing(request, pk):
         "packages": packages,
         "custom_packages": custom_packages,
         "project_modules": project_modules,
-        "has_unbilled_history": has_unbilled_history
+        "has_unbilled_history": has_unbilled_history,
+        "show_custom_package": control.project.customized_package,
     })
 
 
@@ -1144,18 +1148,93 @@ def delete_billing_history(request, pk):
 
     if request.method == "POST":
         control = history.control
-        
-        # Rollback data
-        if history.old_expiry_date:
-            control.expiry_date = history.old_expiry_date
-        
+
+        # Rollback expiry_date — explicitly set even if old value was None
+        # (covers first-billing delete where old_expiry_date is None = Unlimited)
+        control.expiry_date = history.old_expiry_date
+
+        # Rollback login limit
         if history.old_login_limit is not None:
             control.login_limit = history.old_login_limit
-            
+
+        # If this was the only billing, also clear the package references
+        remaining_history = control.billing_history.exclude(pk=history.pk)
+        if not remaining_history.exists():
+            control.package = None
+            control.active_custom_package = None
+
+        # Recalculate bill_status after deletion
+        control.bill_status = not remaining_history.filter(bill_status=False).exists()
+
         control.save()
-        
+
         history.delete()
         messages.success(request, "Billing record deleted and changes reverted.")
         return redirect("MobileApp:mobile_control_billing", pk=control.id)
 
     return redirect("MobileApp:mobile_control_billing", pk=history.control.id)
+
+
+
+
+
+@csrf_exempt
+@require_POST
+def add_modules_to_custom_package(request, control_pk, pkg_pk):
+    """Add new modules to an existing CustomPackage and create a billing record."""
+    control = get_object_or_404(MobileControl, pk=control_pk)
+    pkg = get_object_or_404(CustomPackage, pk=pkg_pk, control=control)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    raw_modules = data.get('modules', [])
+    remark = data.get('remark', '').strip()
+
+    if not raw_modules:
+        return JsonResponse({'success': False, 'error': 'No modules provided'}, status=400)
+
+    # Avoid duplicates
+    existing_names = set(pkg.modules.values_list('module_name', flat=True))
+
+    added = []
+    for m in raw_modules:
+        name = m.get('name', '').strip() if isinstance(m, dict) else str(m).strip()
+        code = m.get('code', '').strip() if isinstance(m, dict) else ''
+        if name and name not in existing_names:
+            CustomPackageModule.objects.create(package=pkg, module_name=name, module_code=code)
+            existing_names.add(name)
+            added.append({'name': name, 'code': code})
+
+    all_modules = [
+        {'name': m.module_name, 'code': m.module_code or ''}
+        for m in pkg.modules.all()
+    ]
+
+    # ── Create a billing history record for the module addition ──
+    added_names = ', '.join(m['name'] for m in added)
+    bill_remark = remark or f'Added modules to [{pkg.package_name}]: {added_names}'
+
+    MobileBillingHistory.objects.create(
+        control=control,
+        extended_days=0,
+        extended_login_limit=0,
+        old_expiry_date=control.expiry_date,
+        new_expiry_date=control.expiry_date,
+        old_login_limit=control.login_limit,
+        new_login_limit=control.login_limit,
+        bill_status=False,
+        remark=bill_remark,
+    )
+
+    # Recalculate bill_status on control
+    control.bill_status = not control.billing_history.filter(bill_status=False).exists()
+    control.save(update_fields=['bill_status', 'updated_date'])
+
+    return JsonResponse({
+        'success': True,
+        'added': added,
+        'all_modules': all_modules,
+    })

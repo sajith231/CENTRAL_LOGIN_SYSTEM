@@ -429,7 +429,8 @@
                                     {% if packages %}
                                     <optgroup label="— Standard Packages —" style="color:#64748b;">
                                         {% for p in packages %}
-                                        <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard">
+                                        <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard"
+                                            {% if control.package.id == p.id %}selected{% endif %}>
                                             {{ p.package_name }} (+{{ p.days_limit }} days)
                                         </option>
                                         {% endfor %}
@@ -439,7 +440,8 @@
                                     <optgroup label="— Custom Packages —" style="color:#10b981;">
                                         {% for cp in custom_packages %}
                                         <option value="custom_{{ cp.id }}" data-days="{{ cp.days_limit }}"
-                                            data-type="custom" data-custom-id="{{ cp.id }}">
+                                            data-type="custom" data-custom-id="{{ cp.id }}"
+                                            {% if control.active_custom_package.id == cp.id %}selected{% endif %}>
                                             [Custom] {{ cp.package_name }} (+{{ cp.days_limit }} days)
                                         </option>
                                         {% endfor %}
@@ -456,15 +458,27 @@
                             </div>
                             <!-- hidden inputs: one of these will be set based on selection -->
                             <input type="hidden" name="custom_package" id="customPkgInputFirst" value="">
-                            <!-- + Custom Package button -->
-                            <div class="mb-2">
+                            <!-- + Custom Package button (only if project has customized_package enabled) -->
+                            {% if show_custom_package %}
+                            <div class="mb-2" style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button type="button" onclick="openCustomPkgModal()"
                                     style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
                                     onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
                                     onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
-                                    <i class="fas fa-plus-circle"></i> Custom Package
+                                    <i class="fas fa-plus-circle"></i> New Custom Package
                                 </button>
+                                {% if custom_packages %}
+                                <button type="button" onclick="openAddModulesModal()"
+                                    style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
+                                    onmouseover="this.style.borderColor='#8b5cf6'; this.style.color='#8b5cf6';"
+                                    onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
+                                    <i class="fas fa-puzzle-piece"></i> Add Modules to Existing
+                                </button>
+                                {% endif %}
                             </div>
+                            {% endif %}
+
+                            
 
                             {% if request.user.is_superuser %}
                             <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
@@ -534,7 +548,7 @@
 
                             <div class="row g-4">
                                 <!-- VALIDITY SECTION -->
-                                <div class="col-md-6" id="section_validity">
+                                <div class="col-12" id="section_validity">
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                         Select Package Extension
@@ -551,7 +565,8 @@
                                             <optgroup label="— Standard Packages —" style="color:#64748b;">
                                                 {% for p in packages %}
                                                 <option value="{{ p.id }}" data-days="{{ p.days_limit }}"
-                                                    data-type="standard">
+                                                    data-type="standard"
+                                                    {% if control.package.id == p.id %}selected{% endif %}>
                                                     {{ p.package_name }} (+{{ p.days_limit }} days)
                                                 </option>
                                                 {% endfor %}
@@ -561,7 +576,8 @@
                                             <optgroup label="— Custom Packages —" style="color:#10b981;">
                                                 {% for cp in custom_packages %}
                                                 <option value="custom_{{ cp.id }}" data-days="{{ cp.days_limit }}"
-                                                    data-type="custom" data-custom-id="{{ cp.id }}">
+                                                    data-type="custom" data-custom-id="{{ cp.id }}"
+                                                    {% if control.active_custom_package.id == cp.id %}selected{% endif %}>
                                                     [Custom] {{ cp.package_name }} (+{{ cp.days_limit }} days)
                                                 </option>
                                                 {% endfor %}
@@ -578,15 +594,25 @@
                                     </div>
                                     <!-- hidden inputs for custom package selection -->
                                     <input type="hidden" name="custom_package" id="customPkgInputSubseq" value="">
-                                    <!-- + Custom Package button -->
-                                    <div class="mb-2">
+                                    <!-- + Custom Package button (only if project has customized_package enabled) -->
+                                    {% if show_custom_package %}
+                                    <div class="mb-2" style="display:flex; gap:8px; flex-wrap:wrap;">
                                         <button type="button" onclick="openCustomPkgModal()"
                                             style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
                                             onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
                                             onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
-                                            <i class="fas fa-plus-circle"></i> Custom Package
+                                            <i class="fas fa-plus-circle"></i> New Custom Package
                                         </button>
+                                        {% if custom_packages %}
+                                        <button type="button" onclick="openAddModulesModal()"
+                                            style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
+                                            onmouseover="this.style.borderColor='#8b5cf6'; this.style.color='#8b5cf6';"
+                                            onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
+                                            <i class="fas fa-puzzle-piece"></i> Add Modules to Existing
+                                        </button>
+                                        {% endif %}
                                     </div>
+                                    {% endif %}
 
                                     {% if request.user.is_superuser %}
                                     <label class="form-label mb-2"
@@ -608,7 +634,7 @@
                                 </div>
 
                                 <!-- USER LIMIT SECTION -->
-                                <div class="col-md-6" id="section_users" style="display:none;">
+                                <div class="col-12" id="section_users" style="display:none;">
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                         Extend / Reduce Users
@@ -998,8 +1024,8 @@
                     <i class="fas fa-calendar-alt me-1" style="color:#3b82f6;"></i>Days Limit
                     <span style="color:#64748b; font-weight:400;">(0 = unlimited)</span>
                 </label>
-                <input type="number" id="customPkgDays" min="0" value="365"
-                    style="width:100%; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;">
+                <input type="number" id="customPkgDays" min="0" value="364" readonly
+                    style="width:100%; background:#0f172a; color:#64748b; border:1px solid #1e293b; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:not-allowed;">
             </div>
 
             <!-- Modules — select from project modules -->
@@ -1024,7 +1050,7 @@
                         onmouseout="this.style.borderColor=this.querySelector('input').checked?'#8b5cf6':'#334155'">
                         <input type="checkbox" class="custom-mod-checkbox" value="{{ m.module_name|escapejs }}" data-code="{{ m.module_code|escapejs }}"
                             style="accent-color:#8b5cf6; width:15px; height:15px; flex-shrink:0;"
-                            onchange="this.closest('label').style.borderColor=this.checked?'#8b5cf6':'#334155';">
+                            onchange="this.closest('label').style.borderColor=this.checked?'#8b5cf6':'#334155'; _updateCustomPkgName();">
                         <span><i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6; font-size:0.65rem;"></i>
                             {{ m.module_name }}</span>
                     </label>
@@ -1190,6 +1216,7 @@
 <script>
     // ── Package selection handlers — routes standard vs custom selections ──
     const CONTROL_PK = {{ control.pk }};
+    const CUSTOMER_NAME = '{{ control.customer_name|escapejs }}';
     const SAVE_CUSTOM_URL = `/mobileapp/mobile_control/${CONTROL_PK}/custom-package/save/`;
 
     // Runtime store of custom package data (grows as user creates new ones in-session)
@@ -1229,10 +1256,23 @@
         _handlePkgChange(sel, 'package', 'customPkgInputSubseq', 'helperText');
     }
 
+    // ── Auto-generate package name from customer + selected modules ──
+    function _updateCustomPkgName() {
+        const checked = Array.from(document.querySelectorAll('.custom-mod-checkbox:checked'))
+                             .map(cb => cb.value);
+        if (checked.length === 0) {
+            document.getElementById('customPkgName').value = '';
+            document.getElementById('customPkgName').placeholder = 'Select modules to auto-fill name';
+        } else {
+            document.getElementById('customPkgName').value = CUSTOMER_NAME + ' - ' + checked.join(' + ');
+        }
+    }
+
     // ── Custom Package Modal ──
     function openCustomPkgModal() {
         document.getElementById('customPkgName').value = '';
-        document.getElementById('customPkgDays').value = '365';
+        document.getElementById('customPkgName').placeholder = 'Select modules to auto-fill name';
+        document.getElementById('customPkgDays').value = '364';
         // Uncheck all module checkboxes and reset border colours
         document.querySelectorAll('.custom-mod-checkbox').forEach(function (cb) {
             cb.checked = false;
@@ -1260,6 +1300,7 @@
         btn.innerHTML = allSelected
             ? '<i class="fas fa-check-double me-1"></i>Select All'
             : '<i class="fas fa-times me-1"></i>Deselect All';
+        _updateCustomPkgName();
     }
 
     function saveCustomPackage() {
@@ -1325,5 +1366,227 @@
             });
     }
 </script>
+
+<!-- ADD MODULES TO EXISTING CUSTOM PACKAGE MODAL -->
+<div id="addModulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8);
+     z-index:10002; align-items:center; justify-content:center;">
+    <div style="background:#0f172a; border:1px solid #8b5cf6; border-radius:14px; width:520px;
+                max-width:95vw; max-height:88vh; display:flex; flex-direction:column;
+                box-shadow:0 20px 60px rgba(0,0,0,.7);">
+
+        <!-- Header -->
+        <div style="padding:20px 24px 14px; border-bottom:1px solid #1e293b; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:rgba(139,92,246,0.15); border-radius:8px; padding:6px 10px;">
+                    <i class="fas fa-puzzle-piece" style="color:#8b5cf6;"></i>
+                </div>
+                <div>
+                    <h5 style="color:white; margin:0; font-weight:600; font-size:1rem;">Add Modules to Custom Package</h5>
+                    <p style="color:#64748b; font-size:0.75rem; margin:0;">Select a package and add new modules to it</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddModulesModal()" style="background:#1e293b; border:1px solid #334155; border-radius:8px; color:#94a3b8;
+                       width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                       cursor:pointer; font-size:1rem; flex-shrink:0;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:20px 24px; overflow-y:auto; flex:1;">
+
+            <!-- Select existing custom package -->
+            <div class="mb-3">
+                <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; display:block; margin-bottom:6px;">
+                    <i class="fas fa-box-open me-1" style="color:#8b5cf6;"></i>Select Custom Package *
+                </label>
+                <select id="addModulesPkgSelect"
+                    style="width:100%; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                    <option value="">-- Select Package --</option>
+                    {% for cp in custom_packages %}
+                    <option value="{{ cp.id }}" data-name="{{ cp.package_name|escapejs }}">
+                        [Custom] {{ cp.package_name }} (+{{ cp.days_limit }} days)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Currently assigned modules (shown after selecting package) -->
+            <div id="currentModulesSection" style="display:none; margin-bottom:16px;">
+                <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; display:block; margin-bottom:6px;">
+                    <i class="fas fa-list me-1" style="color:#64748b;"></i>Currently Assigned Modules
+                </label>
+                <div id="currentModulesList" style="display:flex; flex-wrap:wrap; gap:6px; background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:10px; min-height:36px;">
+                    <span style="color:#475569; font-size:0.8rem;">Select a package to see modules</span>
+                </div>
+            </div>
+
+            <!-- Modules to add -->
+            <div class="mb-2">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <label style="color:#94a3b8; font-size:0.82rem; font-weight:500; margin:0;">
+                        <i class="fas fa-plus me-1" style="color:#8b5cf6;"></i>Add Modules
+                    </label>
+                    <button type="button" onclick="toggleAllAddModules()" id="selectAllAddBtn"
+                        style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); border-radius:6px; color:#8b5cf6; padding:4px 10px; font-size:0.75rem; cursor:pointer;">
+                        <i class="fas fa-check-double me-1"></i>Select All
+                    </button>
+                </div>
+                {% if project_modules %}
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; max-height:200px; overflow-y:auto; padding:4px 2px;">
+                    {% for m in project_modules %}
+                    <label id="addModLabel_{{ forloop.counter }}" style="display:flex; align-items:center; gap:8px; background:#1e293b; border:1px solid #334155;
+                                 border-radius:7px; padding:7px 10px; cursor:pointer; font-size:0.82rem; color:#e2e8f0;
+                                 transition:border-color 0.15s;"
+                        onmouseover="this.style.borderColor='#8b5cf6'"
+                        onmouseout="this.style.borderColor=this.querySelector('input').checked?'#8b5cf6':'#334155'">
+                        <input type="checkbox" class="add-mod-checkbox"
+                            value="{{ m.module_name|escapejs }}"
+                            data-code="{{ m.module_code|escapejs }}"
+                            style="accent-color:#8b5cf6; width:15px; height:15px; flex-shrink:0;"
+                            onchange="this.closest('label').style.borderColor=this.checked?'#8b5cf6':'#334155'; _updateCustomPkgName();">
+                        <span><i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6; font-size:0.65rem;"></i>{{ m.module_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:18px; background:#1e293b; border-radius:8px; border:1px dashed #334155;">
+                    <p style="color:#64748b; font-size:0.82rem; margin:0;">No modules found for this project.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:14px 24px; border-top:1px solid #1e293b; display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" onclick="closeAddModulesModal()"
+                style="background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; padding:9px 20px; font-size:0.85rem; cursor:pointer;">
+                <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="button" onclick="saveAddedModules()"
+                style="background:#8b5cf6; color:white; border:none; border-radius:8px; padding:9px 24px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                <i class="fas fa-save me-1"></i>Add Modules
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Add Modules to Existing Custom Package ──
+    const ADD_MODULES_URL = `/mobileapp/mobile_control/${CONTROL_PK}/custom-package/add-modules/`;
+
+    // pkgData from packageModulesData JSON for showing current modules
+    var _pkgModData = {};
+    try { _pkgModData = JSON.parse(document.getElementById('packageModulesData').textContent); } catch(e){}
+
+    document.getElementById('addModulesPkgSelect').addEventListener('change', function() {
+        const pkgId = this.value;
+        const section = document.getElementById('currentModulesSection');
+        const list = document.getElementById('currentModulesList');
+
+        // Reset add-mod checkboxes
+        document.querySelectorAll('.add-mod-checkbox').forEach(cb => {
+            cb.checked = false;
+            cb.closest('label').style.borderColor = '#334155';
+        });
+
+        if (!pkgId) { section.style.display = 'none'; return; }
+
+        section.style.display = 'block';
+        const info = _pkgModData['custom_' + pkgId] || runtimeCustomPkgData['custom_' + pkgId];
+        if (!info || !info.modules || info.modules.length === 0) {
+            list.innerHTML = '<span style="color:#475569; font-size:0.8rem;">No modules assigned yet</span>';
+        } else {
+            list.innerHTML = info.modules.map(m =>
+                `<span style="background:#1e293b; border:1px solid #334155; border-radius:6px; padding:4px 10px; font-size:0.78rem; color:#e2e8f0;">
+                    <i class="fas fa-puzzle-piece me-1" style="color:#8b5cf6; font-size:0.65rem;"></i>${m.name}
+                    ${m.code ? '<small style="color:#64748b;">('+m.code+')</small>' : ''}
+                </span>`
+            ).join('');
+        }
+
+        // Grey out already-assigned modules in the add list
+        const assignedNames = info && info.modules ? info.modules.map(m => m.name) : [];
+        document.querySelectorAll('.add-mod-checkbox').forEach(cb => {
+            const lbl = cb.closest('label');
+            if (assignedNames.includes(cb.value)) {
+                cb.disabled = true;
+                lbl.style.opacity = '0.4';
+                lbl.style.cursor = 'not-allowed';
+            } else {
+                cb.disabled = false;
+                lbl.style.opacity = '1';
+                lbl.style.cursor = 'pointer';
+            }
+        });
+    });
+
+    function openAddModulesModal() {
+        document.getElementById('addModulesPkgSelect').value = '';
+        document.getElementById('currentModulesSection').style.display = 'none';
+        document.querySelectorAll('.add-mod-checkbox').forEach(cb => {
+            cb.checked = false;
+            cb.disabled = false;
+            const lbl = cb.closest('label');
+            lbl.style.borderColor = '#334155';
+            lbl.style.opacity = '1';
+            lbl.style.cursor = 'pointer';
+        });
+        var btn = document.getElementById('selectAllAddBtn');
+        if (btn) btn.dataset.allSelected = '0';
+        document.getElementById('addModulesModal').style.display = 'flex';
+    }
+
+    function closeAddModulesModal() {
+        document.getElementById('addModulesModal').style.display = 'none';
+    }
+
+    document.getElementById('addModulesModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddModulesModal();
+    });
+
+    function toggleAllAddModules() {
+        var btn = document.getElementById('selectAllAddBtn');
+        var allSelected = btn.dataset.allSelected === '1';
+        document.querySelectorAll('.add-mod-checkbox:not(:disabled)').forEach(cb => {
+            cb.checked = !allSelected;
+            cb.closest('label').style.borderColor = !allSelected ? '#8b5cf6' : '#334155';
+        });
+        btn.dataset.allSelected = allSelected ? '0' : '1';
+        btn.innerHTML = allSelected
+            ? '<i class="fas fa-check-double me-1"></i>Select All'
+            : '<i class="fas fa-times me-1"></i>Deselect All';
+    }
+
+    function saveAddedModules() {
+        const pkgId = document.getElementById('addModulesPkgSelect').value;
+        if (!pkgId) { alert('Please select a custom package.'); return; }
+
+        const modules = [];
+        document.querySelectorAll('.add-mod-checkbox:checked').forEach(cb => {
+            modules.push({ name: cb.value, code: cb.dataset.code || '' });
+        });
+        if (modules.length === 0) { alert('Please select at least one module to add.'); return; }
+
+        fetch(`/mobileapp/mobile_control/${CONTROL_PK}/custom-package/${pkgId}/add-modules/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modules: modules })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Failed'); return; }
+
+            // Update runtime pkg data so current modules list refreshes
+            const key = 'custom_' + pkgId;
+            if (!_pkgModData[key]) _pkgModData[key] = { name: '', days: 0, modules: [] };
+            _pkgModData[key].modules = data.all_modules;
+
+            alert('Modules added successfully!');
+            closeAddModulesModal();
+        });
+    }
+</script>
+
 
 {% endblock %}

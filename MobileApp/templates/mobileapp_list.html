@@ -43,6 +43,7 @@
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Register API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">License Remove API</th>
                     <th style="padding:12px; text-align:center;white-space: nowrap;">Description</th>
+                    <th style="padding:12px; text-align:center; white-space:nowrap;">Customized Pkg</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Actions</th>
                 </tr>
             </thead>
@@ -89,6 +90,17 @@
                         </button>
                         {% else %}
                         <span style="color:#9ca3af;">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding:12px; text-align:center;">
+                        {% if project.customized_package %}
+                            <span style="background:#065f46; color:#6ee7b7; padding:4px 10px; border-radius:12px; font-size:12px;">
+                                <i class="fa-solid fa-check"></i> Yes
+                            </span>
+                        {% else %}
+                            <span style="background:#1e293b; color:#9ca3af; padding:4px 10px; border-radius:12px; font-size:12px;">
+                                No
+                            </span>
                         {% endif %}
                     </td>
 
