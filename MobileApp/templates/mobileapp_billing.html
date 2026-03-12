@@ -789,7 +789,7 @@
                         {# ===== SUBSEQUENT BILLING: existing tabbed UI ===== #}
                         <fieldset>
                             <!-- OPERATION TYPE TABS -->
-                            <div class="d-flex gap-2 mb-3">
+                            <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
                                 <div class="operation-tab active" id="tab_validity"
                                     onclick="toggleOperation('validity')">
                                     <i class="fas fa-calendar-alt me-1"></i>Update Validity
@@ -797,29 +797,72 @@
                                 <div class="operation-tab" id="tab_users" onclick="toggleOperation('users')">
                                     <i class="fas fa-users me-1"></i>Update Users
                                 </div>
+                                <div class="operation-tab" id="tab_change_package" onclick="toggleOperation('change_package')">
+                                    <i class="fas fa-exchange-alt me-1"></i>Change Package
+                                </div>
                             </div>
 
                             <div class="row g-4">
                                 <!-- VALIDITY SECTION -->
                                 <div class="col-12" id="section_validity">
+                                    {% if request.user.is_superuser %}
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                        Select Package Extension
+                                        Manual Days Adjustment (Superuser Only)
+                                    </label>
+                                    <div class="input-group-icon mb-3">
+                                        <i class="fas fa-calendar-minus"></i>
+                                        <input type="number" name="extend_days" id="manualDaysInput"
+                                            class="form-control" placeholder="e.g. -10 or 5"
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
+                                            oninput="handleManualDaysChange(this)">
+                                    </div>
+                                    {% endif %}
+                                    <small id="helperText" style="color:#64748b; font-size:0.75rem; display:block;">
+                                        <i class="fas fa-info-circle me-1"></i>Enter manual days to extend validity period
+                                    </small>
+                                </div>
+
+                                <!-- USER LIMIT SECTION -->
+                                <div class="col-12" id="section_users" style="display:none;">
+                                    <label class="form-label mb-2"
+                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                        Extend / Reduce Users
+                                    </label>
+                                    <div class="input-group-icon mb-3">
+                                        <i class="fas fa-user-plus"></i>
+                                        <input type="number" name="extend_login" id="extendUsersInput"
+                                            class="form-control" placeholder="e.g. +5 or -2"
+                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
+                                    </div>
+                                    <small style="color:#64748b; font-size:0.75rem; display:block;">
+                                        <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to
+                                        remove
+                                    </small>
+                                </div>
+
+                                <!-- CHANGE PACKAGE SECTION -->
+                                <div class="col-12" id="section_change_package" style="display:none;">
+                                    <label class="form-label mb-2"
+                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                                        Select New Package
                                     </label>
                                     <div class="mb-3"
                                         style="display:flex; align-items:center; gap:8px; position:relative;">
                                         <i class="fas fa-box-open"
                                             style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; z-index:10; pointer-events:none;"></i>
-                                        <select name="package" id="packageSelect" class="form-control form-select"
+                                        <select name="change_package_id" id="changePkgSelect" class="form-control form-select"
                                             style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px 10px 42px; border-radius:8px; font-size:0.9rem; cursor:pointer; flex:1;"
-                                            onchange="handlePackageChangeSubseq(this)">
-                                            <option value="" selected disabled>-- Select Package --</option>
+                                            onchange="handleChangePkgSelect(this)">
+                                            <option value="" disabled
+                                                {% if not control.active_custom_package and not control.package %}selected{% endif %}>
+                                                -- Select Package --
+                                            </option>
                                             {% if packages %}
                                             <optgroup label="— Standard Packages —" style="color:#64748b;">
                                                 {% for p in packages %}
-                                                <option value="{{ p.id }}" data-days="{{ p.days_limit }}"
-                                                    data-type="standard"
-                                                    {% if control.package.id == p.id %}selected{% endif %}>
+                                                <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard"
+                                                    {% if not control.active_custom_package and control.package.id == p.id %}selected{% endif %}>
                                                     {{ p.package_name }} (+{{ p.days_limit }} days)
                                                 </option>
                                                 {% endfor %}
@@ -837,7 +880,7 @@
                                             </optgroup>
                                             {% endif %}
                                         </select>
-                                        <button type="button" onclick="showPackageModules('packageSelect')"
+                                        <button type="button" onclick="showPackageModules('changePkgSelect')"
                                             title="View modules in selected package"
                                             style="flex-shrink:0; width:40px; height:40px; background:#3b82f6; border:none; border-radius:8px; color:white; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
                                             onmouseover="this.style.background='#2563eb'"
@@ -845,8 +888,8 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
-                                    <!-- hidden inputs for custom package selection -->
-                                    <input type="hidden" name="custom_package" id="customPkgInputSubseq" value="">
+                                    <!-- hidden input for custom package -->
+                                    <input type="hidden" name="change_custom_package" id="changeCustPkgInput" value="">
                                     <!-- + Custom Package button (only if project has customized_package enabled) -->
                                     {% if show_custom_package %}
                                     <div class="mb-2" style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -866,41 +909,8 @@
                                         {% endif %}
                                     </div>
                                     {% endif %}
-
-                                    {% if request.user.is_superuser %}
-                                    <label class="form-label mb-2"
-                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                        Manual Days Adjustment (Superuser Only)
-                                    </label>
-                                    <div class="input-group-icon mb-3">
-                                        <i class="fas fa-calendar-minus"></i>
-                                        <input type="number" name="extend_days" id="manualDaysInput"
-                                            class="form-control" placeholder="e.g. -10 or 5"
-                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;"
-                                            oninput="handleManualDaysChange(this)">
-                                    </div>
-                                    {% endif %}
-                                    <small id="helperText" style="color:#64748b; font-size:0.75rem; display:block;">
-                                        <i class="fas fa-info-circle me-1"></i>Select a package to extend validity
-                                        period
-                                    </small>
-                                </div>
-
-                                <!-- USER LIMIT SECTION -->
-                                <div class="col-12" id="section_users" style="display:none;">
-                                    <label class="form-label mb-2"
-                                        style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
-                                        Extend / Reduce Users
-                                    </label>
-                                    <div class="input-group-icon mb-3">
-                                        <i class="fas fa-user-plus"></i>
-                                        <input type="number" name="extend_login" id="extendUsersInput"
-                                            class="form-control" placeholder="e.g. +5 or -2"
-                                            style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
-                                    </div>
-                                    <small style="color:#64748b; font-size:0.75rem; display:block;">
-                                        <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to
-                                        remove
+                                    <small style="color:#64748b; font-size:0.75rem; display:block; margin-top:6px;">
+                                        <i class="fas fa-info-circle me-1"></i>Only the package assignment is changed — no days are added.
                                     </small>
                                 </div>
                             </div>
@@ -933,36 +943,42 @@
 
                     <script>
                         function toggleOperation(type) {
-                            const tabValidity = document.getElementById('tab_validity');
-                            const tabUsers = document.getElementById('tab_users');
-                            const secValidity = document.getElementById('section_validity');
-                            const secUsers = document.getElementById('section_users');
-                            const operationType = document.getElementById('operation_type');
+                            const tabValidity      = document.getElementById('tab_validity');
+                            const tabUsers         = document.getElementById('tab_users');
+                            const tabChangePkg     = document.getElementById('tab_change_package');
+                            const secValidity      = document.getElementById('section_validity');
+                            const secUsers         = document.getElementById('section_users');
+                            const secChangePkg     = document.getElementById('section_change_package');
+                            const operationType    = document.getElementById('operation_type');
 
-                            const selectPkg = document.getElementById('packageSelect');
+                            const selectPkg  = document.getElementById('packageSelect');
                             const inputUsers = document.getElementById('extendUsersInput');
+                            const changePkg  = document.getElementById('changePkgSelect');
+
+                            // Reset all tabs
+                            [tabValidity, tabUsers, tabChangePkg].forEach(t => t.classList.remove('active'));
+                            secValidity.style.display   = 'none';
+                            secUsers.style.display      = 'none';
+                            secChangePkg.style.display  = 'none';
 
                             if (type === 'validity') {
-                                // Activate validity tab
                                 tabValidity.classList.add('active');
-                                tabUsers.classList.remove('active');
-
                                 secValidity.style.display = 'block';
-                                secUsers.style.display = 'none';
-
                                 operationType.value = 'validity';
-                                inputUsers.value = '';
-                            } else {
-                                // Activate users tab
+                                if (inputUsers) inputUsers.value = '';
+                                if (changePkg)  changePkg.value = '';
+                            } else if (type === 'users') {
                                 tabUsers.classList.add('active');
-                                tabValidity.classList.remove('active');
-
                                 secUsers.style.display = 'block';
-                                secValidity.style.display = 'none';
-
                                 operationType.value = 'users';
-                                selectPkg.value = '';
-                                handlePackageChange(selectPkg);
+                                if (selectPkg) { selectPkg.value = ''; handlePackageChange(selectPkg); }
+                                if (changePkg)  changePkg.value = '';
+                            } else if (type === 'change_package') {
+                                tabChangePkg.classList.add('active');
+                                secChangePkg.style.display = 'block';
+                                operationType.value = 'change_package';
+                                if (selectPkg)  { selectPkg.value = ''; handlePackageChange(selectPkg); }
+                                if (inputUsers) inputUsers.value = '';
                             }
                         }
 
@@ -989,6 +1005,21 @@
                                 helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Manual adjustment: <b>${input.value} days</b>`;
                             } else {
                                 helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
+                            }
+                        }
+
+                        function handleChangePkgSelect(select) {
+                            const custInput = document.getElementById('changeCustPkgInput');
+                            if (!select.value) { if (custInput) custInput.value = ''; return; }
+                            const opt = select.options[select.selectedIndex];
+                            const type = opt.getAttribute('data-type');
+                            if (type === 'custom') {
+                                if (custInput) custInput.value = opt.getAttribute('data-custom-id');
+                                // clear the standard package field name so only custom_package is submitted
+                                select.name = '';
+                            } else {
+                                if (custInput) custInput.value = '';
+                                select.name = 'change_package_id';
                             }
                         }
                     </script>
