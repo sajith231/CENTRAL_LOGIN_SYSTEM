@@ -97,7 +97,7 @@ def mobile_control_list(request):
     # ---------------- BASE QUERY ----------------
     controls = (
         MobileControl.objects
-        .select_related('project', 'package', 'shop__branch')
+        .select_related('project', 'package', 'active_custom_package', 'shop__branch', 'store')
         .prefetch_related('active_devices')
         .order_by('-updated_date')
     )
@@ -840,27 +840,49 @@ def mobile_control_billing(request, pk):
         extend_login = int(request.POST.get("extend_login") or 0)
         bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
         remark = request.POST.get("remark", "").strip()
-
         # ---------- STORE OLD VALUES ----------
         old_login_limit = control.login_limit
         old_expiry = control.expiry_date
 
+        operation_type = request.POST.get("operation_type", "validity")
+        
         # ---------- EXTEND DAYS LOGIC ----------
-        package_id = request.POST.get("package")
-        custom_package_id = request.POST.get("custom_package")
-
-        if package_id:
-            package = get_object_or_404(Package, pk=package_id)
-            extend_days = package.days_limit
-            control.package = package
-            control.active_custom_package = None   # clear any previous custom pkg
-        elif custom_package_id:
-            custom_pkg = get_object_or_404(CustomPackage, pk=custom_package_id, control=control)
-            extend_days = custom_pkg.days_limit
-            control.active_custom_package = custom_pkg
-            control.package = None                 # clear standard package
-        else:
+        extend_days = 0
+        
+        if operation_type == 'change_package':
+            package_id = request.POST.get("change_package_id")
+            custom_package_id = request.POST.get("change_custom_package")
+            
+            if custom_package_id:
+                custom_pkg = get_object_or_404(CustomPackage, pk=custom_package_id, control=control)
+                extend_days = custom_pkg.days_limit
+                control.active_custom_package = custom_pkg
+                control.package = None                 # clear standard package
+            elif package_id:
+                package = get_object_or_404(Package, pk=package_id)
+                extend_days = package.days_limit
+                control.package = package
+                control.active_custom_package = None   # clear any previous custom pkg
+                
+        elif operation_type == 'validity':
             extend_days = int(request.POST.get("extend_days") or 0)
+            
+        elif operation_type == 'both':
+            package_id = request.POST.get("package")
+            custom_package_id = request.POST.get("custom_package")
+            
+            if custom_package_id:
+                custom_pkg = get_object_or_404(CustomPackage, pk=custom_package_id, control=control)
+                extend_days = custom_pkg.days_limit
+                control.active_custom_package = custom_pkg
+                control.package = None
+            elif package_id:
+                package = get_object_or_404(Package, pk=package_id)
+                extend_days = package.days_limit
+                control.package = package
+                control.active_custom_package = None
+            else:
+                extend_days = int(request.POST.get("extend_days") or 0)
 
         # ---------- LOGIN LIMIT (+ / -) ----------
         if extend_login != 0:
@@ -872,7 +894,11 @@ def mobile_control_billing(request, pk):
 
         # ---------- EXPIRY DATE (+ / -) ----------
         if extend_days != 0:
-            if control.expiry_date:
+            if operation_type == 'change_package':
+                # Start fresh from today when changing package
+                new_expiry = timezone.now() + timedelta(days=extend_days)
+            elif control.expiry_date:
+                # Add to existing expiry for validity extension
                 new_expiry = control.expiry_date + timedelta(days=extend_days)
             else:
                 new_expiry = timezone.now() + timedelta(days=extend_days)
@@ -1099,7 +1125,6 @@ from django.utils import timezone
 from django.shortcuts import render
 from .models import MobileControl, MobileBillingHistory
 from django.utils import timezone
-
 def billing_report(request):
 
     # Flat billing history across ALL customers, latest first — no project grouping
@@ -1112,6 +1137,8 @@ def billing_report(request):
             'control__shop',
             'control__store',
             'control__branch',
+            'package',
+            'custom_package',
         )
         .order_by('-created_at')
     )

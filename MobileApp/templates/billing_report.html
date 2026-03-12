@@ -222,6 +222,34 @@
 
   .amount-pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
+  .badge-package {
+    background: rgba(16,185,129,0.12);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,0.3);
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-custom-pkg {
+    background: rgba(139,92,246,0.12);
+    color: #c4b5fd;
+    border: 1px solid rgba(139,92,246,0.3);
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   .change-indicator {
     display: inline-flex;
     align-items: center;
@@ -405,6 +433,7 @@
           <th>Customer</th>
           <th>Project</th>
           <th>Invoice Details</th>
+          <th>Package</th>
           <th>User Limit Change</th>
           <th>Days Extended</th>
           <th>Old Expiry</th>
@@ -452,6 +481,28 @@
               </span>
             {% else %}
               <span style="color:#64748b;">No invoice</span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if h.package %}
+              <span class="badge-package">
+                <i class="fa-solid fa-box"></i>
+                {{ h.package.package_name }}
+              </span>
+              <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
+                {{ h.package.days_limit }} days
+              </small>
+            {% elif h.custom_package %}
+              <span class="badge-custom-pkg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                {{ h.custom_package.package_name }}
+              </span>
+              <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
+                Custom · {{ h.custom_package.days_limit }} days
+              </small>
+            {% else %}
+              <span style="color:#475569; font-size:12px;">—</span>
             {% endif %}
           </td>
 
@@ -524,7 +575,7 @@
 
         {% empty %}
         <tr>
-          <td colspan="11" class="no-data">
+          <td colspan="12" class="no-data">
             <div class="no-data-icon">📭</div>
             <div style="font-size:18px; font-weight:600; margin-bottom:10px; color:white;">No billing records found</div>
             <div style="color:#64748b;">Billing entries will appear here once added.</div>
