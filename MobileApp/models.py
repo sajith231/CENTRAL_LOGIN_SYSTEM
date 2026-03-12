@@ -163,6 +163,19 @@ class MobileBillingHistory(models.Model):
         on_delete=models.CASCADE,
         related_name="billing_history"
     )
+    package = models.ForeignKey(
+        Package,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    custom_package = models.ForeignKey(
+        'CustomPackage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
     # allow + / - values
     extended_days = models.IntegerField(default=0)

@@ -889,6 +889,8 @@ def mobile_control_billing(request, pk):
             extended_login_limit=extend_login,
             old_expiry_date=old_expiry,
             new_expiry_date=control.expiry_date,
+            package=control.package,
+            custom_package=control.active_custom_package,
             old_login_limit=old_login_limit,
             new_login_limit=control.login_limit,
             bill_status=bill_status,
