@@ -1151,26 +1151,27 @@ def delete_billing_history(request, pk):
     if request.method == "POST":
         control = history.control
 
-        # Rollback expiry_date — explicitly set even if old value was None
-        # (covers first-billing delete where old_expiry_date is None = Unlimited)
-        control.expiry_date = history.old_expiry_date
+        # Delete the record first
+        history.delete()
 
-        # Rollback login limit
-        if history.old_login_limit is not None:
-            control.login_limit = history.old_login_limit
+        # ── Recalculate expiry_date and login_limit from the latest remaining record ──
+        remaining = control.billing_history.order_by("-created_at")
 
-        # If this was the only billing, also clear the package references
-        remaining_history = control.billing_history.exclude(pk=history.pk)
-        if not remaining_history.exists():
-            control.package = None
+        if remaining.exists():
+            latest = remaining.first()
+            control.expiry_date  = latest.new_expiry_date
+            control.login_limit  = latest.new_login_limit
+        else:
+            # No billing records left → fully reset
+            control.expiry_date          = None
+            control.login_limit          = 0
+            control.package              = None
             control.active_custom_package = None
 
-        # Recalculate bill_status after deletion
-        control.bill_status = not remaining_history.filter(bill_status=False).exists()
-
+        # Recalculate bill_status
+        control.bill_status = not remaining.filter(bill_status=False).exists()
         control.save()
 
-        history.delete()
         messages.success(request, "Billing record deleted and changes reverted.")
         return redirect("MobileApp:mobile_control_billing", pk=control.id)
 

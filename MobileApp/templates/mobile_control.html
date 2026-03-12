@@ -35,7 +35,7 @@
 
         <!-- Branch Filter -->
         <select id="branchFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
-               background:#0f172a; color:white;">
+               background:#0f172a; color:white;width: 130px;">
             <option value="">All Branches</option>
             {% for b in branch_names %}
             {% if b %}
@@ -51,6 +51,32 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
         </select>
+
+        <!-- Type Filter -->
+        <select id="typeFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All Types</option>
+            <option value="new">New Licence</option>
+            <option value="transfer">Transfer Licence</option>
+            <option value="developer">Developer Licence</option>
+        </select>
+
+        <!-- Date Range Filter -->
+        <div style="display:flex; align-items:center; gap:6px;">
+            <span style="color:#9ca3af; font-size:13px; white-space:nowrap;">From</span>
+            <input type="date" id="dateFrom" style="padding:8px 10px; border-radius:6px; border:1px solid #334155;
+                       background:#0f172a; color:white; font-size:13px; cursor:pointer;" title="Created from date">
+            <span style="color:#9ca3af; font-size:13px; white-space:nowrap;">To</span>
+            <input type="date" id="dateTo" style="padding:8px 10px; border-radius:6px; border:1px solid #334155;
+                       background:#0f172a; color:white; font-size:13px; cursor:pointer;" title="Created to date">
+            <button onclick="clearDateFilter()" style="padding:7px 12px; border-radius:6px; border:1px solid #334155;
+                       background:#1e293b; color:#9ca3af; font-size:12px; cursor:pointer;
+                       white-space:nowrap; transition:all 0.15s;"
+                onmouseover="this.style.borderColor='#f87171'; this.style.color='#f87171';"
+                onmouseout="this.style.borderColor='#334155'; this.style.color='#9ca3af';" title="Clear date filter">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
     </div>
 
 
@@ -148,7 +174,8 @@
             <tr style="background:#0f172a; border-bottom:1px solid #1e293b;" data-client-id="{{ c.client_id }}"
                 data-status="{% if c.status %}active{% else %}inactive{% endif %}"
                 data-project="{{ c.project.project_name }}" data-branch="{{ c.shop.branch.name|default:'' }}"
-                data-company="{{ c.customer_name }}">
+                data-company="{{ c.customer_name }}" data-type="{{ c.licence_type }}"
+                data-created="{{ c.created_date|date:'Y-m-d' }}">
                 <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
                 <td style="padding:12px;white-space: nowrap">
                     {{ c.created_date|date:"d-m-Y" }}
@@ -838,6 +865,9 @@
         const statusFilter = document.getElementById("statusFilter").value;
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const dateFrom = document.getElementById("dateFrom").value;   // "YYYY-MM-DD" or ""
+        const dateTo = document.getElementById("dateTo").value;     // "YYYY-MM-DD" or ""
         const rowsPerPage = getRowsPerPage();
 
         const allRows = Array.from(document.querySelectorAll("#mainDataTable tbody tr"));
@@ -849,12 +879,19 @@
             const status = row.dataset.status || "";
             const project = row.dataset.project || "";
             const branch = row.dataset.branch || "";
+            const type = row.dataset.type || "";
+            const created = row.dataset.created || "";   // "YYYY-MM-DD"
+
+            const afterFrom = !dateFrom || created >= dateFrom;
+            const beforeTo = !dateTo || created <= dateTo;
 
             return clientId.includes(clientFilter)
                 && companyName.includes(companyFilter)
                 && (statusFilter === "" || status === statusFilter)
                 && (projectFilter === "" || project === projectFilter)
-                && (branchFilter === "" || branch === branchFilter);
+                && (branchFilter === "" || branch === branchFilter)
+                && (typeFilter === "" || type === typeFilter)
+                && afterFrom && beforeTo;
         });
 
         // Update module-level totalPages from filtered results
@@ -898,7 +935,16 @@
     document.getElementById("statusFilter").addEventListener("change", applyFilters);
     document.getElementById("projectFilter").addEventListener("change", applyFilters);
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
+    document.getElementById("typeFilter").addEventListener("change", applyFilters);
+    document.getElementById("dateFrom").addEventListener("change", applyFilters);
+    document.getElementById("dateTo").addEventListener("change", applyFilters);
     document.getElementById("rowsPerPage").addEventListener("change", applyFilters);
+
+    function clearDateFilter() {
+        document.getElementById("dateFrom").value = "";
+        document.getElementById("dateTo").value = "";
+        applyFilters();
+    }
 
     // Initial render on page load
     document.addEventListener("DOMContentLoaded", renderTable);
