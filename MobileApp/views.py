@@ -191,7 +191,8 @@ def add_mobile_control(request):
             login_limit=int(login_limit),
             licence_type=licence_type,
             package=None,
-            expiry_date=None
+            expiry_date=None,
+            status=True
         )
 
         messages.success(request, 'Mobile control saved successfully!')
