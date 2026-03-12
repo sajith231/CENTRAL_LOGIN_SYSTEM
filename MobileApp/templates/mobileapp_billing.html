@@ -216,13 +216,13 @@
             </span>
             <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
                 <i class="fas fa-box-open me-1"></i>{% if control.active_custom_package %}<span
-                    style="color:#10b981;">[Custom] {{ control.active_custom_package.package_name }}</span>{% else %}{{
-                control.package.package_name|default:"No Package" }}{% endif %}
+                    style="color:#10b981;">[Custom] {{ control.active_custom_package.package_name }}</span>{% else %}{{control.package.package_name|default:"No Package" }}{% endif %}
             </span>
             <!-- <span class="badge badge-pill" style="background:#1e293b; color:#94a3b8;">
                 <i class="fas fa-id-card me-1"></i>ID: {{ control.client_id }}
             </span> -->
         </div>
+        
     </div>
 
     <!-- COMPACT OVERVIEW CARDS -->
@@ -310,11 +310,264 @@
                     <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                         <i class="fas fa-calendar-alt me-1" style="color:#3b82f6;"></i>Extended Days
                     </label>
-                    <input type="number" name="extend_days" id="edit_extend_days" class="form-control"
-                        placeholder="e.g. 30 or -10"
-                        style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px;">
-                    <small style="color:#64748b; font-size:0.75rem;">Days added/removed in this record</small>
+
+                    <!-- Hidden actual field submitted with the form -->
+                    <input type="hidden" name="extend_days" id="edit_extend_days">
+
+                    <!-- Display pill showing calculated days -->
+                    <div id="edit_days_badge"
+                        style="display:flex; align-items:center; justify-content:space-between;
+                               background:#1e293b; border:1px solid #334155; border-radius:10px;
+                               padding:9px 14px; margin-bottom:8px; cursor:default;">
+                        <span style="color:#64748b; font-size:0.82rem;">
+                            <i class="fas fa-calendar-check me-1"></i>Pick a date below
+                        </span>
+                        <span id="edit_days_label"
+                            style="font-size:0.9rem; font-weight:700; color:#94a3b8;">— days</span>
+                    </div>
+
+                    <!-- ── MINI CALENDAR ── -->
+                    <div id="editDaysCal"
+                        style="background:#0a0f1e; border:1px solid #334155; border-radius:12px;
+                               padding:12px; user-select:none;">
+
+                        <!-- Month navigation header -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                            <button type="button" id="calPrevBtn" onclick="edCalNav(-1)"
+                                style="width:28px;height:28px;background:#1e293b;border:1px solid #334155;
+                                       border-radius:6px;color:#94a3b8;cursor:pointer;font-size:0.8rem;
+                                       display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                                onmouseover="this.style.background='#334155';this.style.color='white';"
+                                onmouseout="this.style.background='#1e293b';this.style.color='#94a3b8';">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="calMonthLabel"
+                                style="color:white; font-weight:600; font-size:0.85rem; letter-spacing:0.3px;"></span>
+                            <button type="button" id="calNextBtn" onclick="edCalNav(1)"
+                                style="width:28px;height:28px;background:#1e293b;border:1px solid #334155;
+                                       border-radius:6px;color:#94a3b8;cursor:pointer;font-size:0.8rem;
+                                       display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                                onmouseover="this.style.background='#334155';this.style.color='white';"
+                                onmouseout="this.style.background='#1e293b';this.style.color='#94a3b8';">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <!-- Day-of-week header -->
+                        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">S</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">M</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">T</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">W</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">T</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">F</div>
+                            <div style="text-align:center;color:#475569;font-size:0.65rem;font-weight:700;padding:2px 0;">S</div>
+                        </div>
+
+                        <!-- Day grid (filled by JS) -->
+                        <div id="calGrid"
+                            style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+
+                        <!-- Today shortcut -->
+                        <div style="text-align:center; margin-top:8px;">
+                            <button type="button" onclick="edCalSelectToday()"
+                                style="background:transparent;border:1px solid #334155;border-radius:6px;
+                                       color:#64748b;font-size:0.72rem;padding:3px 10px;cursor:pointer;
+                                       transition:all 0.15s;"
+                                onmouseover="this.style.borderColor='#3b82f6';this.style.color='#3b82f6';"
+                                onmouseout="this.style.borderColor='#334155';this.style.color='#64748b';">
+                                <i class="fas fa-crosshairs me-1"></i>Today
+                            </button>
+                            <button type="button" onclick="edCalClear()"
+                                style="background:transparent;border:1px solid #334155;border-radius:6px;
+                                       color:#64748b;font-size:0.72rem;padding:3px 10px;cursor:pointer;
+                                       margin-left:6px;transition:all 0.15s;"
+                                onmouseover="this.style.borderColor='#f87171';this.style.color='#f87171';"
+                                onmouseout="this.style.borderColor='#334155';this.style.color='#64748b';">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <small style="color:#64748b; font-size:0.72rem; margin-top:6px; display:block;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Select a <span style="color:#34d399;">future date</span> to add days &nbsp;|&nbsp;
+                        Select a <span style="color:#f87171;">past date</span> to remove days
+                    </small>
                 </div>
+
+                <style>
+                    .edcal-day {
+                        text-align:center; padding:5px 2px; border-radius:6px;
+                        font-size:0.75rem; font-weight:500; cursor:pointer;
+                        color:#94a3b8; transition:background 0.15s, color 0.15s;
+                        min-height:28px; display:flex; align-items:center; justify-content:center;
+                    }
+                    .edcal-day:hover { background:#1e293b; color:white; }
+                    .edcal-day.today {
+                        background:#1d4ed8; color:white; font-weight:700;
+                    }
+                    .edcal-day.selected-future {
+                        background:#065f46; color:#34d399; font-weight:700;
+                        box-shadow:0 0 0 2px #34d399;
+                    }
+                    .edcal-day.selected-past {
+                        background:#7f1d1d; color:#f87171; font-weight:700;
+                        box-shadow:0 0 0 2px #f87171;
+                    }
+                    .edcal-day.selected-today {
+                        background:#1d4ed8; color:white; font-weight:700;
+                        box-shadow:0 0 0 2px #60a5fa;
+                    }
+                    .edcal-day.empty { cursor:default; }
+                    .edcal-day.empty:hover { background:transparent; }
+                    .edcal-day.other-month { color:#1e293b; cursor:default; }
+                    .edcal-day.other-month:hover { background:transparent; }
+                </style>
+
+                <script>
+                (function(){
+                    const MONTHS = ['January','February','March','April','May','June',
+                                    'July','August','September','October','November','December'];
+                    let _today  = new Date(); _today.setHours(0,0,0,0);
+                    let _viewY  = _today.getFullYear();
+                    let _viewM  = _today.getMonth();  // 0-indexed
+                    let _selDate = null;  // selected date (Date object)
+
+                    function daysBetween(a, b) {
+                        // signed: b - a in whole days
+                        return Math.round((b - a) / 86400000);
+                    }
+
+                    function edCalRender() {
+                        document.getElementById('calMonthLabel').textContent =
+                            MONTHS[_viewM] + ' ' + _viewY;
+
+                        const grid = document.getElementById('calGrid');
+                        grid.innerHTML = '';
+
+                        // first day of month (0=Sun)
+                        const firstDay = new Date(_viewY, _viewM, 1).getDay();
+                        const daysInMonth = new Date(_viewY, _viewM + 1, 0).getDate();
+
+                        // blank cells before first
+                        for (let i = 0; i < firstDay; i++) {
+                            const blank = document.createElement('div');
+                            blank.className = 'edcal-day empty';
+                            grid.appendChild(blank);
+                        }
+
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            const cellDate = new Date(_viewY, _viewM, d);
+                            const isToday  = cellDate.getTime() === _today.getTime();
+                            const isSel    = _selDate && cellDate.getTime() === _selDate.getTime();
+                            const diff     = daysBetween(_today, cellDate);
+
+                            const cell = document.createElement('div');
+                            cell.className = 'edcal-day';
+                            cell.textContent = d;
+
+                            if (isSel && diff > 0) cell.classList.add('selected-future');
+                            else if (isSel && diff < 0) cell.classList.add('selected-past');
+                            else if (isSel) cell.classList.add('selected-today');
+                            else if (isToday) cell.classList.add('today');
+
+                            cell.addEventListener('click', function() { edCalSelect(cellDate); });
+                            grid.appendChild(cell);
+                        }
+                    }
+
+                    // _oldExpiryDate = the rollback base; selected date − this = extend_days sent to backend
+                    let _oldExpiryDate = null;
+
+                    function edCalSelect(date) {
+                        _selDate = date;
+                        // Compute extend_days relative to old_expiry (the rollback point),
+                        // so backend gives: new_expiry = old_expiry + extend_days = selected date exactly.
+                        const base  = _oldExpiryDate || _today;
+                        const diff  = daysBetween(base, date);
+                        document.getElementById('edit_extend_days').value = diff;
+
+                        // Badge wording uses today as reference for human readability
+                        const badge = document.getElementById('edit_days_badge');
+                        const lbl   = document.getElementById('edit_days_label');
+                        const diffFromToday = daysBetween(_today, date);
+                        if (diffFromToday === 0) {
+                            lbl.textContent = 'Today (0 days from now)';
+                            lbl.style.color = '#94a3b8';
+                            badge.style.borderColor = '#334155';
+                        } else if (diffFromToday > 0) {
+                            lbl.textContent = 'Expiry: ' + date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ' (+' + diffFromToday + 'd from today)';
+                            lbl.style.color = '#34d399';
+                            badge.style.borderColor = '#34d399';
+                        } else {
+                            lbl.textContent = 'Expiry: ' + date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ' (' + diffFromToday + 'd from today)';
+                            lbl.style.color = '#f87171';
+                            badge.style.borderColor = '#f87171';
+                        }
+
+                        const icon = badge.querySelector('span:first-child');
+                        icon.innerHTML = '<i class="fas fa-calendar-check me-1"></i>' +
+                            date.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+
+                        edCalRender();
+                    }
+
+                    window.edCalNav = function(dir) {
+                        _viewM += dir;
+                        if (_viewM > 11) { _viewM = 0;  _viewY++; }
+                        if (_viewM <  0) { _viewM = 11; _viewY--; }
+                        edCalRender();
+                    };
+
+                    window.edCalSelectToday = function() { edCalSelect(new Date(_today)); };
+
+                    window.edCalClear = function() {
+                        _selDate = null;
+                        document.getElementById('edit_extend_days').value = '';
+                        document.getElementById('edit_days_label').textContent = '— days';
+                        document.getElementById('edit_days_label').style.color = '#94a3b8';
+                        document.getElementById('edit_days_badge').style.borderColor = '#334155';
+                        document.getElementById('edit_days_badge').querySelector('span:first-child').innerHTML =
+                            '<i class="fas fa-calendar-check me-1"></i>Pick a date below';
+                        edCalRender();
+                    };
+
+                    // Parse ISO string "YYYY-MM-DD" → local midnight Date
+                    function parseIso(iso) {
+                        if (!iso) return null;
+                        const p = iso.split('-');
+                        if (p.length !== 3) return null;
+                        const d = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+                        d.setHours(0,0,0,0);
+                        return d;
+                    }
+
+                    // Called by openEditModal: expiryIso = new_expiry_date (shown/selected on calendar)
+                    //                          oldExpiryIso = old_expiry_date (base for extend_days calc)
+                    window._edCalOpenWithExpiry = function(expiryIso, oldExpiryIso) {
+                        _selDate = null;
+                        _oldExpiryDate = parseIso(oldExpiryIso) || null;
+
+                        const expDate = parseIso(expiryIso);
+
+                        if (expDate) {
+                            _selDate = expDate;
+                            _viewY = expDate.getFullYear();
+                            _viewM = expDate.getMonth();
+                        } else {
+                            _viewY = _today.getFullYear();
+                            _viewM = _today.getMonth();
+                        }
+
+                        edCalRender();
+                        if (_selDate) edCalSelect(_selDate);
+                    };
+
+                    // Initial render
+                    edCalRender();
+                })();
+                </script>
 
                 <div class="mb-3">
                     <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
@@ -868,7 +1121,9 @@
                                             {% if not h.bill_status %}
                                             {% if request.user.is_superuser %}
                                             <button type="button"
-                                                onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}')"
+                                                onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}', this.dataset.expiry, this.dataset.oldExpiry)"
+                                                data-expiry="{% if h.new_expiry_date %}{{ h.new_expiry_date|date:'Y-m-d' }}{% endif %}"
+                                                data-old-expiry="{% if h.old_expiry_date %}{{ h.old_expiry_date|date:'Y-m-d' }}{% endif %}"
                                                 class="btn btn-sm"
                                                 style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
                                                 title="Edit Unbilled Record">
@@ -1135,13 +1390,14 @@
     }
 
     // ── Superuser: Edit unbilled record (separate modal → posts to edit URL) ──
-    function openEditModal(id, extDays, extUsers, remark) {
+    function openEditModal(id, extDays, extUsers, remark, expiryIso, oldExpiryIso) {
         document.getElementById("edit_history_id_modal").value = id;
-        document.getElementById("edit_extend_days").value = extDays;
         document.getElementById("edit_extend_login").value = extUsers;
         document.getElementById("edit_remark").value = remark;
         document.getElementById("editUnbilledForm").action = `/mobileapp/billing-history/edit/${id}/`;
         document.getElementById("editUnbilledModal").style.display = "flex";
+        // Let the calendar widget handle its own reset + expiry pre-selection
+        if (typeof _edCalOpenWithExpiry === 'function') _edCalOpenWithExpiry(expiryIso, oldExpiryIso);
     }
 
     function closeEditModal() {
