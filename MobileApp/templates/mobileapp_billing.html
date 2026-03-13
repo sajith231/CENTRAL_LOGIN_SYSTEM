@@ -195,11 +195,28 @@
 <div class="container-fluid px-4 py-4">
 
     <!-- BACK BUTTON -->
-    <div class="mb-3">
+    <!-- BACK BUTTON & RENEW ACTON -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
         <a href="{% url 'MobileApp:mobile_control' %}" class="btn btn-outline-secondary btn-sm"
             style="border-radius:20px; color:#94a3b8; border-color:#334155;">
             <i class="fas fa-arrow-left me-1"></i> Back to Control
         </a>
+        
+        {% if control.package or control.active_custom_package %}
+        <form method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to renew this package? Time will be added to the current expiry date.');">
+            {% csrf_token %}
+            <input type="hidden" name="operation_type" value="renew">
+            {% if can_renew %}
+            <button type="submit" class="btn btn-sm" style="background:#10b981; color:white; border-radius:20px; font-weight:600; padding:6px 16px; border:none; box-shadow:0 4px 10px rgba(16, 185, 129, 0.2); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(16, 185, 129, 0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 10px rgba(16, 185, 129, 0.2)';">
+                <i class="fas fa-sync-alt me-1"></i> Renew Package
+            </button>
+            {% else %}
+            <button type="button" class="btn btn-sm" style="background:#1e293b; color:#64748b; border-radius:20px; font-weight:600; padding:6px 16px; border:1px solid #334155; opacity:0.6; cursor:not-allowed;" title="Can only renew within 3 days of expiry">
+                <i class="fas fa-sync-alt me-1"></i> Renew Package
+            </button>
+            {% endif %}
+        </form>
+        {% endif %}
     </div>
 
     <!-- HEADER -->
@@ -714,12 +731,14 @@
                             <!-- + Custom Package button (only if project has customized_package enabled) -->
                             {% if show_custom_package %}
                             <div class="mb-2" style="display:flex; gap:8px; flex-wrap:wrap;">
+                                {% if not custom_packages %}
                                 <button type="button" onclick="openCustomPkgModal()"
                                     style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
                                     onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
                                     onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
                                     <i class="fas fa-plus-circle"></i> New Custom Package
                                 </button>
+                                {% endif %}
                                 {% if custom_packages %}
                                 <button type="button" onclick="openAddModulesModal()"
                                     style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
@@ -797,9 +816,18 @@
                                 <div class="operation-tab" id="tab_users" onclick="toggleOperation('users')">
                                     <i class="fas fa-users me-1"></i>Update Users
                                 </div>
+                                {% if control.active_custom_package %}
+                                <div class="operation-tab" id="tab_change_package" style="opacity:0.5; cursor:not-allowed;" title="Cannot change from a custom package">
+                                    <i class="fas fa-exchange-alt me-1"></i>Change Package
+                                </div>
+                                <div class="operation-tab" onclick="openAddModulesModal()">
+                                    <i class="fas fa-puzzle-piece me-1"></i>Add Modules
+                                </div>
+                                {% else %}
                                 <div class="operation-tab" id="tab_change_package" onclick="toggleOperation('change_package')">
                                     <i class="fas fa-exchange-alt me-1"></i>Change Package
                                 </div>
+                                {% endif %}
                             </div>
 
                             <div class="row g-4">
@@ -893,12 +921,14 @@
                                     <!-- + Custom Package button (only if project has customized_package enabled) -->
                                     {% if show_custom_package %}
                                     <div class="mb-2" style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        {% if not custom_packages %}
                                         <button type="button" onclick="openCustomPkgModal()"
                                             style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
                                             onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981';"
                                             onmouseout="this.style.borderColor='#334155'; this.style.color='#64748b';">
                                             <i class="fas fa-plus-circle"></i> New Custom Package
                                         </button>
+                                        {% endif %}
                                         {% if custom_packages %}
                                         <button type="button" onclick="openAddModulesModal()"
                                             style="background:transparent; border:1px dashed #334155; border-radius:8px; color:#64748b; padding:7px 14px; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;"
@@ -1528,7 +1558,6 @@
     function _handlePkgChange(sel, nameInputId, customInputId, helperTextId) {
         const val = sel.value;
         const helper = document.getElementById(helperTextId);
-        const pkgHidden = sel.form ? sel.form.querySelector('[name="package"]') : null;
         const customHidden = document.getElementById(customInputId);
 
         if (!val) return;
@@ -1538,13 +1567,14 @@
         const type = opt.getAttribute('data-type');
 
         if (type === 'custom') {
-            // Clear the standard package field; set custom_package field
-            if (pkgHidden) pkgHidden.value = '';
+            // Remove name so standard package ID isn't sent
+            sel.name = '';
             const customId = opt.getAttribute('data-custom-id');
             if (customHidden) customHidden.value = customId;
             if (helper) helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Custom package adds <b>${days} days</b>`;
         } else {
-            // Standard package — clear custom input
+            // Restore name
+            sel.name = nameInputId;
             if (customHidden) customHidden.value = '';
             const manualInput = document.getElementById('manualDaysInput');
             if (manualInput) manualInput.value = '';
@@ -1567,7 +1597,8 @@
             document.getElementById('customPkgName').value = '';
             document.getElementById('customPkgName').placeholder = 'Select modules to auto-fill name';
         } else {
-            document.getElementById('customPkgName').value = CUSTOMER_NAME + ' - ' + checked.join(' + ');
+            const firstWord = CUSTOMER_NAME.trim().split(' ')[0];
+            document.getElementById('customPkgName').value = firstWord + '-CUSPKG';
         }
     }
 
@@ -1825,7 +1856,7 @@
     });
 
     function openAddModulesModal() {
-        document.getElementById('addModulesPkgSelect').value = '';
+        var pkgSelect = document.getElementById('addModulesPkgSelect');
         document.getElementById('currentModulesSection').style.display = 'none';
         document.querySelectorAll('.add-mod-checkbox').forEach(cb => {
             cb.checked = false;
@@ -1835,6 +1866,15 @@
             lbl.style.opacity = '1';
             lbl.style.cursor = 'pointer';
         });
+        
+        if (pkgSelect.options.length > 1) {
+            pkgSelect.selectedIndex = 1;
+            pkgSelect.dispatchEvent(new Event('change'));
+            pkgSelect.style.pointerEvents = 'none';
+            pkgSelect.style.opacity = '0.7';
+        } else {
+            pkgSelect.value = '';
+        }
         var btn = document.getElementById('selectAllAddBtn');
         if (btn) btn.dataset.allSelected = '0';
         document.getElementById('addModulesModal').style.display = 'flex';

@@ -826,6 +826,13 @@ def mobile_control_billing(request, pk):
 
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date
+    
+    # ── ALLOW RENEW ONLY 3 DAYS BEFORE EXPIRY ──
+    now = timezone.now()
+    can_renew = False
+    if expiry_date:
+        if now >= expiry_date - timedelta(days=3):
+            can_renew = True
 
     # Allow creating a new bill even if the latest record is unbilled.
     # Only block if the latest record is already Billed-but-pending action needed.
@@ -863,6 +870,18 @@ def mobile_control_billing(request, pk):
                 extend_days = package.days_limit
                 control.package = package
                 control.active_custom_package = None   # clear any previous custom pkg
+                
+        elif operation_type == 'renew':
+            if control.active_custom_package:
+                extend_days = control.active_custom_package.days_limit
+            elif control.package:
+                extend_days = control.package.days_limit
+            else:
+                messages.error(request, "No package assigned to renew.")
+                return redirect("MobileApp:mobile_control_billing", pk=pk)
+                
+            if not remark:
+                remark = "Auto-renewed current package"
                 
         elif operation_type == 'validity':
             extend_days = int(request.POST.get("extend_days") or 0)
@@ -956,6 +975,7 @@ def mobile_control_billing(request, pk):
         "project_modules": project_modules,
         "has_unbilled_history": has_unbilled_history,
         "show_custom_package": control.project.customized_package,
+        "can_renew": can_renew,
     })
 
 
