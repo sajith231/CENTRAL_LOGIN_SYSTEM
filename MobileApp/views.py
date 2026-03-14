@@ -882,6 +882,9 @@ def mobile_control_billing(request, pk):
                 
             if not remark:
                 remark = "Auto-renewed current package"
+            
+            bill_status = True  # Avoid unbilled status for autorenewals
+
                 
         elif operation_type == 'validity':
             extend_days = int(request.POST.get("extend_days") or 0)
@@ -954,7 +957,7 @@ def mobile_control_billing(request, pk):
         return redirect("MobileApp:mobile_control_billing", pk=pk)
 
     # ---------- HISTORY ----------
-    history = control.billing_history.all().order_by("-created_at")
+    history = control.billing_history.exclude(remark="Auto-renewed current package").order_by("-created_at")
 
     # ---------- PACKAGES ----------
     packages = Package.objects.filter(project=control.project)
