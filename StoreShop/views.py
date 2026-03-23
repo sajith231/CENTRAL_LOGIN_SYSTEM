@@ -66,7 +66,8 @@ def add_store(request):
             name=name,
             branch=branch,
             place=place,
-            created_by=request.user
+            created_by=request.user if request.user.is_authenticated else None,
+            created_by_name=request.user.username if request.user.is_authenticated else request.session.get("custom_user_name", "Unknown")
         )
         return redirect("stores_list")
 
@@ -165,7 +166,8 @@ def add_shop(request):
             email=email,
             contact_no=contact_no,
             is_active=is_active,
-            created_by=request.user
+            created_by=request.user if request.user.is_authenticated else None,
+            created_by_name=request.user.username if request.user.is_authenticated else request.session.get("custom_user_name", "Unknown")
         )
         return redirect("shop_list")
 

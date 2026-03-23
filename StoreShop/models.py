@@ -13,7 +13,7 @@ class Store(models.Model):
     store_id = models.CharField(max_length=10, unique=True, editable=False, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
+    created_by_name = models.CharField(max_length=150, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.store_id:
@@ -47,7 +47,7 @@ class Shop(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
+    created_by_name = models.CharField(max_length=150, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):

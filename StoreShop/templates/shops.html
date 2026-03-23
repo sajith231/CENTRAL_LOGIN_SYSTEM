@@ -69,7 +69,9 @@
             <td style="padding:12px;">{{ forloop.counter }}</td>
             <td style="padding:12px;">{{ shop.created_at|date:"d-m-Y" }} <br> <span
                 style="font-size: 11px; color:#888;">{{ shop.created_at|date:"h:i A" }}</span></td>
-            <td style="padding:12px;">{{ shop.created_by.username|default:"-" }}</td>
+            <td style="padding:12px;">
+              {% if shop.created_by_name %}{{ shop.created_by_name }}{% elif shop.created_by %}{{ shop.created_by.username }}{% else %}-{% endif %}
+            </td>
             <td style="padding:12px;">{{ shop.name }}</td>
             <td style="padding:12px;">{{ shop.client_id }}</td>
             <td style="padding:12px;">{{ shop.store.name }}</td>
