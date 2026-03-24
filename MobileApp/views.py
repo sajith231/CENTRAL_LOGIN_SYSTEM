@@ -886,6 +886,10 @@ def mobile_control_billing(request, pk):
                 remark = "Auto-renewed current package"
             
             bill_status = True  # Avoid unbilled status for autorenewals
+            
+            # Activate the license if it was inactive
+            if not control.status:
+                control.status = True
 
                 
         elif operation_type == 'validity':
