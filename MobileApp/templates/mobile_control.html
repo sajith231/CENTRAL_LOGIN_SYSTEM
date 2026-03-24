@@ -57,7 +57,9 @@
                background:#0f172a; color:white;">
             <option value="">All Types</option>
             <option value="new">New Licence</option>
+            {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
             <option value="transfer">Transfer Licence</option>
+            {% endif %}
             <option value="developer">Developer Licence</option>
         </select>
 
