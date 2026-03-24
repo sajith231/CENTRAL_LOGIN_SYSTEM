@@ -182,6 +182,11 @@ def add_mobile_control(request):
         shop = get_object_or_404(Shop, pk=shop_id)
         store = get_object_or_404(Store, pk=store_id)
 
+        # Prevent duplicate licence for the same project and company
+        if MobileControl.objects.filter(project=project, shop=shop).exists():
+            messages.error(request, f'A licence already exists for the company "{shop.name}" under the project "{project.project_name}".')
+            return redirect("MobileApp:add_mobile_control")
+
         MobileControl.objects.create(
             project=project,
             store=store,

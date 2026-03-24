@@ -4,6 +4,14 @@
 <div class="card" style="padding:20px;">
     <h2 style="color:white;">Add Mobile Control</h2>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:10px; color: {% if message.tags == 'error' %}#f87171{% else %}#4ade80{% endif %}; border: 1px solid {% if message.tags == 'error' %}#ef4444{% else %}#22c55e{% endif %};">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
 
