@@ -111,8 +111,6 @@ def mobile_control_list(request):
             controls = controls.filter(shop__branch__name__in=user_branches)
         else:
             controls = controls.none()
-            
-        controls = controls.exclude(licence_type='transfer')
 
     # ---------------- CALCULATIONS ----------------
     now = timezone.now()

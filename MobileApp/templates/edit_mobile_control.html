@@ -77,8 +77,10 @@
             <select name="licence_type" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="new"       {% if control.licence_type == 'new' %}selected{% endif %}>New Licence</option>
+                {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                 <option value="transfer"  {% if control.licence_type == 'transfer' %}selected{% endif %}>Transfer Licence</option>
                 <option value="developer" {% if control.licence_type == 'developer' %}selected{% endif %}>Developer Licence</option>
+                {% endif %}
             </select>
         </div>
 
