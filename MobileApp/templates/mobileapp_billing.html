@@ -692,7 +692,7 @@
                             <div class="mb-3" style="display:flex; align-items:center; gap:8px; position:relative;">
                                 <i class="fas fa-box-open"
                                     style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; z-index:10; pointer-events:none;"></i>
-                                <select name="package" id="packageSelectFirst" class="form-control form-select"
+                                <select name="package" id="packageSelectFirst" class="form-control form-select" required
                                     style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px 10px 42px; border-radius:8px; font-size:0.9rem; cursor:pointer; flex:1;"
                                     onchange="handlePackageChangeFirst(this)">
                                     <option value="" selected disabled>-- Select Package --</option>
@@ -1027,13 +1027,17 @@
                         }
 
                         function handleManualDaysChange(input) {
-                            const select = document.getElementById('packageSelect');
+                            const select = document.getElementById('packageSelectFirst') || document.getElementById('packageSelect');
                             const helper = document.getElementById('helperText');
 
                             if (input.value) {
-                                select.value = ""; // Clear package selection
+                                if (select) {
+                                    select.value = ""; // Clear package selection
+                                    select.required = false;
+                                }
                                 helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Manual adjustment: <b>${input.value} days</b>`;
                             } else {
+                                if (select && select.id === 'packageSelectFirst') select.required = true;
                                 helper.innerHTML = `<i class="fas fa-info-circle me-1"></i>Select a package or enter manual days to extend validity period`;
                             }
                         }
