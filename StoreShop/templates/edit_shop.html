@@ -13,7 +13,7 @@
         <!-- Branch -->
         <div class="mb-3">
             <label>Branch</label>
-            <select name="branch" class="form-control" required
+            <select name="branch" id="branchSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for branch in branches %}
                 <option value="{{ branch.id }}" {% if shop.branch == branch %}selected{% endif %}>
@@ -26,11 +26,11 @@
         <!-- Store -->
         <div class="mb-3">
             <label>Corporate</label>
-            <select name="store" class="form-control" required
+            <select name="store" id="storeSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 {% for store in stores %}
-                <option value="{{ store.id }}" {% if shop.store == store %}selected{% endif %}>
-                    {{ store.name }}
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}" {% if shop.store == store %}selected{% endif %}>
+                    {{ store.name }}{% if store.place %} - {{ store.place }}{% endif %}
                 </option>
                 {% endfor %}
             </select>
@@ -73,4 +73,44 @@
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const branchSelect = document.getElementById("branchSelect");
+        const storeSelect = document.getElementById("storeSelect");
+        
+        if (branchSelect && storeSelect) {
+            const allStoreOptions = Array.from(storeSelect.options);
+            const initialStoreId = storeSelect.value; // Store the initial selection
+
+            branchSelect.addEventListener("change", function () {
+                const branchId = this.value;
+                const currentVal = storeSelect.value;
+                storeSelect.innerHTML = '';
+
+                allStoreOptions.forEach(opt => {
+                    const bId = opt.getAttribute("data-branch");
+                    if (!opt.value) {
+                        storeSelect.appendChild(opt.cloneNode(true));
+                        return;
+                    }
+                    if (!branchId || bId === branchId) {
+                        storeSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+
+                // Try to keep the previously selected value if still available
+                storeSelect.value = currentVal;
+            });
+            
+            // Trigger filtering on page load to limit options to only the selected branch
+            branchSelect.dispatchEvent(new Event('change'));
+            
+            // Explicitly set the value to initial selection on load properly
+            if (initialStoreId) {
+                storeSelect.value = initialStoreId;
+            }
+        }
+    });
+</script>
 {% endblock %}

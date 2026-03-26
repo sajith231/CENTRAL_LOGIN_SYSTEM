@@ -13,7 +13,7 @@
         <!-- Branch -->
         <div class="mb-3">
             <label>Branch</label>
-            <select name="branch" class="form-control" required
+            <select name="branch" id="branchSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="" style="background:#0f1b31; color:white;">Select Branch</option>
                 {% for branch in branches %}
@@ -25,11 +25,11 @@
         <!-- Store -->
         <div class="mb-3">
             <label>Corporate</label>
-            <select name="store" class="form-control" required
+            <select name="store" id="storeSelect" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="" style="background:#0f1b31; color:white;">Select Corporate</option>
                 {% for store in stores %}
-                <option value="{{ store.id }}">{{ store.name }}</option>
+                <option value="{{ store.id }}" data-branch="{{ store.branch_id }}">{{ store.name }}{% if store.place %} - {{ store.place }}{% endif %}</option>
                 {% endfor %}
             </select>
         </div>
@@ -71,4 +71,34 @@
         <button type="submit" class="btn btn-success">Save</button>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const branchSelect = document.getElementById("branchSelect");
+        const storeSelect = document.getElementById("storeSelect");
+        
+        if (branchSelect && storeSelect) {
+            const allStoreOptions = Array.from(storeSelect.options);
+
+            branchSelect.addEventListener("change", function () {
+                const branchId = this.value;
+                storeSelect.innerHTML = '';
+                storeSelect.appendChild(allStoreOptions[0].cloneNode(true));  // "Select Corporate"
+
+                allStoreOptions.forEach(opt => {
+                    const bId = opt.getAttribute("data-branch");
+                    if (!opt.value) return;  // skip placeholder
+                    if (!branchId || bId === branchId) {
+                        storeSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+            });
+            
+            // Trigger change on load if branch is pre-selected (though usually not on add)
+            if (branchSelect.value) {
+                branchSelect.dispatchEvent(new Event('change'));
+            }
+        }
+    });
+</script>
 {% endblock %}
