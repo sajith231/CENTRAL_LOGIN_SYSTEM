@@ -35,7 +35,7 @@
                 <option value="">Select Corporate</option>
                 {% for store in stores %}
                 <option value="{{ store.id }}" data-branch="{{ store.branch_id }}">
-                    {{ store.name }}
+                    {{ store.name }}{% if store.place %} - {{ store.place }}{% endif %}
                 </option>
                 {% endfor %}
             </select>
@@ -50,7 +50,7 @@
                 {% for shop in shops %}
                 <option value="{{ shop.id }}" data-client="{{ shop.client_id }}" data-store="{{ shop.store_id }}"
                     data-branch="{{ shop.branch_id }}">
-                    {{ shop.name }}
+                    {{ shop.name }}{% if shop.place %} - {{ shop.place }}{% endif %}
                 </option>
                 {% endfor %}
             </select>
