@@ -1107,6 +1107,10 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-credit-card me-1"></i>Status
                                     </th>
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
+                                        <i class="fas fa-money-check-alt me-1"></i>Pymt Status
+                                    </th>
                                     <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
                                         text-transform:uppercase; letter-spacing:0.5px; padding:10px;
                                         background:#0a0f1e;">
@@ -1210,6 +1214,15 @@
                                         </div>
                                     </td>
                                     {% endif %}
+                                    <td style="padding:12px; background:transparent;">
+                                        <select onchange="updatePaymentStatus({{ h.id }}, this.value)"
+                                                style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
+                                            <option value="Paid" {% if h.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                                            <option value="Partially Paid" {% if h.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                            <option value="Not Paid" {% if h.payment_status == 'Not Paid' %}selected{% endif %}>Not Paid</option>
+                                            <option value="Not Applicable" {% if h.payment_status == 'Not Applicable' %}selected{% endif %}>Not Applicable</option>
+                                        </select>
+                                    </td>
                                     <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                         {% if h.bill_status and h.invoice_number %}
                                         <span style="font-weight:600;">{{ h.invoice_number }}</span>
@@ -1453,6 +1466,28 @@
                 closeInvoiceModal();
                 location.reload();
             });
+    }
+
+    function updatePaymentStatus(id, newStatus) {
+        fetch(`/mobileapp/billing-history/update-payment-status/${id}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/json" },
+            body: JSON.stringify({ payment_status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.error || "Failed to update payment status");
+                location.reload(); // restore previous value on UI
+            } else {
+                // Flash success or silently succeed
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error updating payment status");
+            location.reload();
+        });
     }
 
     // ── Superuser: Edit unbilled record (separate modal → posts to edit URL) ──

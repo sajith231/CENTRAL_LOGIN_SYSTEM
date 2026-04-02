@@ -188,6 +188,17 @@ class MobileBillingHistory(models.Model):
     new_login_limit = models.PositiveIntegerField()
 
     bill_status = models.BooleanField(default=False)
+    PAYMENT_STATUS_CHOICES = [
+        ('Paid', 'Paid'),
+        ('Partially Paid', 'Partially Paid'),
+        ('Not Paid', 'Not Paid'),
+        ('Not Applicable', 'Not Applicable'),
+    ]
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='Not Paid'
+    )
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
     invoice_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     remark = models.CharField(max_length=255, blank=True)

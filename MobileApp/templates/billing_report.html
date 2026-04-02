@@ -48,7 +48,8 @@
   .stat-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0;
+    top: 0;
+    left: 0;
     width: 4px;
     height: 100%;
     background: linear-gradient(180deg, #3b82f6, #1d4ed8);
@@ -56,12 +57,14 @@
     transition: opacity 0.3s;
   }
 
-  .stat-card:hover::before { opacity: 1; }
+  .stat-card:hover::before {
+    opacity: 1;
+  }
 
   .stat-card:hover {
     border-color: #3b82f6;
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(59,130,246,0.2);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
   }
 
   .stat-label {
@@ -83,7 +86,10 @@
     margin-bottom: 4px;
   }
 
-  .stat-subtext { color: #64748b; font-size: 11px; }
+  .stat-subtext {
+    color: #64748b;
+    font-size: 11px;
+  }
 
   .filter-bar {
     display: flex;
@@ -93,7 +99,8 @@
     align-items: center;
   }
 
-  .filter-input, .filter-select {
+  .filter-input,
+  .filter-select {
     padding: 10px 14px;
     border-radius: 8px;
     border: 1px solid #334155;
@@ -104,13 +111,16 @@
     transition: all 0.2s;
   }
 
-  .filter-input:focus, .filter-select:focus {
+  .filter-input:focus,
+  .filter-select:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
-  .filter-input::placeholder { color: #64748b; }
+  .filter-input::placeholder {
+    color: #64748b;
+  }
 
   .table-container {
     overflow-x: auto;
@@ -148,7 +158,9 @@
     transition: background 0.2s;
   }
 
-  .billing-table tbody tr:hover { background: #1a2332; }
+  .billing-table tbody tr:hover {
+    background: #1a2332;
+  }
 
   .billing-table td {
     padding: 13px 12px;
@@ -156,9 +168,19 @@
     vertical-align: middle;
   }
 
-  .text-center { text-align: center; }
-  .text-success { color: #22c55e; font-weight: 600; }
-  .text-danger  { color: #ef4444; font-weight: 600; }
+  .text-center {
+    text-align: center;
+  }
+
+  .text-success {
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .text-danger {
+    color: #ef4444;
+    font-weight: 600;
+  }
 
   .customer-name {
     color: white;
@@ -185,13 +207,20 @@
     white-space: nowrap;
   }
 
-  .badge-billed  { background: #16a34a; color: white; }
-  .badge-pending { background: #f59e0b; color: white; }
+  .badge-billed {
+    background: #16a34a;
+    color: white;
+  }
+
+  .badge-pending {
+    background: #f59e0b;
+    color: white;
+  }
 
   .badge-project {
-    background: rgba(139,92,246,0.15);
+    background: rgba(139, 92, 246, 0.15);
     color: #a78bfa;
-    border: 1px solid rgba(139,92,246,0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     font-size: 11px;
     font-family: 'Courier New', monospace;
   }
@@ -220,12 +249,14 @@
     font-size: 13px;
   }
 
-  .amount-pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .amount-pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+  }
 
   .badge-package {
-    background: rgba(16,185,129,0.12);
+    background: rgba(16, 185, 129, 0.12);
     color: #34d399;
-    border: 1px solid rgba(16,185,129,0.3);
+    border: 1px solid rgba(16, 185, 129, 0.3);
     font-size: 11px;
     display: inline-flex;
     align-items: center;
@@ -237,9 +268,9 @@
   }
 
   .badge-custom-pkg {
-    background: rgba(139,92,246,0.12);
+    background: rgba(139, 92, 246, 0.12);
     color: #c4b5fd;
-    border: 1px solid rgba(139,92,246,0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     font-size: 11px;
     display: inline-flex;
     align-items: center;
@@ -260,9 +291,20 @@
     font-size: 12px;
   }
 
-  .change-increase { background: rgba(34,197,94,0.1);   color: #22c55e; }
-  .change-decrease { background: rgba(239,68,68,0.1);   color: #ef4444; }
-  .change-neutral  { background: rgba(148,163,184,0.1); color: #94a3b8; }
+  .change-increase {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .change-decrease {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .change-neutral {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+  }
 
   .no-data {
     text-align: center;
@@ -270,7 +312,10 @@
     color: #64748b;
   }
 
-  .no-data-icon { font-size: 48px; margin-bottom: 16px; }
+  .no-data-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
 
   /* ── Pagination ── */
   .pagination-bar {
@@ -396,13 +441,8 @@
 
   <!-- Filters -->
   <div class="filter-bar">
-    <input
-      type="text"
-      id="searchInput"
-      class="filter-input"
-      placeholder="🔍 Search customer, client ID, invoice, project..."
-      oninput="applyFilters()"
-    >
+    <input type="text" id="searchInput" class="filter-input"
+      placeholder="🔍 Search customer, client ID, invoice, project..." oninput="applyFilters()">
 
     <select id="billFilter" class="filter-select" onchange="applyFilters()">
       <option value="">All Billing Status</option>
@@ -439,13 +479,13 @@
           <th>Old Expiry</th>
           <th>New Expiry</th>
           <th class="text-center">Status</th>
+          <th>Payment Status</th>
           <th>Remark</th>
         </tr>
       </thead>
       <tbody id="tableBody">
         {% for h in billing_history %}
-        <tr class="data-row"
-            data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}">
+        <tr class="data-row" data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}">
 
           <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
 
@@ -468,104 +508,117 @@
 
           <td style="white-space:nowrap;">
             {% if h.invoice_number %}
-              <div>
-                <span class="invoice-badge">
-                  <i class="fa-solid fa-file-invoice"></i> {{ h.invoice_number }}
-                </span>
-              </div>
+            <div>
+              <span class="invoice-badge">
+                <i class="fa-solid fa-file-invoice"></i> {{ h.invoice_number }}
+              </span>
+            </div>
             {% endif %}
             {% if h.invoice_amount %}
-              <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
-                <i class="fa-solid fa-indian-rupee-sign"></i>
-                {{ h.invoice_amount|floatformat:2 }}
-              </span>
+            <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+              {{ h.invoice_amount|floatformat:2 }}
+            </span>
             {% else %}
-              <span style="color:#64748b;">No invoice</span>
+            <span style="color:#64748b;">No invoice</span>
             {% endif %}
           </td>
 
           <td>
             {% if h.package %}
-              <span class="badge-package">
-                <i class="fa-solid fa-box"></i>
-                {{ h.package.package_name }}
-              </span>
-              <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
-                {{ h.package.days_limit }} days
-              </small>
+            <span class="badge-package">
+              <i class="fa-solid fa-box"></i>
+              {{ h.package.package_name }}
+            </span>
+            <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
+              {{ h.package.days_limit }} days
+            </small>
             {% elif h.custom_package %}
-              <span class="badge-custom-pkg">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                {{ h.custom_package.package_name }}
-              </span>
-              <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
-                Custom · {{ h.custom_package.days_limit }} days
-              </small>
+            <span class="badge-custom-pkg">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              {{ h.custom_package.package_name }}
+            </span>
+            <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
+              Custom · {{ h.custom_package.days_limit }} days
+            </small>
             {% else %}
-              <span style="color:#475569; font-size:12px;">—</span>
+            <span style="color:#475569; font-size:12px;">—</span>
             {% endif %}
           </td>
 
           <td>
             {% if h.old_login_limit != h.new_login_limit %}
-              {% if h.new_login_limit > h.old_login_limit %}
-                <span class="change-indicator change-increase">
-                  {{ h.old_login_limit }} → {{ h.new_login_limit }}
-                  <i class="fa-solid fa-arrow-up"></i>
-                </span>
-              {% else %}
-                <span class="change-indicator change-decrease">
-                  {{ h.old_login_limit }} → {{ h.new_login_limit }}
-                  <i class="fa-solid fa-arrow-down"></i>
-                </span>
-              {% endif %}
+            {% if h.new_login_limit > h.old_login_limit %}
+            <span class="change-indicator change-increase">
+              {{ h.old_login_limit }} → {{ h.new_login_limit }}
+              <i class="fa-solid fa-arrow-up"></i>
+            </span>
             {% else %}
-              <span class="change-indicator change-neutral">
-                {{ h.old_login_limit }} (No change)
-              </span>
+            <span class="change-indicator change-decrease">
+              {{ h.old_login_limit }} → {{ h.new_login_limit }}
+              <i class="fa-solid fa-arrow-down"></i>
+            </span>
+            {% endif %}
+            {% else %}
+            <span class="change-indicator change-neutral">
+              {{ h.old_login_limit }} (No change)
+            </span>
             {% endif %}
           </td>
 
           <td style="white-space:nowrap;">
             {% if h.extended_days > 0 %}
-              <span class="text-success">
-                <i class="fa-solid fa-plus"></i> {{ h.extended_days }} days
+            <span class="text-success">
+              <i class="fa-solid fa-plus"></i> {{ h.extended_days }} days
+            </span>
+            {% elif h.extended_days < 0 %} <span class="text-danger">
+              <i class="fa-solid fa-minus"></i> {{ h.extended_days|slice:"1:" }} days
               </span>
-            {% elif h.extended_days < 0 %}
-              <span class="text-danger">
-                <i class="fa-solid fa-minus"></i> {{ h.extended_days|slice:"1:" }} days
-              </span>
-            {% else %}
+              {% else %}
               <span style="color:#64748b;">—</span>
-            {% endif %}
+              {% endif %}
           </td>
 
           <td style="white-space:nowrap;">
             {% if h.old_expiry_date %}
-              <strong style="color:#cbd5e1; font-size:13px;">{{ h.old_expiry_date|date:"d M Y" }}</strong>
+            <strong style="color:#cbd5e1; font-size:13px;">{{ h.old_expiry_date|date:"d M Y" }}</strong>
             {% else %}
-              <span style="color:#64748b;">—</span>
+            <span style="color:#64748b;">—</span>
             {% endif %}
           </td>
 
           <td style="white-space:nowrap;">
             {% if h.new_expiry_date %}
-              <strong style="color:#cbd5e1; font-size:13px;">{{ h.new_expiry_date|date:"d M Y" }}</strong>
+            <strong style="color:#cbd5e1; font-size:13px;">{{ h.new_expiry_date|date:"d M Y" }}</strong>
             {% else %}
-              <span style="color:#64748b;">—</span>
+            <span style="color:#64748b;">—</span>
             {% endif %}
           </td>
 
           <td class="text-center">
             {% if h.bill_status %}
-              <span class="badge badge-billed">
-                <i class="fa-solid fa-check"></i> Billed
-              </span>
+            <span class="badge badge-billed">
+              <i class="fa-solid fa-check"></i> Billed
+            </span>
             {% else %}
-              <span class="badge badge-pending">
-                <i class="fa-solid fa-clock"></i> Pending
-              </span>
+            <span class="badge badge-pending">
+              <i class="fa-solid fa-clock"></i> Pending
+            </span>
             {% endif %}
+          </td>
+
+          <td>
+            <span class="badge" style="background:#1e293b; color:#9ca3af; border:1px solid #334155;">
+              {% if h.payment_status == 'Paid' %}
+                <i class="fa-solid fa-circle-check text-success"></i> Paid
+              {% elif h.payment_status == 'Partially Paid' %}
+                <i class="fa-solid fa-circle-half-stroke text-warning" style="color:#f59e0b;"></i> Partially Paid
+              {% elif h.payment_status == 'Not Paid' %}
+                <i class="fa-solid fa-circle-xmark text-danger"></i> Not Paid
+              {% else %}
+                <i class="fa-solid fa-minus text-secondary"></i> Not Applicable
+              {% endif %}
+            </span>
           </td>
 
           <td style="font-style:italic; color:#9ca3af; max-width:160px;">
@@ -577,7 +630,8 @@
         <tr>
           <td colspan="12" class="no-data">
             <div class="no-data-icon">📭</div>
-            <div style="font-size:18px; font-weight:600; margin-bottom:10px; color:white;">No billing records found</div>
+            <div style="font-size:18px; font-weight:600; margin-bottom:10px; color:white;">No billing records found
+            </div>
             <div style="color:#64748b;">Billing entries will appear here once added.</div>
           </td>
         </tr>
@@ -589,7 +643,8 @@
   <!-- Pagination Bar -->
   <div class="pagination-bar">
     <div class="pagination-info" id="paginationInfo">
-      Showing <span id="showingFrom">–</span> to <span id="showingTo">–</span> of <span id="totalVisible">–</span> records
+      Showing <span id="showingFrom">–</span> to <span id="showingTo">–</span> of <span id="totalVisible">–</span>
+      records
     </div>
 
     <div class="pagination-controls">
@@ -614,17 +669,17 @@
 </div>
 
 <script>
-  let currentPage  = 1;
-  let totalPages   = 1;
+  let currentPage = 1;
+  let totalPages = 1;
   let filteredRows = [];
 
   function applyFilters() {
     const search = document.getElementById('searchInput').value.toLowerCase();
-    const bill   = document.getElementById('billFilter').value;
+    const bill = document.getElementById('billFilter').value;
 
     filteredRows = Array.from(document.querySelectorAll('.data-row')).filter(row => {
       const matchSearch = !search || row.textContent.toLowerCase().includes(search);
-      const matchBill   = !bill   || row.getAttribute('data-bill') === bill;
+      const matchBill = !bill || row.getAttribute('data-bill') === bill;
       return matchSearch && matchBill;
     });
 
@@ -640,7 +695,7 @@
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * perPage;
-    const end   = Math.min(start + perPage, filteredRows.length);
+    const end = Math.min(start + perPage, filteredRows.length);
 
     // Hide all rows first
     document.querySelectorAll('.data-row').forEach(r => r.style.display = 'none');
@@ -655,15 +710,15 @@
     });
 
     // Update info text
-    document.getElementById('showingFrom').textContent  = filteredRows.length ? start + 1 : 0;
-    document.getElementById('showingTo').textContent    = end;
+    document.getElementById('showingFrom').textContent = filteredRows.length ? start + 1 : 0;
+    document.getElementById('showingTo').textContent = end;
     document.getElementById('totalVisible').textContent = filteredRows.length;
 
     // Prev / Next / First / Last buttons
     document.getElementById('btnFirst').disabled = currentPage === 1;
-    document.getElementById('btnPrev').disabled  = currentPage === 1;
-    document.getElementById('btnNext').disabled  = currentPage === totalPages;
-    document.getElementById('btnLast').disabled  = currentPage === totalPages;
+    document.getElementById('btnPrev').disabled = currentPage === 1;
+    document.getElementById('btnNext').disabled = currentPage === totalPages;
+    document.getElementById('btnLast').disabled = currentPage === totalPages;
 
     // Page number buttons (show up to 5 around current)
     const pgContainer = document.getElementById('pageNumbers');
@@ -675,7 +730,7 @@
     }
 
     let startPg = Math.max(1, currentPage - 2);
-    let endPg   = Math.min(totalPages, startPg + 4);
+    let endPg = Math.min(totalPages, startPg + 4);
     if (endPg - startPg < 4) startPg = Math.max(1, endPg - 4);
 
     for (let p = startPg; p <= endPg; p++) {
@@ -688,8 +743,8 @@
   }
 
   function goToPage(page) {
-    const rowsVal  = document.getElementById('rowsPerPage').value;
-    const perPage  = rowsVal === 'all' ? filteredRows.length || 1 : parseInt(rowsVal);
+    const rowsVal = document.getElementById('rowsPerPage').value;
+    const perPage = rowsVal === 'all' ? filteredRows.length || 1 : parseInt(rowsVal);
     totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
 
     if (page < 1 || page > totalPages) return;

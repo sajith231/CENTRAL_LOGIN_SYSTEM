@@ -1148,6 +1148,21 @@ def toggle_billing_history_status(request, pk):
 
     return JsonResponse({"success": True, "status": history.bill_status})
 
+@csrf_exempt
+@require_POST
+def update_payment_status(request, pk):
+    history = get_object_or_404(MobileBillingHistory, pk=pk)
+    try:
+        data = json.loads(request.body or "{}")
+        new_payment_status = data.get("payment_status")
+        if new_payment_status not in dict(MobileBillingHistory.PAYMENT_STATUS_CHOICES):
+            return JsonResponse({"success": False, "error": "Invalid payment status"})
+            
+        history.payment_status = new_payment_status
+        history.save(update_fields=['payment_status'])
+        return JsonResponse({"success": True, "payment_status": history.payment_status})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
 
 
 from django.shortcuts import render

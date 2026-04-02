@@ -14,11 +14,17 @@
         </a>
     </div>
 
-    <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center;">
+    <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <button onclick="location.reload()" class="btn"
             style="background:#3b82f6; color:white; padding:8px 16px; border-radius:6px; border:none;">
             <i class="fa-solid fa-rotate-right"></i> Refresh
         </button>
+        <input type="text" id="clientIdFilter" placeholder="Search Client ID" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white; width:220px;">
+
+        <input type="text" id="companyFilter" placeholder="Search Company" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white; width:220px;">
+
         <select id="projectFilter"
             style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
             <option value="">All Projects</option>
@@ -27,11 +33,6 @@
             <option value="{{ name }}">{{ name }}</option>
             {% endfor %}
         </select>
-        <input type="text" id="clientIdFilter" placeholder="Search Client ID" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
-               background:#0f172a; color:white; width:220px;">
-
-        <input type="text" id="companyFilter" placeholder="Search Company" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
-               background:#0f172a; color:white; width:220px;">
 
         <!-- Branch Filter -->
         <select id="branchFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
@@ -59,6 +60,14 @@
             <option value="new">New Licence</option>
             <option value="transfer">Transfer Licence</option>
             <option value="developer">Developer Licence</option>
+        </select>
+
+        <!-- Bill Status Filter -->
+        <select id="billStatusFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All Bill Status</option>
+            <option value="billed">Billed</option>
+            <option value="unbilled">Unbilled</option>
         </select>
 
         <!-- Date Range Filter -->
@@ -175,6 +184,7 @@
                 data-status="{% if c.status %}active{% else %}inactive{% endif %}"
                 data-project="{{ c.project.project_name }}" data-branch="{{ c.shop.branch.name|default:'' }}"
                 data-company="{{ c.customer_name }}" data-type="{{ c.licence_type }}"
+                data-bill-status="{% if c.bill_status %}billed{% else %}unbilled{% endif %}"
                 data-created="{{ c.created_date|date:'Y-m-d' }}">
                 <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
                 <td style="padding:12px;white-space: nowrap">
@@ -866,6 +876,7 @@
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
+        const billStatusFilter = document.getElementById("billStatusFilter").value;
         const dateFrom = document.getElementById("dateFrom").value;   // "YYYY-MM-DD" or ""
         const dateTo = document.getElementById("dateTo").value;     // "YYYY-MM-DD" or ""
         const rowsPerPage = getRowsPerPage();
@@ -880,6 +891,7 @@
             const project = row.dataset.project || "";
             const branch = row.dataset.branch || "";
             const type = row.dataset.type || "";
+            const billStatus = row.dataset.billStatus || "";
             const created = row.dataset.created || "";   // "YYYY-MM-DD"
 
             const afterFrom = !dateFrom || created >= dateFrom;
@@ -891,6 +903,7 @@
                 && (projectFilter === "" || project === projectFilter)
                 && (branchFilter === "" || branch === branchFilter)
                 && (typeFilter === "" || type === typeFilter)
+                && (billStatusFilter === "" || billStatus === billStatusFilter)
                 && afterFrom && beforeTo;
         });
 
@@ -936,6 +949,7 @@
     document.getElementById("projectFilter").addEventListener("change", applyFilters);
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
     document.getElementById("typeFilter").addEventListener("change", applyFilters);
+    document.getElementById("billStatusFilter").addEventListener("change", applyFilters);
     document.getElementById("dateFrom").addEventListener("change", applyFilters);
     document.getElementById("dateTo").addEventListener("change", applyFilters);
     document.getElementById("rowsPerPage").addEventListener("change", applyFilters);
