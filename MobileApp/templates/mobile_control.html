@@ -961,7 +961,25 @@
     }
 
     // Initial render on page load
-    document.addEventListener("DOMContentLoaded", renderTable);
+    document.addEventListener("DOMContentLoaded", function() {
+        renderTable();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const newLicenseId = urlParams.get('new_license_id');
+        const newLicenseName = urlParams.get('new_license_name');
+
+        if (newLicenseId) {
+            // Remove the param from URL to prevent showing it again on refresh
+            window.history.replaceState(null, '', window.location.pathname);
+            
+            setTimeout(() => {
+                const goToBilling = confirm(`Do you want to proceed to the Billing Dashboard for ${newLicenseName || 'this license'}?`);
+                if (goToBilling) {
+                    window.location.href = `/mobileapp/mobile_control/billing/${newLicenseId}/`;
+                }
+            }, 300); 
+        }
+    });
 </script>
 <!-- QR Code library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

@@ -187,7 +187,7 @@ def add_mobile_control(request):
             messages.error(request, f'A licence already exists for the company "{shop.name}" under the project "{project.project_name}".')
             return redirect("MobileApp:add_mobile_control")
 
-        MobileControl.objects.create(
+        control = MobileControl.objects.create(
             project=project,
             store=store,
             shop=shop,
@@ -197,11 +197,13 @@ def add_mobile_control(request):
             licence_type=licence_type,
             package=None,
             expiry_date=None,
-            status=True
+            status=False
         )
 
         messages.success(request, 'Mobile control saved successfully!')
-        return redirect('MobileApp:mobile_control')
+        # Append parameter to show prompt on the mobile_control page
+        from django.urls import reverse
+        return redirect(f"{reverse('MobileApp:mobile_control')}?new_license_id={control.id}&new_license_name={control.customer_name}")
 
     return render(request, "add_mobile_control.html", {
         'projects': projects,
@@ -958,6 +960,10 @@ def mobile_control_billing(request, pk):
         # ---------- RE-CALCULATE BILL STATUS ----------
         has_unbilled = control.billing_history.filter(bill_status=False).exists()
         control.bill_status = not has_unbilled
+        
+        # Activate the license automatically upon adding/submitting any billing
+        if not control.status:
+            control.status = True
 
         # ✅ IMPORTANT: FULL SAVE (updates updated_date correctly)
         control.save()
