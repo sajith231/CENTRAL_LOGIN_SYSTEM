@@ -88,6 +88,25 @@ def delete_folder(request, name):
     return redirect("downloads:upload")
 
 
+def delete_file(request, folder, filename):
+    if request.method == "POST":
+        r2 = get_r2()
+        key = f"{folder}/{filename}"
+        try:
+            r2.delete_object(Bucket=BUCKET, Key=key)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    "success": True,
+                    "message": f"File '{filename}' deleted successfully"
+                })
+        except Exception as e:
+            print(f"Error deleting file {key}: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+    return redirect("downloads:upload")
+
+
 # ---------- DOWNLOAD PAGE ----------
 def download_page(request):
     r2 = get_r2()
