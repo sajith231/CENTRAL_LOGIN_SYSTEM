@@ -933,7 +933,12 @@
 
         // Show only the paginated slice of matched rows
         matchedRows.forEach((row, i) => {
-            row.style.display = (i >= startIndex && i < endIndex) ? "" : "none";
+            const isVisible = (i >= startIndex && i < endIndex);
+            row.style.display = isVisible ? "" : "none";
+            // Update the "No" column cell dynamically
+            if (isVisible) {
+                row.cells[0].textContent = i + 1;
+            }
         });
 
         // Update info text
