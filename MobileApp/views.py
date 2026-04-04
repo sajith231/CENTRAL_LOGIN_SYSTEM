@@ -94,9 +94,18 @@ from django.utils import timezone
 from datetime import timedelta
 
 def mobile_control_list(request):
+    from django.db.models import OuterRef, Subquery
+    from .models import MobileBillingHistory
+
+    # Get the latest payment status for each control
+    latest_payment_status_subquery = MobileBillingHistory.objects.filter(
+        control=OuterRef('pk')
+    ).order_by('-created_at').values('payment_status')[:1]
+
     # ---------------- BASE QUERY ----------------
     controls = (
         MobileControl.objects
+        .annotate(latest_payment_status=Subquery(latest_payment_status_subquery))
         .select_related('project', 'package', 'active_custom_package', 'shop__branch', 'store')
         .prefetch_related('active_devices')
         .order_by('-updated_date')

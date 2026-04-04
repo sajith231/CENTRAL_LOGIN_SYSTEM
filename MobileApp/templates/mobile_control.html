@@ -161,6 +161,7 @@
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
 
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bill Status</th>
+                <th style="padding:12px;text-align:center;white-space: nowrap;">PYMNT status</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Remaining Days</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Actions</th>
 
@@ -311,6 +312,19 @@
                         style="{% if c.bill_status %}background:#16a34a; color:white;{% else %}background:#dc2626; color:white;{% endif %} padding:6px 12px; border-radius:6px; min-width:80px;">
                         {% if c.bill_status %}Billed{% else %}Unbilled{% endif %}
                     </button>
+                </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.latest_payment_status == 'Paid' %}
+                    <span style="background:#16a34a; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Paid</span>
+                    {% elif c.latest_payment_status == 'Partially Paid' %}
+                    <span style="background:#f59e0b; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Partial</span>
+                    {% elif c.latest_payment_status == 'Not Paid' %}
+                    <span style="background:#dc2626; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Unpaid</span>
+                    {% elif c.latest_payment_status == 'Not Applicable' %}
+                    <span style="background:#4b5563; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">N/A</span>
+                    {% else %}
+                    <span style="color:#6b7280;">—</span>
+                    {% endif %}
                 </td>
                 <td style="padding:12px;text-align:center;white-space: nowrap">
                     {% if c.remaining_days is None %}
