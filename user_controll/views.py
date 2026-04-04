@@ -30,6 +30,9 @@ def get_all_menus():
                 {"id": "mobile_control", "name": "Mobile Licensing", "icon": "fa-solid fa-sliders"},
                 {"id": "mobile_control_status","name": "Mobile Status Control","icon": "fa-solid fa-toggle-on"},
                 {"id": "mobile_billing","name": "Mobile Billing","icon": "fa-solid fa-file-invoice-dollar"},
+                {"id": "mobile_payment_status", "name": "Mobile Payment Status", "icon": "fa-solid fa-money-check-dollar"},
+
+
                 {"id": "mobile_device_remove","name": "Mobile Device Remove","icon": "fa-solid fa-trash"},
                 {"id": "mobileapp_list", "name": "Mobile App List", "icon": "fa-solid fa-list-check"},
                 {"id": "module_list", "name": "Module", "icon": "fa-solid fa-puzzle-piece"},

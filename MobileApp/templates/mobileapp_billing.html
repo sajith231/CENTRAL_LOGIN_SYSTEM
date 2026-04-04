@@ -1107,10 +1107,12 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-credit-card me-1"></i>Status
                                     </th>
+                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-money-check-alt me-1"></i>Pymt Status
                                     </th>
+                                    {% endif %}
                                     <th style="color:#94a3b8; font-weight:600; font-size:0.75rem;
                                         text-transform:uppercase; letter-spacing:0.5px; padding:10px;
                                         background:#0a0f1e;">
@@ -1214,6 +1216,7 @@
                                         </div>
                                     </td>
                                     {% endif %}
+                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus %}
                                     <td style="padding:12px; background:transparent;">
                                         <select onchange="updatePaymentStatus({{ h.id }}, this.value)"
                                                 style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
@@ -1223,6 +1226,7 @@
                                             <option value="Not Applicable" {% if h.payment_status == 'Not Applicable' %}selected{% endif %}>Not Applicable</option>
                                         </select>
                                     </td>
+                                    {% endif %}
                                     <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                         {% if h.bill_status and h.invoice_number %}
                                         <span style="font-weight:600;">{{ h.invoice_number }}</span>
