@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 import json
 
 from app1 import models
-from .models import ActiveDevice, MobileProject, MobileControl, LoginLog
+from .models import ActiveDevice, MobileProject, MobileControl, LoginLog, MobileBillingHistory
 from StoreShop.models import Shop
 from ModuleAndPackage.models import Package
 from mobile_demo_licencing.models import DemoMobileLicense
@@ -196,6 +196,9 @@ def add_mobile_control(request):
             messages.error(request, f'A licence already exists for the company "{shop.name}" under the project "{project.project_name}".')
             return redirect("MobileApp:add_mobile_control")
 
+        # For transfer or developer licences, set default bill status to True
+        is_billed = licence_type in ['transfer', 'developer']
+
         control = MobileControl.objects.create(
             project=project,
             store=store,
@@ -206,7 +209,8 @@ def add_mobile_control(request):
             licence_type=licence_type,
             package=None,
             expiry_date=None,
-            status=False
+            status=is_billed,  # Active by default for Transfer/Developer
+            bill_status=is_billed
         )
 
         messages.success(request, 'Mobile control saved successfully!')
@@ -863,6 +867,12 @@ def mobile_control_billing(request, pk):
         extend_login = int(request.POST.get("extend_login") or 0)
         bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
         remark = request.POST.get("remark", "").strip()
+
+        # For Transfer or Developer licenses, default to Billed and Not Applicable
+        payment_status = 'Not Paid'
+        if control.licence_type in ['transfer', 'developer']:
+            bill_status = True
+            payment_status = 'Not Applicable'
         # ---------- STORE OLD VALUES ----------
         old_login_limit = control.login_limit
         old_expiry = control.expiry_date
@@ -963,6 +973,7 @@ def mobile_control_billing(request, pk):
             old_login_limit=old_login_limit,
             new_login_limit=control.login_limit,
             bill_status=bill_status,
+            payment_status=payment_status,
             remark=remark
         )
 
