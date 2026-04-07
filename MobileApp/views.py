@@ -907,7 +907,7 @@ def mobile_control_billing(request, pk):
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
                 
             if not remark:
-                remark = "Auto-renewed current package"
+                remark = "Package Renewed (Manual)"
             
             bill_status = True  # Avoid unbilled status for autorenewals
             
@@ -992,7 +992,7 @@ def mobile_control_billing(request, pk):
         return redirect("MobileApp:mobile_control_billing", pk=pk)
 
     # ---------- HISTORY ----------
-    history = control.billing_history.exclude(remark="Auto-renewed current package").order_by("-created_at")
+    history = control.billing_history.order_by("-created_at")
 
     # ---------- PACKAGES ----------
     packages = Package.objects.filter(project=control.project)
