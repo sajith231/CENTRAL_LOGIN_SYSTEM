@@ -69,6 +69,16 @@
             <option value="billed">Billed</option>
             <option value="unbilled">Unbilled</option>
         </select>
+ 
+        <!-- Payment Status Filter -->
+        <select id="paymentFilter" onchange="applyFilters()" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All Payment Status</option>
+            <option value="Paid">Paid</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Not Paid">Not Paid</option>
+            <option value="Not Applicable">Not Applicable</option>
+        </select>
 
         <!-- Date Range Filter -->
         <div style="display:flex; align-items:center; gap:6px;">
@@ -186,6 +196,7 @@
                 data-project="{{ c.project.project_name }}" data-branch="{{ c.shop.branch.name|default:'' }}"
                 data-company="{{ c.customer_name }}" data-type="{{ c.licence_type }}"
                 data-bill-status="{% if c.bill_status %}billed{% else %}unbilled{% endif %}"
+                data-payment="{{ c.latest_payment_status|default:'' }}"
                 data-created="{{ c.created_date|date:'Y-m-d' }}">
                 <td style="padding:12px;white-space: nowrap">{{ forloop.counter }}</td>
                 <td style="padding:12px;white-space: nowrap">
@@ -891,6 +902,7 @@
         const branchFilter = document.getElementById("branchFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
         const billStatusFilter = document.getElementById("billStatusFilter").value;
+        const paymentFilter = document.getElementById("paymentFilter").value;
         const dateFrom = document.getElementById("dateFrom").value;   // "YYYY-MM-DD" or ""
         const dateTo = document.getElementById("dateTo").value;     // "YYYY-MM-DD" or ""
         const rowsPerPage = getRowsPerPage();
@@ -906,6 +918,7 @@
             const branch = row.dataset.branch || "";
             const type = row.dataset.type || "";
             const billStatus = row.dataset.billStatus || "";
+            const payment = row.dataset.payment || "";
             const created = row.dataset.created || "";   // "YYYY-MM-DD"
 
             const afterFrom = !dateFrom || created >= dateFrom;
@@ -918,6 +931,7 @@
                 && (branchFilter === "" || branch === branchFilter)
                 && (typeFilter === "" || type === typeFilter)
                 && (billStatusFilter === "" || billStatus === billStatusFilter)
+                && (paymentFilter === "" || payment === paymentFilter)
                 && afterFrom && beforeTo;
         });
 

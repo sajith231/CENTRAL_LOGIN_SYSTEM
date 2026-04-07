@@ -457,6 +457,14 @@
       {% endfor %}
     </select>
 
+    <select id="paymentFilter" class="filter-select" onchange="applyFilters()">
+      <option value="">All Payment Status</option>
+      <option value="Paid">Paid</option>
+      <option value="Partially Paid">Partially Paid</option>
+      <option value="Not Paid">Not Paid</option>
+      <option value="Not Applicable">Not Applicable</option>
+    </select>
+
     <!-- Rows per page -->
     <label class="rows-label">
       <i class="fa-solid fa-table-list"></i> Rows:
@@ -480,7 +488,8 @@
           <th>Customer</th>
           <th>Project</th>
           <th>Branch</th>
-          <th>Invoice Details</th>
+          <th>Invoice No</th>
+          <th>Invoice Amount</th>
           <th>Package</th>
           <th>User Limit Change</th>
           <th>Days Extended</th>
@@ -495,7 +504,8 @@
         {% for h in billing_history %}
         <tr class="data-row" 
             data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}"
-            data-branch="{{ h.control.shop.branch.id|default:'' }}">
+            data-branch="{{ h.control.shop.branch.id|default:'' }}"
+            data-payment="{{ h.payment_status|default:'Not Paid' }}">
 
           <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
 
@@ -525,19 +535,22 @@
 
           <td style="white-space:nowrap;">
             {% if h.invoice_number %}
-            <div>
               <span class="invoice-badge">
                 <i class="fa-solid fa-file-invoice"></i> {{ h.invoice_number }}
               </span>
-            </div>
-            {% endif %}
-            {% if h.invoice_amount %}
-            <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
-              <i class="fa-solid fa-indian-rupee-sign"></i>
-              {{ h.invoice_amount|floatformat:2 }}
-            </span>
             {% else %}
-            <span style="color:#64748b;">No invoice</span>
+              <span style="color:#64748b; font-size: 11px;">—</span>
+            {% endif %}
+          </td>
+
+          <td style="white-space:nowrap;">
+            {% if h.invoice_amount %}
+              <span class="amount-badge {% if not h.bill_status %}amount-pending{% endif %}">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+                {{ h.invoice_amount|floatformat:2 }}
+              </span>
+            {% else %}
+              <span style="color:#64748b; font-size: 11px;">No invoice</span>
             {% endif %}
           </td>
 
@@ -694,12 +707,14 @@
     const search = document.getElementById('searchInput').value.toLowerCase();
     const bill = document.getElementById('billFilter').value;
     const branch = document.getElementById('branchFilter').value;
+    const payment = document.getElementById('paymentFilter').value;
 
     filteredRows = Array.from(document.querySelectorAll('.data-row')).filter(row => {
       const matchSearch = !search || row.textContent.toLowerCase().includes(search);
       const matchBill = !bill || row.getAttribute('data-bill') === bill;
       const matchBranch = !branch || row.getAttribute('data-branch') === branch;
-      return matchSearch && matchBill && matchBranch;
+      const matchPayment = !payment || row.getAttribute('data-payment') === payment;
+      return matchSearch && matchBill && matchBranch && matchPayment;
     });
 
     currentPage = 1;
