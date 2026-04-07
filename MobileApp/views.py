@@ -7,6 +7,7 @@ import json
 
 from app1 import models
 from .models import ActiveDevice, MobileProject, MobileControl, LoginLog, MobileBillingHistory
+from branch.models import Branch
 from StoreShop.models import Shop
 from ModuleAndPackage.models import Package
 from mobile_demo_licencing.models import DemoMobileLicense
@@ -1216,6 +1217,19 @@ def billing_report(request):
         .order_by('-created_at')
     )
 
+    branches = Branch.objects.all().order_by('name')
+
+    # ---------------- BRANCH BASED FILTER ----------------
+    # Restriction logic for non-super-level users
+    if not is_super_level_user(request):
+        user_branches = request.session.get('custom_user_branches', [])
+        if user_branches:
+            billing_history = billing_history.filter(control__shop__branch__name__in=user_branches)
+            branches = branches.filter(name__in=user_branches)
+        else:
+            billing_history = billing_history.none()
+            branches = Branch.objects.none()
+
     # Summary stats
     total_records   = billing_history.count()
     billed_records  = billing_history.filter(bill_status=True).count()
@@ -1230,8 +1244,11 @@ def billing_report(request):
             else:
                 pending_revenue += float(h.invoice_amount)
 
+
+
     context = {
         "billing_history":  billing_history,
+        "branches":         branches,
         "total_records":    total_records,
         "billed_records":   billed_records,
         "pending_records":  pending_records,

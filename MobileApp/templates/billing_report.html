@@ -450,6 +450,13 @@
       <option value="pending">Pending</option>
     </select>
 
+    <select id="branchFilter" class="filter-select" onchange="applyFilters()">
+      <option value="">All Branches</option>
+      {% for b in branches %}
+      <option value="{{ b.id }}">{{ b.name }}</option>
+      {% endfor %}
+    </select>
+
     <!-- Rows per page -->
     <label class="rows-label">
       <i class="fa-solid fa-table-list"></i> Rows:
@@ -472,6 +479,7 @@
           <th>Date & Time</th>
           <th>Customer</th>
           <th>Project</th>
+          <th>Branch</th>
           <th>Invoice Details</th>
           <th>Package</th>
           <th>User Limit Change</th>
@@ -485,7 +493,9 @@
       </thead>
       <tbody id="tableBody">
         {% for h in billing_history %}
-        <tr class="data-row" data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}">
+        <tr class="data-row" 
+            data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}"
+            data-branch="{{ h.control.shop.branch.id|default:'' }}">
 
           <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
 
@@ -503,6 +513,13 @@
             <span class="badge badge-project">
               <i class="fa-solid fa-mobile-screen-button"></i>
               {{ h.control.project.project_name|default:"—" }}
+            </span>
+          </td>
+
+          <td>
+            <span style="color:#94a3b8; font-size:13px; font-weight:500;">
+              <i class="fa-solid fa-code-branch me-1"></i>
+              {{ h.control.shop.branch.name|default:"—" }}
             </span>
           </td>
 
@@ -676,11 +693,13 @@
   function applyFilters() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const bill = document.getElementById('billFilter').value;
+    const branch = document.getElementById('branchFilter').value;
 
     filteredRows = Array.from(document.querySelectorAll('.data-row')).filter(row => {
       const matchSearch = !search || row.textContent.toLowerCase().includes(search);
       const matchBill = !bill || row.getAttribute('data-bill') === bill;
-      return matchSearch && matchBill;
+      const matchBranch = !branch || row.getAttribute('data-branch') === branch;
+      return matchSearch && matchBill && matchBranch;
     });
 
     currentPage = 1;
