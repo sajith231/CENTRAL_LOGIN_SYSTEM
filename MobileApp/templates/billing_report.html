@@ -465,6 +465,11 @@
       <option value="Not Applicable">Not Applicable</option>
     </select>
 
+    <select id="amountFilter" class="filter-select" onchange="applyFilters()">
+      <option value="">All Invoice Amount</option>
+      <option value="zero">0 (Null/Zero)</option>
+    </select>
+
     <!-- Rows per page -->
     <label class="rows-label">
       <i class="fa-solid fa-table-list"></i> Rows:
@@ -505,7 +510,8 @@
         <tr class="data-row" 
             data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}"
             data-branch="{{ h.control.shop.branch.id|default:'' }}"
-            data-payment="{{ h.payment_status|default:'Not Paid' }}">
+            data-payment="{{ h.payment_status|default:'Not Paid' }}"
+            data-status-amount="{% if h.invoice_amount %}has_value{% else %}is_zero{% endif %}">
 
           <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
 
@@ -708,13 +714,18 @@
     const bill = document.getElementById('billFilter').value;
     const branch = document.getElementById('branchFilter').value;
     const payment = document.getElementById('paymentFilter').value;
+    const amountFilter = document.getElementById('amountFilter').value;
 
     filteredRows = Array.from(document.querySelectorAll('.data-row')).filter(row => {
       const matchSearch = !search || row.textContent.toLowerCase().includes(search);
       const matchBill = !bill || row.getAttribute('data-bill') === bill;
       const matchBranch = !branch || row.getAttribute('data-branch') === branch;
       const matchPayment = !payment || row.getAttribute('data-payment') === payment;
-      return matchSearch && matchBill && matchBranch && matchPayment;
+      
+      const rowAmtStatus = row.getAttribute('data-status-amount');
+      const matchAmount = !amountFilter || (amountFilter === 'zero' && rowAmtStatus === 'is_zero');
+
+      return matchSearch && matchBill && matchBranch && matchPayment && matchAmount;
     });
 
     currentPage = 1;
