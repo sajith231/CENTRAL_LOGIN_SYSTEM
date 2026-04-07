@@ -568,16 +568,16 @@
 
                         const expDate = parseIso(expiryIso);
 
+                        // Always start calendar view at the present month/year
+                        _viewY = _today.getFullYear();
+                        _viewM = _today.getMonth();
+
                         if (expDate) {
                             _selDate = expDate;
-                            _viewY = expDate.getFullYear();
-                            _viewM = expDate.getMonth();
-                        } else {
-                            _viewY = _today.getFullYear();
-                            _viewM = _today.getMonth();
                         }
 
                         edCalRender();
+                        // Pre-select the existing date if it exists
                         if (_selDate) edCalSelect(_selDate);
                     };
 
