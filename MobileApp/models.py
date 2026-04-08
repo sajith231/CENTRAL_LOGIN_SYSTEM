@@ -211,6 +211,14 @@ class MobileBillingHistory(models.Model):
     def __str__(self):
         return f"{self.control.client_id} | {self.created_at}"
 
+    @property
+    def license_age_days(self):
+        """Returns the age of the license in days at the time this record was created."""
+        if not self.control.created_date:
+            return 0
+        delta = self.created_at - self.control.created_date
+        return max(0, delta.days)
+
 
 # ── Custom (one-off) packages — per MobileControl, hidden from global Package tables ──
 

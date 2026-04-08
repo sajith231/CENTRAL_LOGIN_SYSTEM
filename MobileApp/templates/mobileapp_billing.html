@@ -422,15 +422,7 @@
                     }
                     .edcal-day:hover { background:#1e293b; color:white; }
                     .edcal-day.today {
-                        background:#1d4ed8; color:white; font-weight:700;
-                    }
-                    .edcal-day.selected-future {
-                        background:#065f46; color:#34d399; font-weight:700;
-                        box-shadow:0 0 0 2px #34d399;
-                    }
-                    .edcal-day.selected-past {
-                        background:#7f1d1d; color:#f87171; font-weight:700;
-                        box-shadow:0 0 0 2px #f87171;
+                        border: 1px solid #3b82f6; color: #3b82f6; font-weight: 700;
                     }
                     .edcal-day.selected-today {
                         background:#1d4ed8; color:white; font-weight:700;
@@ -562,23 +554,29 @@
 
                     // Called by openEditModal: expiryIso = new_expiry_date (shown/selected on calendar)
                     //                          oldExpiryIso = old_expiry_date (base for extend_days calc)
-                    window._edCalOpenWithExpiry = function(expiryIso, oldExpiryIso) {
+                    window._edCalOpenWithExpiry = function(expiryIso, oldExpiryIso, currentExtDays) {
                         _selDate = null;
                         _oldExpiryDate = parseIso(oldExpiryIso) || null;
 
-                        const expDate = parseIso(expiryIso);
+                        // Pre-fill hidden field with CURRENT extension (but don't select on calendar)
+                        document.getElementById('edit_extend_days').value = currentExtDays;
+
+                        // Update badge to reflect current extension WITHOUT selecting a date highlight in calendar
+                        const badge = document.getElementById('edit_days_badge');
+                        const lbl   = document.getElementById('edit_days_label');
+                        if(badge && lbl) {
+                            badge.style.borderColor = '#334155';
+                            lbl.textContent = currentExtDays + ' days (Current)';
+                            lbl.style.color = '#94a3b8';
+                            const icon = badge.querySelector('span:first-child');
+                            if(icon) icon.innerHTML = '<i class="fas fa-calendar-check me-1"></i>Pre-set Extension';
+                        }
 
                         // Always start calendar view at the present month/year
                         _viewY = _today.getFullYear();
                         _viewM = _today.getMonth();
 
-                        if (expDate) {
-                            _selDate = expDate;
-                        }
-
                         edCalRender();
-                        // Pre-select the existing date if it exists
-                        if (_selDate) edCalSelect(_selDate);
                     };
 
                     // Initial render
@@ -635,7 +633,7 @@
 
             <div class="mb-3">
                 <label style="color:#94a3b8;">Invoice Number *</label>
-                <input type="text" id="popup_invoice_number" class="form-control"
+                <input type="text" id="popup_icnvoice_number" class="form-control"
                     style="background:#1e293b; color:white;">
             </div>
 
@@ -1501,8 +1499,8 @@
         document.getElementById("edit_remark").value = remark;
         document.getElementById("editUnbilledForm").action = `/mobileapp/billing-history/edit/${id}/`;
         document.getElementById("editUnbilledModal").style.display = "flex";
-        // Let the calendar widget handle its own reset + expiry pre-selection
-        if (typeof _edCalOpenWithExpiry === 'function') _edCalOpenWithExpiry(expiryIso, oldExpiryIso);
+        // Pass current extension days so it's preserved if they don't touch the calendar
+        if (typeof _edCalOpenWithExpiry === 'function') _edCalOpenWithExpiry(expiryIso, oldExpiryIso, extDays);
     }
 
     function closeEditModal() {

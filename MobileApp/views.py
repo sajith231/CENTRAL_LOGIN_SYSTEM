@@ -1079,10 +1079,9 @@ def edit_billing_history(request, pk):
 
     if request.method == "POST":
         # Rollback old values on control before re-applying
-        if history_obj.old_expiry_date is not None:
-            control.expiry_date = history_obj.old_expiry_date
-        if history_obj.old_login_limit is not None:
-            control.login_limit = history_obj.old_login_limit
+        # (Always rollback so we calculate new values from the baseline state)
+        control.expiry_date = history_obj.old_expiry_date
+        control.login_limit = history_obj.old_login_limit
 
         extend_login = int(request.POST.get("extend_login") or 0)
         remark = request.POST.get("remark", "").strip()
@@ -1100,7 +1099,7 @@ def edit_billing_history(request, pk):
 
         # Apply new login limit
         if extend_login != 0:
-            new_login_limit = control.login_limit + extend_login
+            new_login_limit = (control.login_limit or 0) + extend_login
             if new_login_limit < 1:
                 messages.error(request, "Login limit cannot be less than 1")
                 return redirect("MobileApp:mobile_control_billing", pk=control.id)
@@ -1108,16 +1107,17 @@ def edit_billing_history(request, pk):
 
         # Apply new expiry
         if extend_days != 0:
-            if control.expiry_date:
-                new_expiry = control.expiry_date + timedelta(days=extend_days)
-            else:
-                new_expiry = timezone.now() + timedelta(days=extend_days)
+            base_date = control.expiry_date or timezone.now()
+            new_expiry = base_date + timedelta(days=extend_days)
 
             if new_expiry < timezone.now() and not request.user.is_superuser:
                 messages.error(request, "Expiry date cannot be in the past")
                 return redirect("MobileApp:mobile_control_billing", pk=control.id)
 
             control.expiry_date = new_expiry
+        else:
+            # If extend_days is 0, control.expiry_date is already rolled back to old_expiry
+            pass
 
         # Update the history record in place
         history_obj.extended_days = extend_days

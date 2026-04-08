@@ -467,7 +467,7 @@
 
     <select id="amountFilter" class="filter-select" onchange="applyFilters()">
       <option value="">All Invoice Amount</option>
-      <option value="zero">0 (Null/Zero)</option>
+      <option value="has_value" selected>Greater than 0</option>
     </select>
 
     <!-- Rows per page -->
@@ -492,15 +492,14 @@
           <th>Date & Time</th>
           <th>Customer</th>
           <th>Project</th>
-          <th>Branch</th>
           <th>Invoice No</th>
           <th>Invoice Amount</th>
-          <th>Package</th>
           <th>User Limit Change</th>
           <th>Days Extended</th>
           <th>Old Expiry</th>
           <th>New Expiry</th>
-          <th class="text-center">Status</th>
+          <th>Age</th>
+          <th class="text-center">Billing Status</th>
           <th>Payment Status</th>
           <th>Remark</th>
         </tr>
@@ -520,23 +519,38 @@
             <small style="color:#64748b;">{{ h.created_at|date:"h:i A" }}</small>
           </td>
 
-          <td>
-            <span class="customer-name">{{ h.control.customer_name }}</span>
-            <span class="customer-id">{{ h.control.client_id }}</span>
+          <td style="white-space:nowrap;">
+            <div style="display:flex; flex-direction:column; gap:1px;">
+              <span class="customer-name" style="letter-spacing: 0.3px;">{{ h.control.customer_name }}</span>
+              <div style="display:flex; align-items:center; gap:6px; opacity:0.8;">
+                <span class="customer-id" style="font-family:'Courier New', monospace; font-weight:700;">{{ h.control.client_id }}</span>
+                <span style="color:#334155;">|</span>
+                <span style="color:#94a3b8; font-size:11px; font-weight:500;">
+                  <i class="fa-solid fa-code-branch me-1" style="color:#3b82f6; font-size:10px;"></i>
+                  {{ h.control.shop.branch.name|default:"—" }} ({{ h.control.shop.branch.place|default:"—" }})
+                </span>
+              </div>
+            </div>
           </td>
 
-          <td>
-            <span class="badge badge-project">
-              <i class="fa-solid fa-mobile-screen-button"></i>
-              {{ h.control.project.project_name|default:"—" }}
-            </span>
-          </td>
-
-          <td>
-            <span style="color:#94a3b8; font-size:13px; font-weight:500;">
-              <i class="fa-solid fa-code-branch me-1"></i>
-              {{ h.control.shop.branch.name|default:"—" }}
-            </span>
+          <td style="white-space:nowrap;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span class="badge badge-project" style="align-self:flex-start;">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+                {{ h.control.project.project_name|default:"—" }}
+              </span>
+              {% if h.package %}
+              <div style="display:flex; align-items:center; gap:5px; color:#34d399; font-size:11px; font-weight:600; padding-left:4px;">
+                <i class="fa-solid fa-box" style="font-size:10px;"></i>
+                {{ h.package.package_name }} ({{ h.package.days_limit }}d)
+              </div>
+              {% elif h.custom_package %}
+              <div style="display:flex; align-items:center; gap:5px; color:#c4b5fd; font-size:11px; font-weight:600; padding-left:4px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="font-size:10px;"></i>
+                {{ h.custom_package.package_name }} ({{ h.custom_package.days_limit }}d)
+              </div>
+              {% endif %}
+            </div>
           </td>
 
           <td style="white-space:nowrap;">
@@ -557,28 +571,6 @@
               </span>
             {% else %}
               <span style="color:#64748b; font-size: 11px;">No invoice</span>
-            {% endif %}
-          </td>
-
-          <td>
-            {% if h.package %}
-            <span class="badge-package">
-              <i class="fa-solid fa-box"></i>
-              {{ h.package.package_name }}
-            </span>
-            <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
-              {{ h.package.days_limit }} days
-            </small>
-            {% elif h.custom_package %}
-            <span class="badge-custom-pkg">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              {{ h.custom_package.package_name }}
-            </span>
-            <small style="display:block; color:#64748b; font-size:11px; margin-top:3px;">
-              Custom · {{ h.custom_package.days_limit }} days
-            </small>
-            {% else %}
-            <span style="color:#475569; font-size:12px;">—</span>
             {% endif %}
           </td>
 
@@ -629,6 +621,13 @@
             {% else %}
             <span style="color:#64748b;">—</span>
             {% endif %}
+          </td>
+
+          <td>
+            <span style="color:#94a3b8; font-size:13px; font-weight:600;">
+              <i class="fa-solid fa-hourglass-half me-1"></i>
+              {{ h.license_age_days }} days
+            </span>
           </td>
 
           <td class="text-center">
@@ -723,7 +722,7 @@
       const matchPayment = !payment || row.getAttribute('data-payment') === payment;
       
       const rowAmtStatus = row.getAttribute('data-status-amount');
-      const matchAmount = !amountFilter || (amountFilter === 'zero' && rowAmtStatus === 'is_zero');
+      const matchAmount = !amountFilter || (amountFilter === 'has_value' && rowAmtStatus === 'has_value');
 
       return matchSearch && matchBill && matchBranch && matchPayment && matchAmount;
     });
@@ -799,8 +798,7 @@
 
   // Boot
   document.addEventListener('DOMContentLoaded', () => {
-    filteredRows = Array.from(document.querySelectorAll('.data-row'));
-    renderPage();
+    applyFilters();
   });
 </script>
 
