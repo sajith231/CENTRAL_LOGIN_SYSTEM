@@ -213,10 +213,10 @@ class MobileBillingHistory(models.Model):
 
     @property
     def license_age_days(self):
-        """Returns the age of the Project in days at the time this record was created."""
-        if not self.control.project or not self.control.project.created_date:
-            return 0
-        delta = self.created_at - self.control.project.created_date
+        """Returns the current age of this record (Bill Date to Today), ignoring time of day."""
+        now_date = timezone.now().date()
+        bill_date = self.created_at.date()
+        delta = now_date - bill_date
         return max(0, delta.days)
 
 
