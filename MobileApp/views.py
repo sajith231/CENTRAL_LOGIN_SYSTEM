@@ -370,17 +370,13 @@ def api_register_license(request, endpoint):
 
     # ================= OG LICENSE FLOW =================
     if control:
-        # License expiry rule
-        if control.package and control.package.days_limit > 0:
-            days_limit = control.package.days_limit
-            created_date = control.created_date
-            expiry_date = created_date + timedelta(days=days_limit)
+        # Check if expired based on control.expiry_date
+        if control.expiry_date:
             now = timezone.now()
-
-            if expiry_date <= now:
+            if control.expiry_date <= now:
                 if control.status:
                     control.status = False
-                    control.save()
+                    control.save(update_fields=['status'])
                 return JsonResponse({
                     'success': False,
                     'error': 'This license has expired. Please contact administrator.'
@@ -517,18 +513,14 @@ def api_post_login(request, endpoint):
     except MobileControl.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
     
-    # Check if expired based on package days_limit
-    if control.package and control.package.days_limit > 0:
-        days_limit = control.package.days_limit
-        created_date = control.created_date
-        expiry_date = created_date + timedelta(days=days_limit)
+    # Check if expired based on control.expiry_date
+    if control.expiry_date:
         now = timezone.now()
-        
-        if expiry_date <= now:
+        if control.expiry_date <= now:
             # Auto-deactivate if expired
             if control.status:
                 control.status = False
-                control.save()
+                control.save(update_fields=['status'])
             return JsonResponse({
                 'success': False,
                 'error': 'This license has expired. Please contact administrator.'
