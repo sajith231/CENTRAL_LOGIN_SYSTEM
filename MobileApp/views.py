@@ -11,7 +11,7 @@ from branch.models import Branch
 from StoreShop.models import Shop
 from ModuleAndPackage.models import Package
 from mobile_demo_licencing.models import DemoMobileLicense
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 
 def is_super_level_user(request):
@@ -1227,16 +1227,16 @@ def billing_report(request):
     billed_records  = billing_history.filter(bill_status=True).count()
     pending_records = billing_history.filter(bill_status=False).count()
 
-    total_revenue   = 0
-    pending_revenue = 0
-    for h in billing_history:
-        if h.invoice_amount:
-            if h.bill_status:
-                total_revenue   += float(h.invoice_amount)
-            else:
-                pending_revenue += float(h.invoice_amount)
-
-
+    # Revenue and Outstanding stats
+    stats = billing_history.aggregate(
+        total_rev=Sum('invoice_amount', filter=Q(bill_status=True)),
+        pending_rev=Sum('invoice_amount', filter=Q(bill_status=False)),
+        total_out=Sum('invoice_amount', filter=Q(payment_status='Not Paid'))
+    )
+    
+    total_revenue     = stats['total_rev'] or 0
+    pending_revenue   = stats['pending_rev'] or 0
+    total_outstanding = stats['total_out'] or 0
 
     context = {
         "billing_history":  billing_history,
@@ -1246,6 +1246,7 @@ def billing_report(request):
         "pending_records":  pending_records,
         "total_revenue":    total_revenue,
         "pending_revenue":  pending_revenue,
+        "total_outstanding": total_outstanding,
     }
 
     return render(request, "billing_report.html", context)

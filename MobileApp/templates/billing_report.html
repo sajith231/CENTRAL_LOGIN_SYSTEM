@@ -437,7 +437,23 @@
       <div class="stat-value">{{ pending_records }}</div>
       <div class="stat-subtext">Awaiting payment</div>
     </div>
+
+    <div class="stat-card outstanding">
+      <div class="stat-label"><i class="fa-solid fa-hand-holding-dollar"></i> Total Outstanding</div>
+      <div class="stat-value" style="color: #f87171;">₹{{ total_outstanding|floatformat:2 }}</div>
+      <div class="stat-subtext">Unpaid amount (Not Paid)</div>
+    </div>
   </div>
+
+  <style>
+    .stat-card.outstanding::before {
+      background: linear-gradient(180deg, #ef4444, #b91c1c);
+    }
+    .stat-card.outstanding:hover {
+      border-color: #ef4444;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+    }
+  </style>
 
   <!-- Filters -->
   <div class="filter-bar">
