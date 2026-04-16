@@ -967,7 +967,8 @@ def mobile_control_billing(request, pk):
             new_login_limit=control.login_limit,
             bill_status=bill_status,
             payment_status=payment_status,
-            remark=remark
+            remark=remark,
+            added_by=request.session.get('custom_user_name') or request.user.username or 'System'
         )
 
         # ---------- RE-CALCULATE BILL STATUS ----------
@@ -1119,6 +1120,7 @@ def edit_billing_history(request, pk):
         history_obj.old_login_limit = old_login_limit
         history_obj.new_login_limit = control.login_limit
         history_obj.remark = remark
+        history_obj.added_by = request.session.get('custom_user_name') or request.user.username or 'System'
         history_obj.save()
 
         # Recalculate control bill_status
@@ -1341,6 +1343,7 @@ def add_modules_to_custom_package(request, control_pk, pkg_pk):
         new_login_limit=control.login_limit,
         bill_status=False,
         remark=bill_remark,
+        added_by=request.session.get('custom_user_name') or request.user.username or 'System'
     )
 
     # Recalculate bill_status on control
