@@ -27,12 +27,12 @@ def stores_list(request):
         stores = Store.objects.annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).order_by('-created_at')
-        branches = Branch.objects.all()
+        branches = Branch.objects.all().order_by('name')
     else:
         # 👤 Normal user → branch-based
         user_branches = request.session.get("custom_user_branches", [])
 
-        branches = Branch.objects.filter(name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
         stores = Store.objects.filter(
             branch__name__in=user_branches
         ).annotate(
@@ -50,10 +50,10 @@ from branch.models import Branch
 def add_store(request):
     # 🔑 Branch filtering
     if is_super_level_user(request):
-        branches = Branch.objects.all()
+        branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -81,10 +81,10 @@ def edit_store(request, id):
 
     # 🔑 Branch filtering
     if is_super_level_user(request):
-        branches = Branch.objects.all()
+        branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
 
     if request.method == "POST":
         store.name = request.POST.get("name")
@@ -120,10 +120,10 @@ def shop_list(request):
         shops = Shop.objects.annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).select_related('store', 'branch').order_by('-created_at')
-        branches = Branch.objects.all()
+        branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
         shops = Shop.objects.filter(
             branch__name__in=user_branches
         ).annotate(
@@ -139,12 +139,12 @@ from branch.models import Branch
 
 def add_shop(request):
     if is_super_level_user(request):
-        stores = Store.objects.all()
-        branches = Branch.objects.all()
+        stores = Store.objects.all().order_by('name')
+        branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
-        stores = Store.objects.filter(branch__name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -181,12 +181,12 @@ def edit_shop(request, id):
     shop = get_object_or_404(Shop, id=id)
 
     if is_super_level_user(request):
-        stores = Store.objects.all()
-        branches = Branch.objects.all()
+        stores = Store.objects.all().order_by('name')
+        branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
-        stores = Store.objects.filter(branch__name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
 
     if request.method == "POST":
         shop.name = request.POST.get("name")

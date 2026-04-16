@@ -168,14 +168,14 @@ def add_mobile_control(request):
 
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
-        branches = Branch.objects.all()
-        stores = Store.objects.all()
-        shops = Shop.objects.all()
+        branches = Branch.objects.all().order_by('name')
+        stores = Store.objects.all().order_by('name')
+        shops = Shop.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
-        stores = Store.objects.filter(branch__name__in=user_branches)
-        shops = Shop.objects.filter(branch__name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
+        shops = Shop.objects.filter(branch__name__in=user_branches).order_by('name')
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
@@ -237,14 +237,14 @@ def edit_mobile_control(request, pk):
 
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
-        branches = Branch.objects.all()
-        stores = Store.objects.all()
-        shops = Shop.objects.all()
+        branches = Branch.objects.all().order_by('name')
+        stores = Store.objects.all().order_by('name')
+        shops = Shop.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
-        branches = Branch.objects.filter(name__in=user_branches)
-        stores = Store.objects.filter(branch__name__in=user_branches)
-        shops = Shop.objects.filter(branch__name__in=user_branches)
+        branches = Branch.objects.filter(name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
+        shops = Shop.objects.filter(branch__name__in=user_branches).order_by('name')
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
