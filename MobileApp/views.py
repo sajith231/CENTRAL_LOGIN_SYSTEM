@@ -1065,7 +1065,7 @@ def edit_billing_history(request, pk):
     history_obj = get_object_or_404(MobileBillingHistory, pk=pk)
     control = history_obj.control
 
-    if history_obj.bill_status:
+    if history_obj.bill_status and control.licence_type != 'transfer':
         messages.error(request, "Cannot edit a billed record.")
         return redirect("MobileApp:mobile_control_billing", pk=control.id)
 

@@ -302,8 +302,8 @@
     </div>
 
 
-    {% if request.user.is_superuser %}
-    <!-- SUPERUSER: EDIT UNBILLED MODAL -->
+    {% if request.user.is_superuser or control.licence_type == 'transfer' %}
+    <!-- EDIT RECORD MODAL -->
     <div id="editUnbilledModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
         z-index:9999; align-items:center; justify-content:center;">
         <div style="background:#0f172a; padding:28px; border-radius:14px; width:480px; max-width:95vw;
@@ -313,10 +313,10 @@
                 <div style="background:rgba(245,158,11,0.15); border-radius:8px; padding:6px 10px;">
                     <i class="fas fa-pencil-alt" style="color:#f59e0b;"></i>
                 </div>
-                <h5 style="color:white; margin:0; font-weight:600;">Edit Unbilled Record</h5>
+                <h5 style="color:white; margin:0; font-weight:600;">Edit Billing Record</h5>
             </div>
             <p style="color:#64748b; font-size:0.8rem; margin-bottom:20px; padding-left:2px;">
-                Superuser only — updates this record in place. No new bill created.
+                Updates this record in place. No new bill created.
             </p>
 
             <form method="POST" id="editUnbilledForm" action="">
@@ -1105,7 +1105,7 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-credit-card me-1"></i>Status
                                     </th>
-                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus %}
+                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-money-check-alt me-1"></i>Pymt Status
@@ -1173,7 +1173,7 @@
                                         <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
                                     </td>
 
-                                    {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
+                                    {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <td style="padding:12px; background:transparent;">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <button id="billingStatusBtn{{ h.id }}"
@@ -1188,18 +1188,20 @@
                                                 {% endif %}
                                             </button>
 
-                                            {% if not h.bill_status %}
-                                            {% if request.user.is_superuser %}
+                                            {% if not h.bill_status or control.licence_type == 'transfer' %}
+                                            {% if request.user.is_superuser or control.licence_type == 'transfer' %}
                                             <button type="button"
                                                 onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}', this.dataset.expiry, this.dataset.oldExpiry)"
                                                 data-expiry="{% if h.new_expiry_date %}{{ h.new_expiry_date|date:'Y-m-d' }}{% endif %}"
                                                 data-old-expiry="{% if h.old_expiry_date %}{{ h.old_expiry_date|date:'Y-m-d' }}{% endif %}"
                                                 class="btn btn-sm"
                                                 style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;"
-                                                title="Edit Unbilled Record">
+                                                title="Edit Record">
                                                 <i class="fas fa-pencil-alt" style="font-size:0.75rem;"></i>
                                             </button>
                                             {% endif %}
+                                            
+                                            {% if not h.bill_status %}
                                             <form method="post"
                                                 action="{% url 'MobileApp:delete_billing_history' h.id %}"
                                                 onsubmit="return confirm('Are you sure? This will revert usage data.');">
@@ -1211,10 +1213,11 @@
                                                 </button>
                                             </form>
                                             {% endif %}
+                                            {% endif %}
                                         </div>
                                     </td>
                                     {% endif %}
-                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus %}
+                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <td style="padding:12px; background:transparent;">
                                         <select onchange="updatePaymentStatus({{ h.id }}, this.value)"
                                                 style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
