@@ -902,7 +902,7 @@ def mobile_control_billing(request, pk):
             if not remark:
                 remark = "Package Renewed (Manual)"
             
-            bill_status = True  # Avoid unbilled status for autorenewals
+            bill_status = False  # Renewals start as unbilled as per request
             
             # Activate the license if it was inactive
             if not control.status:
