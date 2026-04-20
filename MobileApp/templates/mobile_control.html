@@ -889,6 +889,47 @@
         return parseInt(document.getElementById("rowsPerPage").value, 10);
     }
 
+    function saveFilterState() {
+        const state = {
+            clientId: document.getElementById("clientIdFilter").value,
+            company: document.getElementById("companyFilter").value,
+            status: document.getElementById("statusFilter").value,
+            project: document.getElementById("projectFilter").value,
+            branch: document.getElementById("branchFilter").value,
+            type: document.getElementById("typeFilter").value,
+            billStatus: document.getElementById("billStatusFilter").value,
+            payment: document.getElementById("paymentFilter").value,
+            dateFrom: document.getElementById("dateFrom").value,
+            dateTo: document.getElementById("dateTo").value,
+            rowsPerPage: document.getElementById("rowsPerPage").value,
+            currentPage: currentPage
+        };
+        sessionStorage.setItem("mobileControlFilters", JSON.stringify(state));
+    }
+
+    function loadFilterState() {
+        const saved = sessionStorage.getItem("mobileControlFilters");
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                document.getElementById("clientIdFilter").value = state.clientId || "";
+                document.getElementById("companyFilter").value = state.company || "";
+                document.getElementById("statusFilter").value = state.status || "";
+                document.getElementById("projectFilter").value = state.project || "";
+                document.getElementById("branchFilter").value = state.branch || "";
+                document.getElementById("typeFilter").value = state.type || "";
+                document.getElementById("billStatusFilter").value = state.billStatus || "";
+                document.getElementById("paymentFilter").value = state.payment || "";
+                document.getElementById("dateFrom").value = state.dateFrom || "";
+                document.getElementById("dateTo").value = state.dateTo || "";
+                if (state.rowsPerPage) document.getElementById("rowsPerPage").value = state.rowsPerPage;
+                if (state.currentPage) currentPage = state.currentPage;
+            } catch (e) {
+                console.error("Failed to parse filter state", e);
+            }
+        }
+    }
+
     function applyFilters() {
         currentPage = 1; // Reset to first page on filter change
         renderTable();
@@ -968,6 +1009,8 @@
         btnNext.disabled = currentPage >= totalPages;
         btnNext.style.opacity = currentPage >= totalPages ? "0.4" : "1";
         btnNext.style.cursor = currentPage >= totalPages ? "not-allowed" : "pointer";
+
+        saveFilterState();
     }
 
     function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
@@ -995,6 +1038,7 @@
 
     // Initial render on page load
     document.addEventListener("DOMContentLoaded", function() {
+        loadFilterState();
         renderTable();
 
         const urlParams = new URLSearchParams(window.location.search);

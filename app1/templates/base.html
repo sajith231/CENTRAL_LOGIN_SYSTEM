@@ -408,7 +408,7 @@
             </button>
             <div id="submenu-mobile" class="submenu">
               {% if request.user.is_superuser or 'mobile_control' in am %}
-              <a href="{% url 'MobileApp:mobile_control' %}">
+              <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');">
                 <i class="fa-solid fa-sliders"></i> Mobile Licensing
               </a>
               {% endif %}
