@@ -633,7 +633,7 @@
 
             <div class="mb-3">
                 <label style="color:#94a3b8;">Invoice Number *</label>
-                <input type="text" id="popup_icnvoice_number" class="form-control"
+                <input type="text" id="popup_invoice_number" class="form-control"
                     style="background:#1e293b; color:white;">
             </div>
 
@@ -1445,6 +1445,20 @@
 
 <script>
     // ── Billing status toggle (billed → unbilled popup) ──
+    function toggleStatusRequest(id) {
+        fetch(`/mobileapp/billing-history/toggle-status/${id}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/json" },
+            body: JSON.stringify({})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || "Failed"); return; }
+            location.reload();
+        })
+        .catch(err => { console.error(err); alert("Error toggling status"); });
+    }
+
     function toggleHistoryStatus(id) {
         const btn = document.getElementById("billingStatusBtn" + id);
         if (btn.innerText.includes("Billed")) {
