@@ -10,31 +10,56 @@ def demo_license_list(request):
     demos = DemoMobileLicense.objects.select_related(
         "original_license",
         "original_license__project",
+        "original_license__shop",
+        "original_license__shop__branch",
         "project"
     ).prefetch_related(
         "original_license__active_devices",
-        "active_devices"   # 👈 demo devices
+        "active_devices"
     )
 
     now = timezone.now()
 
+    # Build a client_id → branch name map for manual demos in one query
+    from StoreShop.models import Shop
+    manual_client_ids = [
+        d.client_id for d in demos
+        if d.original_license is None and d.client_id
+    ]
+    shop_branch_map = {}
+    if manual_client_ids:
+        shops = Shop.objects.filter(
+            client_id__in=manual_client_ids
+        ).select_related('branch').values('client_id', 'branch__name')
+        shop_branch_map = {s['client_id']: s['branch__name'] for s in shops}
+
     for d in demos:
-        # 🔹 auto expire demo after 5 days
+        # auto expire demo after 5 days
         if d.expires_at and d.expires_at < now and d.status:
             d.status = False
             d.save(update_fields=["status"])
 
-        # ALWAYS show Demo License stats/devices
+        # stats/devices
         d.total_lic = d.demo_login_limit
         d.devices = d.active_devices.all()
         d.reg_dev = d.devices.count()
         d.bal_lic = d.total_lic - d.reg_dev
 
+        # branch name
+        if d.original_license and d.original_license.shop and d.original_license.shop.branch:
+            d.branch_name = d.original_license.shop.branch.name
+        elif d.client_id and d.client_id in shop_branch_map:
+            d.branch_name = shop_branch_map[d.client_id]
+        else:
+            d.branch_name = None
+
     return render(request, "demo_mobile_licensing.html", {"demos": demos})
 
 
 def add_mobile_demo_licencing(request):
+    from branch.models import Branch
     og_licenses = MobileControl.objects.select_related('shop', 'project').all()
+    branches = Branch.objects.all()
 
     if request.method == "POST":
         og_id = request.POST.get("og_license")
@@ -55,7 +80,7 @@ def add_mobile_demo_licencing(request):
         messages.success(request, f"Demo License {demo_key} created")
         return redirect("DemoLicensing:demo_list")
 
-    return render(request, "add_demo_license.html", {"og_licenses": og_licenses})
+    return render(request, "add_demo_license.html", {"og_licenses": og_licenses, "branches": branches})
 
 
 def edit_demo_license(request, pk):
@@ -156,6 +181,23 @@ def get_all_branches(request):
     """Return all branches as JSON."""
     branches = Branch.objects.values("id", "name")
     return JsonResponse(list(branches), safe=False)
+
+def get_licenses_by_branch(request, branch_id):
+    """Return OG MobileControl licenses filtered by branch via shop__branch."""
+    from MobileApp.models import MobileControl
+    licenses = MobileControl.objects.filter(
+        shop__branch_id=branch_id
+    ).select_related('shop', 'project').values(
+        "id", "customer_name", "license_key", "project__project_name", "shop__place"
+    )
+    data = [
+        {
+            "id": lic["id"],
+            "label": f"{lic['customer_name']} ({lic['shop__place'] or ''}) — {lic['project__project_name']} ({lic['license_key']})"
+        }
+        for lic in licenses
+    ]
+    return JsonResponse(data, safe=False)
 
 def get_corporates_by_branch(request, branch_id):
     """Return Stores (Corporates) for a given Branch."""

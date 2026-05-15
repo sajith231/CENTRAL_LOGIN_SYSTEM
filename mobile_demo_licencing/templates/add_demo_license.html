@@ -1,46 +1,85 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+  select.form-control {
+    color: black !important;
+    background-color: white !important;
+  }
+  select.form-control option {
+    color: black !important;
+    background-color: white !important;
+  }
+</style>
+
 <div class="card" style="background:#0f172a; padding:20px; color:white;">
 
-  <!-- Heading -->
-  <h2 style="color:white; margin-bottom:20px;">
-    Create Demo License
-  </h2>
+  <h2 style="color:white; margin-bottom:20px;">Create Demo License</h2>
 
   <form method="POST">
     {% csrf_token %}
 
-    <!-- Label -->
-    <label style="color:white; font-weight:600;">
-      Select OG License
-    </label>
-
-    <!-- Dropdown -->
-    <select name="og_license" class="form-control" required style="
-              background:#ffffff;
-              color:#000000;
-              border:1px solid #334155;
-              margin-top:6px;
-            ">
-
-      <option value="" style="color:#000;">Select</option>
-
-      {% for lic in og_licenses %}
-      <option value="{{ lic.id }}" style="color:#000;">
-        {{ lic.customer_name }} ({{ lic.shop.place }}) — {{ lic.project.project_name }} ({{ lic.license_key }})
-      </option>
+    <!-- Branch Dropdown -->
+    <label style="color:white; font-weight:600;">Branch</label>
+    <select id="branchSelect" class="form-control mb-3" style="margin-top:6px;">
+      <option value="">Select Branch</option>
+      {% for branch in branches %}
+      <option value="{{ branch.id }}">{{ branch.name }}</option>
       {% endfor %}
     </select>
 
-    <!-- Button -->
-    <button class="btn btn-primary mt-3">
-      Create Demo
-    </button>
+    <!-- OG License Dropdown (filtered by branch) -->
+    <label style="color:white; font-weight:600; margin-top:10px;">Select OG License</label>
+    <select name="og_license" id="ogLicenseSelect" class="form-control" required style="margin-top:6px;">
+      <option value="">— Select Branch first —</option>
+    </select>
+
+    <button class="btn btn-primary mt-3">Create Demo</button>
     <a href="{% url 'DemoLicensing:demo_list' %}" class="btn btn-secondary mt-3"
       style="background:#64748b; border:none; margin-left:10px;">Back</a>
 
   </form>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const branchSelect = document.getElementById("branchSelect");
+    const ogLicenseSelect = document.getElementById("ogLicenseSelect");
+
+    branchSelect.addEventListener("change", function () {
+      const branchId = this.value;
+
+      // Reset OG license dropdown
+      ogLicenseSelect.innerHTML = "<option value=''>— Select Branch first —</option>";
+
+      if (!branchId) return;
+
+      ogLicenseSelect.innerHTML = "<option value=''>Loading...</option>";
+
+      fetch("/mobile-demo/get-licenses-by-branch/" + branchId + "/")
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          ogLicenseSelect.innerHTML = "<option value=''>Select OG License</option>";
+          if (data.length === 0) {
+            ogLicenseSelect.innerHTML += "<option value=''>No licenses found for this branch</option>";
+            return;
+          }
+          data.forEach(function (lic) {
+            const opt = document.createElement("option");
+            opt.value = lic.id;
+            opt.textContent = lic.label;
+            ogLicenseSelect.appendChild(opt);
+          });
+        })
+        .catch(function (err) {
+          console.error("Error loading licenses:", err);
+          ogLicenseSelect.innerHTML = "<option value=''>Error loading licenses</option>";
+        });
+    });
+  });
+</script>
 
 {% endblock %}

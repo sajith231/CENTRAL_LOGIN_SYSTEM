@@ -16,4 +16,5 @@ urlpatterns = [
     path("get-branches/", views.get_all_branches, name="get_all_branches"),
     path("get-corporates/<int:branch_id>/", views.get_corporates_by_branch, name="get_corporates_by_branch"),
     path("get-shops/<int:corporate_id>/", views.get_shops_by_corporate, name="get_shops_by_corporate"),
+    path("get-licenses-by-branch/<int:branch_id>/", views.get_licenses_by_branch, name="get_licenses_by_branch"),
 ]
