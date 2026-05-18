@@ -9,15 +9,11 @@
     <h2 style="margin:0; font-size:20px; color:white;">
       Mobile Demo Licensing
     </h2>
-
     <div style="display:flex; gap:8px;">
-      <!-- OG Based Demo -->
       <a href="{% url 'DemoLicensing:demo_add' %}" class="btn"
         style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
         <i class="fa-solid fa-plus"></i> Add Demo License
       </a>
-
-      <!-- Manual Demo -->
       <a href="{% url 'DemoLicensing:demo_add_manual' %}" class="btn"
         style="background:#f59e0b; color:black; padding:8px 16px; border-radius:6px;">
         <i class="fa-solid fa-pen"></i> Manual Demo
@@ -25,10 +21,31 @@
     </div>
   </div>
 
+  <!-- Filters -->
+  <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+
+    <!-- Branch Search -->
+    <input type="text" id="branchSearch" placeholder="Search branch..."
+      style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px;
+             padding:7px 12px; font-size:13px; min-width:180px; outline:none;"
+      oninput="applyFilters()" />
+
+    <!-- Status Filter -->
+    <select id="statusFilter"
+      style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px;
+             padding:7px 12px; font-size:13px; outline:none;"
+      onchange="applyFilters()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+
+  </div>
+
   <!-- Table -->
   {% if demos %}
   <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; color:white;">
+    <table id="demoTable" style="width:100%; border-collapse:collapse; color:white;">
       <thead>
         <tr style="background:#1e293b;">
           <th style="padding:12px; white-space:nowrap;">No</th>
@@ -37,6 +54,7 @@
           <th style="padding:12px; white-space:nowrap;">Company</th>
           <th style="padding:12px; white-space:nowrap;">Project / OG License</th>
           <th style="padding:12px; white-space:nowrap;">Demo License</th>
+          <th style="padding:12px; white-space:nowrap;">Demo Key Copy</th>
           <th style="padding:12px; white-space:nowrap;">T.Lic</th>
           <th style="padding:12px; white-space:nowrap;">Reg.Dev</th>
           <th style="padding:12px; white-space:nowrap;">Bal.Lic</th>
@@ -47,9 +65,13 @@
           <th style="padding:12px; white-space:nowrap;">Actions</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="demoTableBody">
         {% for d in demos|dictsortreversed:"created_at" %}
-        <tr style="background:#0f172a; border-bottom:1px solid #1e293b;">
+        <tr class="demo-row"
+            data-branch="{{ d.branch_name|default:'' |lower }}"
+            data-status="{% if d.status %}active{% else %}inactive{% endif %}"
+            style="background:#0f172a; border-bottom:1px solid #1e293b;">
+
           <td style="padding:12px; white-space:nowrap;">{{ forloop.counter }}</td>
 
           <!-- Created -->
@@ -69,51 +91,49 @@
           <!-- Company -->
           <td style="padding:12px; white-space:nowrap;">
             {% if d.original_license %}
-            {{ d.original_license.customer_name }}
+              {{ d.original_license.customer_name }}
             {% else %}
-            {{ d.company_name }}
+              {{ d.company_name }}
             {% endif %}
           </td>
 
           <!-- Project / OG -->
           <td style="padding:12px; white-space:nowrap;">
             {% if d.original_license %}
-            <strong>{{ d.original_license.project.project_name }}</strong><br>
-            <small style="color:#9ca3af;">
-              ({{ d.original_license.license_key }})
-            </small>
+              <strong>{{ d.original_license.project.project_name }}</strong><br>
+              <small style="color:#9ca3af;">({{ d.original_license.license_key }})</small>
             {% else %}
-            <strong>{{ d.project.project_name }}</strong><br>
-            <small style="color:#9ca3af;">(Manual)</small>
+              <strong>{{ d.project.project_name }}</strong><br>
+              <small style="color:#9ca3af;">(Manual)</small>
             {% endif %}
           </td>
 
           <!-- Demo License -->
           <td style="padding:12px; white-space:nowrap;">
-            <code style="color:#fbbf24;">
-              {{ d.demo_license }}
-            </code>
+            <code style="color:#fbbf24;">{{ d.demo_license }}</code>
+          </td>
+
+          <!-- Demo Key Copy -->
+          <td style="padding:12px; text-align:center; white-space:nowrap;">
+            <button onclick="copyKey('{{ d.demo_license }}', this)"
+              style="background:#334155; color:white; border:none; border-radius:8px;
+                     padding:7px 14px; cursor:pointer; font-size:13px; display:inline-flex;
+                     align-items:center; gap:6px;">
+              <i class="fa-solid fa-key"></i> Key
+            </button>
           </td>
 
           <!-- T.Lic -->
-          <td style="padding:12px; text-align:center; white-space:nowrap;">
-            {{ d.total_lic }}
-          </td>
+          <td style="padding:12px; text-align:center; white-space:nowrap;">{{ d.total_lic }}</td>
 
           <!-- Reg.Dev -->
-          <td style="padding:12px; text-align:center; white-space:nowrap;">
-            {{ d.reg_dev }}
-          </td>
+          <td style="padding:12px; text-align:center; white-space:nowrap;">{{ d.reg_dev }}</td>
 
           <!-- Bal.Lic -->
-          <td style="padding:12px; text-align:center; white-space:nowrap;">
-            {{ d.bal_lic }}
-          </td>
+          <td style="padding:12px; text-align:center; white-space:nowrap;">{{ d.bal_lic }}</td>
 
           <!-- Demo Limit -->
-          <td style="padding:12px; text-align:center; white-space:nowrap;">
-            {{ d.demo_login_limit }}
-          </td>
+          <td style="padding:12px; text-align:center; white-space:nowrap;">{{ d.demo_login_limit }}</td>
 
           <!-- Expiry Date -->
           <td style="padding:12px; text-align:center; white-space:nowrap;">
@@ -131,29 +151,31 @@
           <!-- Status -->
           <td style="padding:12px; white-space:nowrap;">
             {% if d.status %}
-            <span style="color:#16a34a; font-weight:bold;">Active</span>
+              <span style="color:#16a34a; font-weight:bold;">Active</span>
             {% else %}
-            <span style="color:#dc2626; font-weight:bold;">Inactive</span>
+              <span style="color:#dc2626; font-weight:bold;">Inactive</span>
             {% endif %}
           </td>
 
           <!-- Actions -->
           <td style="padding:12px; display:flex; gap:6px; white-space:nowrap;">
             <a href="{% url 'DemoLicensing:demo_edit' d.id %}" class="btn btn-sm"
-              style="background:#2563eb; color:white;">
-              Edit
-            </a>
-
+              style="background:#2563eb; color:white;">Edit</a>
             <a href="{% url 'DemoLicensing:demo_delete' d.id %}" class="btn btn-sm"
-              style="background:#b91c1c; color:white;" onclick="return confirm('Delete this demo license?');">
-              Delete
-            </a>
+              style="background:#b91c1c; color:white;"
+              onclick="return confirm('Delete this demo license?');">Delete</a>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- No results message -->
+  <div id="noResults" style="display:none; padding:30px; text-align:center; color:#9ca3af;">
+    No matching records found.
+  </div>
+
   {% else %}
   <div style="padding:30px; text-align:center; color:#9ca3af;">
     No demo licenses created yet.
@@ -169,11 +191,7 @@
           <h5 class="modal-title">
             <i class="fa-solid fa-mobile-screen"></i>
             Devices —
-            {% if d.original_license %}
-            {{ d.original_license.customer_name }}
-            {% else %}
-            {{ d.company_name }}
-            {% endif %}
+            {% if d.original_license %}{{ d.original_license.customer_name }}{% else %}{{ d.company_name }}{% endif %}
           </h5>
           <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
@@ -212,6 +230,69 @@
   </div>
   {% endfor %}
 
-
 </div>
+
+<!-- Toast notification for copy -->
+<div id="copyToast"
+  style="display:none; position:fixed; bottom:28px; right:28px; background:#16a34a; color:white;
+         padding:10px 20px; border-radius:8px; font-size:14px; z-index:9999;
+         box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+  <i class="fa-solid fa-check"></i> Copied!
+</div>
+
+<script>
+  // ── Copy demo key ──────────────────────────────────────────
+  function copyKey(key, btn) {
+    navigator.clipboard.writeText(key).then(function () {
+      // briefly change button appearance
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+      btn.style.background = '#16a34a';
+      setTimeout(function () {
+        btn.innerHTML = original;
+        btn.style.background = '#334155';
+      }, 1500);
+
+      // show toast
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(function () { toast.style.display = 'none'; }, 2000);
+    }).catch(function () {
+      // fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = key;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    });
+  }
+
+  // ── Filters ────────────────────────────────────────────────
+  function applyFilters() {
+    const branchVal = document.getElementById('branchSearch').value.toLowerCase().trim();
+    const statusVal = document.getElementById('statusFilter').value;
+
+    const rows = document.querySelectorAll('.demo-row');
+    let visible = 0;
+
+    rows.forEach(function (row) {
+      const branch = row.getAttribute('data-branch');
+      const status = row.getAttribute('data-status');
+
+      const branchMatch = branchVal === '' || branch.includes(branchVal);
+      const statusMatch = statusVal === '' || status === statusVal;
+
+      if (branchMatch && statusMatch) {
+        row.style.display = '';
+        visible++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+
 {% endblock %}
