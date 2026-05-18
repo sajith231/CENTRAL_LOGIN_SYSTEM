@@ -59,7 +59,7 @@ def demo_license_list(request):
 def add_mobile_demo_licencing(request):
     from branch.models import Branch
     og_licenses = MobileControl.objects.select_related('shop', 'project').all()
-    branches = Branch.objects.all()
+    branches = Branch.objects.all().order_by('name')
 
     if request.method == "POST":
         og_id = request.POST.get("og_license")
