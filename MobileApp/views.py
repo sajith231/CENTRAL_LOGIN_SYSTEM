@@ -1355,3 +1355,74 @@ def add_modules_to_custom_package(request, control_pk, pkg_pk):
         'added': added,
         'all_modules': all_modules,
     })
+
+
+@csrf_exempt
+@require_POST
+def update_invoice_details(request, pk):
+    """Superuser-only: update invoice_number, invoice_amount, and remark on any billing record."""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    history = get_object_or_404(MobileBillingHistory, pk=pk)
+
+    try:
+        data = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    invoice_number = data.get('invoice_number', '').strip()
+    invoice_amount = data.get('invoice_amount', '').strip()
+    remark = data.get('remark', '').strip()
+
+    # invoice_amount must be a valid decimal if provided
+    if invoice_amount:
+        try:
+            from decimal import Decimal, InvalidOperation
+            invoice_amount = Decimal(invoice_amount)
+        except InvalidOperation:
+            return JsonResponse({'success': False, 'error': 'Invalid invoice amount'}, status=400)
+    else:
+        invoice_amount = None
+
+    history.invoice_number = invoice_number or None
+    history.invoice_amount = invoice_amount
+    history.remark = remark
+    history.save(update_fields=['invoice_number', 'invoice_amount', 'remark'])
+
+    return JsonResponse({
+        'success': True,
+        'invoice_number': history.invoice_number or '',
+        'invoice_amount': str(history.invoice_amount) if history.invoice_amount else '',
+        'remark': history.remark or '',
+    })
+
+
+@csrf_exempt
+@require_POST
+def super_delete_billing_history(request, pk):
+    """Superuser-only: force-delete any billing record (billed or unbilled) and recalculate control state."""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    history = get_object_or_404(MobileBillingHistory, pk=pk)
+    control = history.control
+
+    history.delete()
+
+    # Recalculate expiry_date and login_limit from the latest remaining record
+    remaining = control.billing_history.order_by('-created_at')
+    if remaining.exists():
+        latest = remaining.first()
+        control.expiry_date = latest.new_expiry_date
+        control.login_limit = latest.new_login_limit
+    else:
+        control.expiry_date = None
+        control.login_limit = 0
+        control.package = None
+        control.active_custom_package = None
+
+    control.bill_status = not remaining.filter(bill_status=False).exists()
+    control.save()
+
+    return JsonResponse({'success': True})

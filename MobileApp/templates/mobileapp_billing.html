@@ -617,6 +617,60 @@
     </div>
     {% endif %}
 
+    {% if request.user.is_superuser %}
+    <!-- SUPERUSER: EDIT INVOICE DETAILS MODAL -->
+    <div id="editInvoiceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+        z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#0f172a; padding:28px; border-radius:14px; width:460px; max-width:95vw;
+                    border:1px solid #3b82f6; box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <div style="background:rgba(59,130,246,0.15); border-radius:8px; padding:6px 10px;">
+                    <i class="fas fa-file-invoice" style="color:#3b82f6;"></i>
+                </div>
+                <h5 style="color:white; margin:0; font-weight:600;">Edit Invoice Details</h5>
+            </div>
+            <p style="color:#64748b; font-size:0.8rem; margin-bottom:20px; padding-left:2px;">
+                Superuser only — updates Invoice No, Amount and Remark in place.
+            </p>
+
+            <div class="mb-3">
+                <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                    <i class="fas fa-file-invoice me-1" style="color:#3b82f6;"></i>Invoice Number
+                </label>
+                <input type="text" id="ei_invoice_number" class="form-control" placeholder="e.g. INV-2024-001"
+                    style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px;">
+            </div>
+
+            <div class="mb-3">
+                <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                    <i class="fas fa-rupee-sign me-1" style="color:#10b981;"></i>Invoice Amount
+                </label>
+                <input type="number" step="0.01" id="ei_invoice_amount" class="form-control" placeholder="e.g. 1500.00"
+                    style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px;">
+            </div>
+
+            <div class="mb-4">
+                <label style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
+                    <i class="fas fa-comment-alt me-1" style="color:#f59e0b;"></i>Remark / Notes
+                </label>
+                <textarea id="ei_remark" rows="2" class="form-control" placeholder="Add notes..."
+                    style="background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:10px 14px; resize:none; font-size:0.85rem;"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" onclick="closeEditInvoiceModal()" class="btn btn-sm"
+                    style="background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; padding:8px 18px;">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" onclick="submitEditInvoice()" class="btn btn-sm"
+                    style="background:#3b82f6; color:white; border:none; border-radius:8px; padding:8px 20px; font-weight:700;">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- INVOICE MODAL -->
     <div id="invoiceModal" style="display:none;
         position:fixed; inset:0; background:rgba(0,0,0,.6);
@@ -1130,6 +1184,12 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-comment me-1"></i>Remark
                                     </th>
+                                    {% if request.user.is_superuser %}
+                                    <th
+                                        style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e; text-align:center;">
+                                        <i class="fas fa-tools me-1"></i>Actions
+                                    </th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody style="background:transparent;">
@@ -1234,18 +1294,18 @@
                                     {% endif %}
                                     <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                         {% if h.bill_status and h.invoice_number %}
-                                        <span style="font-weight:600;">{{ h.invoice_number }}</span>
+                                        <span style="font-weight:600;" id="inv_no_{{ h.id }}">{{ h.invoice_number }}</span>
                                         {% else %}
-                                        <span style="color:#64748b;">—</span>
+                                        <span style="color:#64748b;" id="inv_no_{{ h.id }}">—</span>
                                         {% endif %}
                                     </td>
                                     <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
                                         {% if h.bill_status and h.invoice_amount %}
-                                        <span style="font-weight:600;">
+                                        <span style="font-weight:600;" id="inv_amt_{{ h.id }}">
                                             ₹ {{ h.invoice_amount }}
                                         </span>
                                         {% else %}
-                                        <span style="color:#64748b;">—</span>
+                                        <span style="color:#64748b;" id="inv_amt_{{ h.id }}">—</span>
                                         {% endif %}
                                     </td>
 
@@ -1255,8 +1315,32 @@
                                     </td>
                                     <td
                                         style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
-                                        {{ h.remark|default:"—" }}
+                                        <span id="inv_remark_{{ h.id }}">{{ h.remark|default:"—" }}</span>
                                     </td>
+                                    {% if request.user.is_superuser %}
+                                    <td style="padding:12px; background:transparent; text-align:center; white-space:nowrap;">
+                                        <div style="display:inline-flex; align-items:center; gap:6px;">
+                                            <!-- Edit Invoice Details -->
+                                            <button type="button"
+                                                onclick="openEditInvoiceModal({{ h.id }}, '{{ h.invoice_number|default:''|escapejs }}', '{{ h.invoice_amount|default:''|escapejs }}', '{{ h.remark|default:''|escapejs }}')"
+                                                style="background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.4); border-radius:8px; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;"
+                                                onmouseover="this.style.background='rgba(59,130,246,0.35)'"
+                                                onmouseout="this.style.background='rgba(59,130,246,0.15)'"
+                                                title="Edit Invoice / Remark (Superuser)">
+                                                <i class="fas fa-pencil-alt" style="font-size:0.75rem;"></i>
+                                            </button>
+                                            <!-- Force Delete (any record) -->
+                                            <button type="button"
+                                                onclick="superDeleteRecord({{ h.id }})"
+                                                style="background:rgba(220,38,38,0.15); color:#ef4444; border:1px solid rgba(220,38,38,0.4); border-radius:8px; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s;"
+                                                onmouseover="this.style.background='rgba(220,38,38,0.35)'"
+                                                onmouseout="this.style.background='rgba(220,38,38,0.15)'"
+                                                title="Force Delete Record (Superuser)">
+                                                <i class="fas fa-trash-alt" style="font-size:0.75rem;"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr style="background:transparent;">
@@ -1610,6 +1694,72 @@
             }
         }
         return cookieValue;
+    }
+</script>
+<script>
+    // ── Superuser: Edit Invoice Details (Invoice No, Amount, Remark) ──
+    let _editInvoiceId = null;
+
+    function openEditInvoiceModal(id, invoiceNo, invoiceAmt, remark) {
+        _editInvoiceId = id;
+        document.getElementById('ei_invoice_number').value = invoiceNo || '';
+        document.getElementById('ei_invoice_amount').value = invoiceAmt || '';
+        document.getElementById('ei_remark').value = remark || '';
+        document.getElementById('editInvoiceModal').style.display = 'flex';
+    }
+
+    function closeEditInvoiceModal() {
+        document.getElementById('editInvoiceModal').style.display = 'none';
+        _editInvoiceId = null;
+    }
+
+    function submitEditInvoice() {
+        if (!_editInvoiceId) return;
+        const invoiceNo  = document.getElementById('ei_invoice_number').value.trim();
+        const invoiceAmt = document.getElementById('ei_invoice_amount').value.trim();
+        const remark     = document.getElementById('ei_remark').value.trim();
+
+        fetch(`/mobileapp/billing-history/update-invoice/${_editInvoiceId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoice_number: invoiceNo, invoice_amount: invoiceAmt, remark: remark })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Failed to save'); return; }
+
+            // Update cells in-place without full reload
+            const noEl  = document.getElementById('inv_no_'     + _editInvoiceId);
+            const amtEl = document.getElementById('inv_amt_'    + _editInvoiceId);
+            const remEl = document.getElementById('inv_remark_' + _editInvoiceId);
+
+            if (noEl)  { noEl.textContent  = data.invoice_number || '—'; noEl.style.color  = data.invoice_number  ? '' : '#64748b'; }
+            if (amtEl) { amtEl.textContent = data.invoice_amount ? '₹ ' + parseFloat(data.invoice_amount).toFixed(2) : '—'; amtEl.style.color = data.invoice_amount ? '' : '#64748b'; }
+            if (remEl) { remEl.textContent = data.remark || '—'; }
+
+            closeEditInvoiceModal();
+        })
+        .catch(err => { console.error(err); alert('Error saving invoice details'); });
+    }
+
+    document.getElementById('editInvoiceModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeEditInvoiceModal();
+    });
+
+    // ── Superuser: Force-delete any billing record ──
+    function superDeleteRecord(id) {
+        if (!confirm('Force delete this billing record?\n\nThis will permanently remove it and recalculate the control state. This cannot be undone.')) return;
+        fetch(`/mobileapp/billing-history/super-delete/${id}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Failed to delete'); return; }
+            location.reload();
+        })
+        .catch(err => { console.error(err); alert('Error deleting record'); });
     }
 </script>
 <script>
