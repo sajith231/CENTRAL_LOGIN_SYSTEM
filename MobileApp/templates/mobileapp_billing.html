@@ -302,7 +302,7 @@
     </div>
 
 
-    {% if request.user.is_superuser or control.licence_type == 'transfer' %}
+    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or control.licence_type == 'transfer' %}
     <!-- EDIT RECORD MODAL -->
     <div id="editUnbilledModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
         z-index:9999; align-items:center; justify-content:center;">
@@ -617,7 +617,7 @@
     </div>
     {% endif %}
 
-    {% if request.user.is_superuser %}
+    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
     <!-- SUPERUSER: EDIT INVOICE DETAILS MODAL -->
     <div id="editInvoiceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
         z-index:9999; align-items:center; justify-content:center;">
@@ -804,7 +804,7 @@
 
                             
 
-                            {% if request.user.is_superuser %}
+                            {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                             <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                 Manual Days Adjustment (Superuser Only)
                             </label>
@@ -885,7 +885,7 @@
                             <div class="row g-4">
                                 <!-- VALIDITY SECTION -->
                                 <div class="col-12" id="section_validity">
-                                    {% if request.user.is_superuser %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
                                         Manual Days Adjustment (Superuser Only)
@@ -1159,7 +1159,7 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-credit-card me-1"></i>Status
                                     </th>
-                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-money-check-alt me-1"></i>Pymt Status
@@ -1184,7 +1184,7 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-comment me-1"></i>Remark
                                     </th>
-                                    {% if request.user.is_superuser %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e; text-align:center;">
                                         <i class="fas fa-tools me-1"></i>Actions
@@ -1237,7 +1237,7 @@
                                         <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
                                     </td>
 
-                                    {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_billing' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <td style="padding:12px; background:transparent;">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <button id="billingStatusBtn{{ h.id }}"
@@ -1253,7 +1253,7 @@
                                             </button>
 
                                             {% if not h.bill_status or control.licence_type == 'transfer' %}
-                                            {% if request.user.is_superuser or control.licence_type == 'transfer' %}
+                                            {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or control.licence_type == 'transfer' %}
                                             <button type="button"
                                                 onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}', this.dataset.expiry, this.dataset.oldExpiry)"
                                                 data-expiry="{% if h.new_expiry_date %}{{ h.new_expiry_date|date:'Y-m-d' }}{% endif %}"
@@ -1281,7 +1281,7 @@
                                         </div>
                                     </td>
                                     {% endif %}
-                                    {% if request.user.is_superuser or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <td style="padding:12px; background:transparent;">
                                         <select onchange="updatePaymentStatus({{ h.id }}, this.value)"
                                                 style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
@@ -1317,7 +1317,7 @@
                                         style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
                                         <span id="inv_remark_{{ h.id }}">{{ h.remark|default:"—" }}</span>
                                     </td>
-                                    {% if request.user.is_superuser %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                                     <td style="padding:12px; background:transparent; text-align:center; white-space:nowrap;">
                                         <div style="display:inline-flex; align-items:center; gap:6px;">
                                             <!-- Edit Invoice Details -->

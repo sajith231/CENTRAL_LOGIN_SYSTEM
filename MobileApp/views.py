@@ -948,7 +948,7 @@ def mobile_control_billing(request, pk):
             else:
                 new_expiry = timezone.now() + timedelta(days=extend_days)
 
-            if new_expiry < timezone.now() and not request.user.is_superuser:
+            if new_expiry < timezone.now() and not is_super_level_user(request):
                 messages.error(request, "Expiry date cannot be in the past")
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
 
@@ -1103,7 +1103,7 @@ def edit_billing_history(request, pk):
             base_date = control.expiry_date or timezone.now()
             new_expiry = base_date + timedelta(days=extend_days)
 
-            if new_expiry < timezone.now() and not request.user.is_superuser:
+            if new_expiry < timezone.now() and not is_super_level_user(request):
                 messages.error(request, "Expiry date cannot be in the past")
                 return redirect("MobileApp:mobile_control_billing", pk=control.id)
 
@@ -1360,8 +1360,8 @@ def add_modules_to_custom_package(request, control_pk, pkg_pk):
 @csrf_exempt
 @require_POST
 def update_invoice_details(request, pk):
-    """Superuser-only: update invoice_number, invoice_amount, and remark on any billing record."""
-    if not request.user.is_superuser:
+    """Super-level-only: update invoice_number, invoice_amount, and remark on any billing record."""
+    if not is_super_level_user(request):
         return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
 
     history = get_object_or_404(MobileBillingHistory, pk=pk)
@@ -1401,8 +1401,8 @@ def update_invoice_details(request, pk):
 @csrf_exempt
 @require_POST
 def super_delete_billing_history(request, pk):
-    """Superuser-only: force-delete any billing record (billed or unbilled) and recalculate control state."""
-    if not request.user.is_superuser:
+    """Super-level-only: force-delete any billing record (billed or unbilled) and recalculate control state."""
+    if not is_super_level_user(request):
         return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
 
     history = get_object_or_404(MobileBillingHistory, pk=pk)
