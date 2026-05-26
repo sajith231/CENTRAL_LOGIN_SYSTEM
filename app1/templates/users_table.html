@@ -34,6 +34,9 @@
             <th style="text-align:left; padding:10px;">User Role</th>
             <th style="text-align:left; padding:10px;">Level</th>
             <th style="text-align:left; padding:10px;">Password</th>
+            {% if request.user.is_superuser %}
+            <th style="text-align:left; padding:10px;">Status</th>
+            {% endif %}
             <th style="text-align:left; padding:10px;">Actions</th>
           </tr>
         </thead>
@@ -85,6 +88,24 @@
             <td style="padding:10px;">{{ r.level }}</td>
             <td style="padding:10px; font-family:monospace;">{{ r.password }}</td>
 
+            {% if request.user.is_superuser %}
+            <td style="padding:10px;">
+              <button
+                id="statusBtn{{ r.id }}"
+                onclick="toggleUserStatus({{ r.id }})"
+                style="background:{% if r.is_active %}#16a34a{% else %}#b91c1c{% endif %};
+                       color:white; border:none; border-radius:6px; padding:6px 14px;
+                       font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+                       display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
+                {% if r.is_active %}
+                <i class="fa-solid fa-circle-check"></i> Active
+                {% else %}
+                <i class="fa-solid fa-circle-xmark"></i> Inactive
+                {% endif %}
+              </button>
+            </td>
+            {% endif %}
+
             <td style="padding:6px 10px;">
               <div style="display:flex; gap:8px;">
                 <!-- ✏️ Edit -->
@@ -115,4 +136,40 @@
     </div>
   </div>
 </div>
+
+{% if request.user.is_superuser %}
+<script>
+  function getCookie(name) {
+    let v = null;
+    if (document.cookie) {
+      for (let c of document.cookie.split(';')) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) { v = decodeURIComponent(c.slice(name.length + 1)); break; }
+      }
+    }
+    return v;
+  }
+
+  function toggleUserStatus(id) {
+    fetch(`/users/${id}/toggle-status/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) { alert(data.error || 'Failed'); return; }
+      const btn = document.getElementById('statusBtn' + id);
+      if (data.is_active) {
+        btn.style.background = '#16a34a';
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Active';
+      } else {
+        btn.style.background = '#b91c1c';
+        btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Inactive';
+      }
+    })
+    .catch(err => { console.error(err); alert('Error toggling status'); });
+  }
+</script>
+{% endif %}
 {% endblock %}

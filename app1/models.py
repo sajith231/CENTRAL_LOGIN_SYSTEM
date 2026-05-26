@@ -25,6 +25,8 @@ class Users(models.Model):
     # 🔴 NEW FIELD – will store list of allowed submenu IDs
     allowed_menus = models.JSONField(default=list, blank=True)
 
+    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Users, LEVEL_CHOICES
 from branch.models import Branch
@@ -41,6 +43,9 @@ def login_view(request):
         try:
             custom_user = Users.objects.get(email=username_or_email.lower())
             if custom_user.password == password:
+                if not custom_user.is_active:
+                    messages.error(request, "Your account has been deactivated. Please contact the administrator.")
+                    return render(request, "login.html")
                 request.session['custom_user_id'] = custom_user.id
                 request.session['custom_user_name'] = custom_user.name
                 request.session['custom_user_email'] = custom_user.email
@@ -195,3 +200,17 @@ def delete_user(request, pk):
         messages.success(request, "User deleted successfully.")
 
     return redirect("users_table")
+
+
+# ================= TOGGLE USER ACTIVE STATUS (DJANGO SUPERUSER ONLY) =================
+@csrf_exempt
+@require_POST
+def toggle_user_status(request, pk):
+    if not (request.user.is_authenticated and request.user.is_superuser):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    u = get_object_or_404(Users, pk=pk)
+    u.is_active = not u.is_active
+    u.save(update_fields=['is_active'])
+
+    return JsonResponse({'success': True, 'is_active': u.is_active})
