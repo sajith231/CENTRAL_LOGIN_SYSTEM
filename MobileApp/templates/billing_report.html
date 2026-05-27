@@ -422,25 +422,25 @@
   <div class="stats-container">
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-list"></i> Total Records</div>
-      <div class="stat-value">{{ total_records }}</div>
+      <div class="stat-value" id="stat-total">{{ total_records }}</div>
       <div class="stat-subtext">All billing entries</div>
     </div>
 
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-circle-check"></i> Billed</div>
-      <div class="stat-value">{{ billed_records }}</div>
+      <div class="stat-value" id="stat-billed">{{ billed_records }}</div>
       <div class="stat-subtext">Invoice paid</div>
     </div>
 
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-clock"></i> Pending</div>
-      <div class="stat-value">{{ pending_records }}</div>
+      <div class="stat-value" id="stat-pending">{{ pending_records }}</div>
       <div class="stat-subtext">Awaiting payment</div>
     </div>
 
     <div class="stat-card outstanding">
       <div class="stat-label"><i class="fa-solid fa-hand-holding-dollar"></i> Total Outstanding</div>
-      <div class="stat-value" style="color: #f87171;">₹{{ total_outstanding|floatformat:2 }}</div>
+      <div class="stat-value" id="stat-outstanding" style="color: #f87171;">₹{{ total_outstanding|floatformat:2 }}</div>
       <div class="stat-subtext">Unpaid amount (Not Paid)</div>
     </div>
   </div>
@@ -482,8 +482,8 @@
     </select>
 
     <select id="amountFilter" class="filter-select" onchange="applyFilters()">
-      <option value="">All Invoice Amount</option>
-      <option value="has_value" selected>Greater than 0</option>
+      <option value="" selected>All Invoice Amount</option>
+      <option value="has_value">Greater than 0</option>
     </select>
 
     <!-- Rows per page -->
@@ -526,6 +526,7 @@
             data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}"
             data-branch="{{ h.control.shop.branch.id|default:'' }}"
             data-payment="{{ h.payment_status|default:'Not Paid' }}"
+            data-invoice-amount="{{ h.invoice_amount|default:'0' }}"
             data-status-amount="{% if h.invoice_amount %}has_value{% else %}is_zero{% endif %}">
 
           <td style="color:#64748b; font-weight:600; white-space:nowrap;" class="row-num">{{ forloop.counter }}</td>
@@ -736,15 +737,39 @@
       const matchBill = !bill || row.getAttribute('data-bill') === bill;
       const matchBranch = !branch || row.getAttribute('data-branch') === branch;
       const matchPayment = !payment || row.getAttribute('data-payment') === payment;
-      
+
       const rowAmtStatus = row.getAttribute('data-status-amount');
       const matchAmount = !amountFilter || (amountFilter === 'has_value' && rowAmtStatus === 'has_value');
 
       return matchSearch && matchBill && matchBranch && matchPayment && matchAmount;
     });
 
+    updateStats();
     currentPage = 1;
     renderPage();
+  }
+
+  function updateStats() {
+    let total = filteredRows.length;
+    let billed = 0;
+    let pending = 0;
+    let outstanding = 0;
+
+    filteredRows.forEach(row => {
+      const billStatus = row.getAttribute('data-bill');
+      const paymentStatus = row.getAttribute('data-payment');
+      const amount = parseFloat(row.getAttribute('data-invoice-amount')) || 0;
+
+      if (billStatus === 'billed') billed++;
+      else pending++;
+
+      if (paymentStatus === 'Not Paid') outstanding += amount;
+    });
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-billed').textContent = billed;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-outstanding').textContent = '₹' + outstanding.toFixed(2);
   }
 
   function renderPage() {
