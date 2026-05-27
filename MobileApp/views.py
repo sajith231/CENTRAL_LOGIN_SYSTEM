@@ -910,6 +910,11 @@ def mobile_control_billing(request, pk):
 
                 
         elif operation_type == 'validity':
+            # Only Django superuser or Super User level can update validity
+            is_super = request.user.is_superuser or request.session.get('custom_user_level') == 'Super User'
+            if not is_super:
+                messages.error(request, "Permission denied. Only Super Users can update validity.")
+                return redirect("MobileApp:mobile_control_billing", pk=pk)
             extend_days = int(request.POST.get("extend_days") or 0)
             
         elif operation_type == 'both':

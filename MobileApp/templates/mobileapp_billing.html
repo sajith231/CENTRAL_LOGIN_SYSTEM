@@ -726,7 +726,7 @@
                     <form method="POST" id="billingForm">
                         {% csrf_token %}
                         <input type="hidden" name="operation_type" id="operation_type"
-                            value="{% if not history %}both{% else %}validity{% endif %}">
+                            value="{% if not history %}both{% elif request.user.is_superuser or request.session.custom_user_level == 'Super User' %}validity{% else %}users{% endif %}">
 
                         {% if not history %}
                         {# ===== FIRST BILLING: combined validity + users in one form ===== #}
@@ -861,11 +861,13 @@
                         <fieldset>
                             <!-- OPERATION TYPE TABS -->
                             <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
-                                <div class="operation-tab active" id="tab_validity"
+                                {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
+                                <div class="operation-tab {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}active{% endif %}" id="tab_validity"
                                     onclick="toggleOperation('validity')">
                                     <i class="fas fa-calendar-alt me-1"></i>Update Validity
                                 </div>
-                                <div class="operation-tab" id="tab_users" onclick="toggleOperation('users')">
+                                {% endif %}
+                                <div class="operation-tab {% if not request.user.is_superuser and request.session.custom_user_level != 'Super User' %}active{% endif %}" id="tab_users" onclick="toggleOperation('users')">
                                     <i class="fas fa-users me-1"></i>Update Users
                                 </div>
                                 {% if control.active_custom_package %}
@@ -883,8 +885,8 @@
                             </div>
 
                             <div class="row g-4">
-                                <!-- VALIDITY SECTION -->
-                                <div class="col-12" id="section_validity">
+                                <!-- VALIDITY SECTION — super users only -->
+                                <div class="col-12" id="section_validity" {% if not request.user.is_superuser and request.session.custom_user_level != 'Super User' %}style="display:none;"{% endif %}>
                                     {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
@@ -1037,32 +1039,39 @@
                             const inputUsers = document.getElementById('extendUsersInput');
                             const changePkg  = document.getElementById('changePkgSelect');
 
-                            // Reset all tabs
-                            [tabValidity, tabUsers, tabChangePkg].forEach(t => t.classList.remove('active'));
-                            secValidity.style.display   = 'none';
-                            secUsers.style.display      = 'none';
-                            secChangePkg.style.display  = 'none';
+                            // Reset all tabs (guard against null — tab_validity not rendered for regular users)
+                            [tabValidity, tabUsers, tabChangePkg].forEach(t => t && t.classList.remove('active'));
+                            if (secValidity)  secValidity.style.display  = 'none';
+                            if (secUsers)     secUsers.style.display     = 'none';
+                            if (secChangePkg) secChangePkg.style.display = 'none';
 
-                            if (type === 'validity') {
+                            if (type === 'validity' && tabValidity) {
                                 tabValidity.classList.add('active');
-                                secValidity.style.display = 'block';
+                                if (secValidity) secValidity.style.display = 'block';
                                 operationType.value = 'validity';
                                 if (inputUsers) inputUsers.value = '';
                                 if (changePkg)  changePkg.value = '';
                             } else if (type === 'users') {
                                 tabUsers.classList.add('active');
-                                secUsers.style.display = 'block';
+                                if (secUsers) secUsers.style.display = 'block';
                                 operationType.value = 'users';
                                 if (selectPkg) { selectPkg.value = ''; handlePackageChange(selectPkg); }
                                 if (changePkg)  changePkg.value = '';
                             } else if (type === 'change_package') {
                                 tabChangePkg.classList.add('active');
-                                secChangePkg.style.display = 'block';
+                                if (secChangePkg) secChangePkg.style.display = 'block';
                                 operationType.value = 'change_package';
                                 if (selectPkg)  { selectPkg.value = ''; handlePackageChange(selectPkg); }
                                 if (inputUsers) inputUsers.value = '';
                             }
                         }
+
+                        // On load: if Update Validity tab is not present, default to Users
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (!document.getElementById('tab_validity')) {
+                                toggleOperation('users');
+                            }
+                        });
 
                         function handlePackageChange(select) {
                             const helper = document.getElementById('helperText');
