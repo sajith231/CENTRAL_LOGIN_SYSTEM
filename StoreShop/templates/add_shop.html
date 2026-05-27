@@ -62,6 +62,45 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
         </div>
 
+        <!-- Client ID Mode -->
+        <div class="mb-3">
+            <label style="display:block; margin-bottom:8px;">Client ID</label>
+            <div style="display:flex; gap:12px; margin-bottom:10px;">
+                <!-- Auto Generate -->
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;
+                              background:#0f1b31; border:2px solid #3b82f6; border-radius:8px;
+                              padding:10px 18px; transition:all 0.2s;" id="label_auto">
+                    <input type="radio" name="client_id_mode" value="auto" id="mode_auto" checked
+                           style="accent-color:#3b82f6; width:16px; height:16px;"
+                           onchange="toggleClientIdMode()">
+                    <span style="color:#3b82f6; font-weight:600; font-size:0.9rem;">
+                        <i class="fas fa-magic me-1"></i>Auto Generate
+                    </span>
+                </label>
+
+                <!-- Custom Entry -->
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;
+                              background:#0f1b31; border:2px solid #334155; border-radius:8px;
+                              padding:10px 18px; transition:all 0.2s;" id="label_custom">
+                    <input type="radio" name="client_id_mode" value="custom" id="mode_custom"
+                           style="accent-color:#10b981; width:16px; height:16px;"
+                           onchange="toggleClientIdMode()">
+                    <span style="color:#94a3b8; font-weight:600; font-size:0.9rem;">
+                        <i class="fas fa-keyboard me-1"></i>Custom Entry
+                    </span>
+                </label>
+            </div>
+
+            <!-- Custom Client ID input — hidden by default -->
+            <div id="custom_client_id_wrap" style="display:none;">
+                <input type="text" name="custom_client_id" id="custom_client_id"
+                       class="form-control" placeholder="Enter unique Client ID"
+                       style="background:#0f1b31; color:white; border:1px solid #334155;"
+                       oninput="checkClientIdAvailability()">
+                <div id="client_id_feedback" style="margin-top:6px; font-size:0.82rem;"></div>
+            </div>
+        </div>
+
         <!-- Status -->
         <div class="mb-3 form-check">
             <input type="checkbox" name="is_active" id="is_active" class="form-check-input" checked>
@@ -73,6 +112,7 @@
 </div>
 
 <script>
+    // ── Branch → Corporate filter ──
     document.addEventListener('DOMContentLoaded', function() {
         const branchSelect = document.getElementById("branchSelect");
         const storeSelect = document.getElementById("storeSelect");
@@ -83,21 +123,90 @@
             branchSelect.addEventListener("change", function () {
                 const branchId = this.value;
                 storeSelect.innerHTML = '';
-                storeSelect.appendChild(allStoreOptions[0].cloneNode(true));  // "Select Corporate"
+                storeSelect.appendChild(allStoreOptions[0].cloneNode(true));
 
                 allStoreOptions.forEach(opt => {
                     const bId = opt.getAttribute("data-branch");
-                    if (!opt.value) return;  // skip placeholder
+                    if (!opt.value) return;
                     if (!branchId || bId === branchId) {
                         storeSelect.appendChild(opt.cloneNode(true));
                     }
                 });
             });
             
-            // Trigger change on load if branch is pre-selected (though usually not on add)
             if (branchSelect.value) {
                 branchSelect.dispatchEvent(new Event('change'));
             }
+        }
+    });
+
+    // ── Client ID mode toggle ──
+    function toggleClientIdMode() {
+        const isCustom = document.getElementById('mode_custom').checked;
+        const wrap     = document.getElementById('custom_client_id_wrap');
+        const labelAuto   = document.getElementById('label_auto');
+        const labelCustom = document.getElementById('label_custom');
+        const input    = document.getElementById('custom_client_id');
+
+        wrap.style.display = isCustom ? 'block' : 'none';
+
+        if (isCustom) {
+            labelCustom.style.borderColor = '#10b981';
+            labelCustom.querySelector('span').style.color = '#10b981';
+            labelAuto.style.borderColor = '#334155';
+            labelAuto.querySelector('span').style.color = '#94a3b8';
+            input.focus();
+        } else {
+            labelAuto.style.borderColor = '#3b82f6';
+            labelAuto.querySelector('span').style.color = '#3b82f6';
+            labelCustom.style.borderColor = '#334155';
+            labelCustom.querySelector('span').style.color = '#94a3b8';
+            document.getElementById('client_id_feedback').innerHTML = '';
+            input.value = '';
+        }
+    }
+
+    // ── Live uniqueness check ──
+    let _cidTimer = null;
+    function checkClientIdAvailability() {
+        const val = document.getElementById('custom_client_id').value.trim();
+        const fb  = document.getElementById('client_id_feedback');
+
+        clearTimeout(_cidTimer);
+        if (!val) { fb.innerHTML = ''; return; }
+
+        fb.innerHTML = '<span style="color:#64748b;"><i class="fas fa-spinner fa-spin me-1"></i>Checking...</span>';
+
+        _cidTimer = setTimeout(() => {
+            fetch(`/store-shop/shops/check-client-id/?client_id=${encodeURIComponent(val)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.available) {
+                        fb.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle me-1"></i>Available</span>';
+                        document.getElementById('custom_client_id').style.borderColor = '#10b981';
+                    } else {
+                        fb.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle me-1"></i>Already taken — choose another</span>';
+                        document.getElementById('custom_client_id').style.borderColor = '#ef4444';
+                    }
+                });
+        }, 400);
+    }
+
+    // ── Submit guard: block if custom mode and ID is taken/empty ──
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!document.getElementById('mode_custom').checked) return; // auto — fine
+
+        const val = document.getElementById('custom_client_id').value.trim();
+        if (!val) {
+            e.preventDefault();
+            document.getElementById('client_id_feedback').innerHTML =
+                '<span style="color:#ef4444;"><i class="fas fa-exclamation-circle me-1"></i>Please enter a Client ID</span>';
+            return;
+        }
+
+        const fb = document.getElementById('client_id_feedback');
+        if (fb.innerHTML.includes('Already taken')) {
+            e.preventDefault();
         }
     });
 </script>

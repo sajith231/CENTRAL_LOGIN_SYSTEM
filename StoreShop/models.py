@@ -43,7 +43,7 @@ class Shop(models.Model):
 
 
     # 13 characters now
-    client_id = models.CharField(max_length=13, unique=True, editable=False)
+    client_id = models.CharField(max_length=50, unique=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

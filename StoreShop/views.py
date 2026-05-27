@@ -158,7 +158,21 @@ def add_shop(request):
         store = get_object_or_404(Store, id=store_id)
         branch = get_object_or_404(Branch, id=branch_id)
 
-        Shop.objects.create(
+        # ── Client ID: auto-generate or custom entry ──
+        client_id_mode = request.POST.get("client_id_mode", "auto")
+        custom_client_id = request.POST.get("custom_client_id", "").strip()
+
+        if client_id_mode == "custom":
+            if not custom_client_id:
+                from django.contrib import messages
+                messages.error(request, "Custom Client ID cannot be empty.")
+                return render(request, "add_shop.html", {"stores": stores, "branches": branches})
+            if Shop.objects.filter(client_id=custom_client_id).exists():
+                from django.contrib import messages
+                messages.error(request, f"Client ID '{custom_client_id}' is already taken. Please choose another.")
+                return render(request, "add_shop.html", {"stores": stores, "branches": branches})
+
+        create_kwargs = dict(
             name=name,
             store=store,
             branch=branch,
@@ -169,6 +183,10 @@ def add_shop(request):
             created_by=request.user if request.user.is_authenticated else None,
             created_by_name=request.user.username if request.user.is_authenticated else request.session.get("custom_user_name", "Unknown")
         )
+        if client_id_mode == "custom":
+            create_kwargs["client_id"] = custom_client_id
+
+        Shop.objects.create(**create_kwargs)
         return redirect("shop_list")
 
     return render(request, "add_shop.html", {
@@ -214,3 +232,14 @@ def delete_shop(request, id):
     shop = get_object_or_404(Shop, id=id)
     shop.delete()
     return redirect("shop_list")
+
+
+from django.http import JsonResponse
+
+def check_client_id(request):
+    """AJAX: check if a client_id is already taken. Returns {available: true/false}."""
+    client_id = request.GET.get("client_id", "").strip()
+    if not client_id:
+        return JsonResponse({"available": False, "error": "Empty"})
+    taken = Shop.objects.filter(client_id=client_id).exists()
+    return JsonResponse({"available": not taken})
