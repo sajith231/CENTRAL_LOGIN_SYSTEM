@@ -482,8 +482,8 @@
     </select>
 
     <select id="amountFilter" class="filter-select" onchange="applyFilters()">
-      <option value="" selected>All Invoice Amount</option>
-      <option value="has_value">Greater than 0</option>
+      <option value="">All Invoice Amount</option>
+      <option value="has_value" selected>Greater than 0</option>
     </select>
 
     <!-- Rows per page -->
@@ -522,7 +522,7 @@
       </thead>
       <tbody id="tableBody">
         {% for h in billing_history %}
-        <tr class="data-row" 
+        <tr class="data-row" style="display:none;"
             data-bill="{% if h.bill_status %}billed{% else %}pending{% endif %}"
             data-branch="{{ h.control.shop.branch.id|default:'' }}"
             data-payment="{{ h.payment_status|default:'Not Paid' }}"
@@ -788,7 +788,7 @@
     // Show only current page rows and update serial number
     filteredRows.forEach((row, idx) => {
       if (idx >= start && idx < end) {
-        row.style.display = '';
+        row.style.display = 'table-row';
         const numCell = row.querySelector('.row-num');
         if (numCell) numCell.textContent = idx + 1;
       }
