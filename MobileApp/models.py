@@ -146,6 +146,7 @@ class ActiveDevice(models.Model):
 
     device_id = models.CharField(max_length=255)
     device_name = models.CharField(max_length=255, blank=True, null=True)
+    user_name = models.CharField(max_length=255, blank=True, null=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     logged_in_at = models.DateTimeField(auto_now_add=True)
 

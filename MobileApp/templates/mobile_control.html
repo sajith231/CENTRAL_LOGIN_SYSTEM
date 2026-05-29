@@ -726,6 +726,7 @@
         <table style="width:100%; font-size:13px; color:white;">
         <tr style="border-bottom:1px solid #334155;">
             <th>Device Name</th>
+            <th>User Name</th>
             <th>Device ID</th>
             <th>IP</th>
             <th>Logged at</th>
@@ -736,6 +737,7 @@
                 html += `
             <tr style="border-bottom:1px solid #334155;">
                 <td>${device.device_name || '-'}</td>
+                <td>${device.user_name || '-'}</td>
                 <td>${device.device_id}</td>
                 <td>${device.ip_address || '-'}</td>
                 <td>${new Date(device.logged_in_at).toLocaleString()}</td>

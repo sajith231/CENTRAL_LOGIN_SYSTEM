@@ -446,6 +446,7 @@
                     html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
     <tr>
         <th align="left">Device Name</th>
+        <th align="left">User Name</th>
         <th align="left">Device ID</th>
         <th align="left">IP</th>
         <th align="left">Registered At</th>
@@ -455,6 +456,7 @@
 for (const d of devices) {
     html += `<tr style="border-bottom:1px solid #1e293b;">
         <td>${d.device_name || '-'}</td>
+        <td>${d.user_name || '-'}</td>
         <td>${d.device_id}</td>
         <td>${d.ip_address || '-'}</td>
         <td>${d.logged_in_at ? new Date(d.logged_in_at).toLocaleString() : '-'}</td>
@@ -559,7 +561,13 @@ html += `</table>`;
             return;
         }
 
-        const payload = { license_key: license_key.trim(), device_id: device_id.trim() };
+        const user_name = prompt('Enter user name (optional):', '') || '';
+
+        const payload = {
+            license_key: license_key.trim(),
+            device_id: device_id.trim(),
+            user_name: user_name.trim()
+        };
         const csrftoken = getCookie('csrftoken');
 
         try {

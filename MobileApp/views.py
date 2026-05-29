@@ -307,7 +307,8 @@ def _device_payload(control):
     return list(
         control.active_devices.values(
             'device_id',
-            'device_name',  # 👈 Added
+            'device_name',
+            'user_name',
             'ip_address',
             'logged_in_at',
         ).order_by('-logged_in_at')
@@ -321,7 +322,8 @@ def api_register_license(request, endpoint):
     Body: {
         "license_key": "ABC123",
         "device_id": "DEVICE-001",
-        "device_name": "Samsung A52"
+        "device_name": "Samsung A52",
+        "user_name": "Optional name"
     }
     """
     try:
@@ -332,6 +334,7 @@ def api_register_license(request, endpoint):
     license_key = payload.get('license_key', '').strip()
     device_id = payload.get('device_id', '').strip()
     device_name = payload.get('device_name', '').strip()
+    user_name = payload.get('user_name', '').strip()
 
     # REQUIRED VALIDATION
     if not license_key:
@@ -393,17 +396,19 @@ def api_register_license(request, endpoint):
         # Already registered device
         exists = control.active_devices.filter(device_id=device_id).exists()
         if exists:
-            return JsonResponse({
+            response = {
                 'success': True,
                 'message': 'Device already registered',
                 'license_key': license_key,
                 'registered_devices': _device_payload(control),
                 'registered_count': registered_count,
                 'max_devices': control.login_limit,
-            }, status=200)
+            }
+            if user_name:
+                response['user_name'] = user_name
+            return JsonResponse(response, status=200)
 
         # Device limit check
-        if registered_count >= control.login_limit:
             return JsonResponse({
                 'success': False,
                 'error': 'License limit reached',
@@ -416,17 +421,21 @@ def api_register_license(request, endpoint):
             control=control,
             device_id=device_id,
             device_name=device_name,
+            user_name=user_name,
             ip_address=_get_client_ip(request),
         )
 
-        return JsonResponse({
+        response = {
             'success': True,
             'message': 'Device registered successfully',
             'license_key': license_key,
             'registered_devices': _device_payload(control),
             'registered_count': control.active_devices.count(),
             'max_devices': control.login_limit,
-        }, status=201)
+        }
+        if user_name:
+            response['user_name'] = user_name
+        return JsonResponse(response, status=201)
 
     # ================= DEMO LICENSE FLOW =================
     if demo:
@@ -446,14 +455,17 @@ def api_register_license(request, endpoint):
         # Already registered
         exists = demo.active_devices.filter(device_id=device_id).exists()
         if exists:
-            return JsonResponse({
+            response = {
                 'success': True,
                 'message': 'Device already registered',
                 'license_key': license_key,
                 'registered_devices': list(demo.active_devices.values()),
                 'registered_count': reg_count,
                 'max_devices': demo.demo_login_limit,
-            }, status=200)
+            }
+            if user_name:
+                response['user_name'] = user_name
+            return JsonResponse(response, status=200)
 
         # Limit check
         limit = int(demo.demo_login_limit)
@@ -469,17 +481,21 @@ def api_register_license(request, endpoint):
             demo_license=demo,
             device_id=device_id,
             device_name=device_name,
+            user_name=user_name,
             ip_address=_get_client_ip(request),
         )
 
-        return JsonResponse({
+        response = {
             'success': True,
             'message': 'Demo device registered',
             'license_key': license_key,
             'registered_devices': list(demo.active_devices.values()),
             'registered_count': demo.active_devices.count(),
             'max_devices': demo.demo_login_limit,
-        }, status=201)
+        }
+        if user_name:
+            response['user_name'] = user_name
+        return JsonResponse(response, status=201)
 
 
 
