@@ -18,10 +18,13 @@
   <form method="POST">
     {% csrf_token %}
 
-    <!-- Branch (Filter) -->
+    <!-- Branch (Filter) — pre-populated server-side, restricted for non-superusers -->
     <label>Branch</label>
     <select id="branchSelect" class="form-control mb-2">
       <option value="">Select Branch</option>
+      {% for b in allowed_branches %}
+      <option value="{{ b.id }}">{{ b.name }}</option>
+      {% endfor %}
     </select>
 
     <!-- Corporate / Store (Filter) -->
@@ -66,29 +69,18 @@
     const packageSelect = document.getElementById("packageSelect");
 
     // URLs
-    const urlGetBranches = "{% url 'DemoLicensing:get_all_branches' %}";
     const urlGetCorporates = "{% url 'DemoLicensing:get_corporates_by_branch' 0 %}";
     const urlGetShops = "{% url 'DemoLicensing:get_shops_by_corporate' 0 %}";
     const urlGetPackages = "{% url 'ModuleAndPackage:get_packages' 0 %}";
 
-    // 1. Initial Load: Fetch Branches
-    fetch(urlGetBranches)
-      .then(res => res.json())
-      .then(data => {
-        data.forEach(item => {
-          const opt = document.createElement("option");
-          opt.value = item.id;
-          opt.textContent = item.name;
-          branchSelect.appendChild(opt);
-        });
-      })
-      .catch(err => console.error("Error loading branches:", err));
+    // Branch options are already rendered server-side (restricted per user).
+    // No initial fetch needed.
 
-    // 2. Branch -> Corporate
+    // 1. Branch -> Corporate
     branchSelect.addEventListener("change", function () {
       const branchId = this.value;
       corporateSelect.innerHTML = "<option value=''>Select Corporate</option>";
-      companySelect.innerHTML = "<option value=''>Select Company</option>"; // Reset company too
+      companySelect.innerHTML = "<option value=''>Select Company</option>";
 
       if (branchId) {
         const url = urlGetCorporates.replace("/0/", "/" + branchId + "/");
@@ -105,7 +97,7 @@
       }
     });
 
-    // 3. Corporate -> Company (Shop)
+    // 2. Corporate -> Company (Shop)
     corporateSelect.addEventListener("change", function () {
       const corpId = this.value;
       companySelect.innerHTML = "<option value=''>Select Company</option>";
@@ -117,7 +109,6 @@
           .then(data => {
             data.forEach(item => {
               const opt = document.createElement("option");
-              // Use NAME as value because backend expects string name
               opt.value = item.id;
               opt.textContent = item.name;
               companySelect.appendChild(opt);
@@ -126,8 +117,7 @@
       }
     });
 
-
-    // 4. Project -> Package (Existing Logic)
+    // 3. Project -> Package
     projectSelect.addEventListener("change", function () {
       const projectId = this.value;
 

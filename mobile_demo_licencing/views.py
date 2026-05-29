@@ -6,7 +6,20 @@ from ModuleAndPackage.models import Package
 from .models import DemoMobileLicense
 from django.utils import timezone
 
+
+def _is_super_level_user(request):
+    """Returns True if the logged-in user is a Django superuser or a custom Super User."""
+    if request.user.is_authenticated and request.user.is_superuser:
+        return True
+    if request.session.get("custom_user_level") == "Super User":
+        return True
+    return False
+
+
 def demo_license_list(request):
+    from StoreShop.models import Shop
+    from django.db.models import Q
+
     demos = DemoMobileLicense.objects.select_related(
         "original_license",
         "original_license__project",
@@ -18,10 +31,26 @@ def demo_license_list(request):
         "active_devices"
     )
 
+    # ── Branch-based filtering for non-superusers ──
+    if not _is_super_level_user(request):
+        user_branch_names = request.session.get("custom_user_branches", [])
+        if user_branch_names:
+            # OG-linked demos: filter via shop → branch name
+            # Manual demos: filter via client_id → shop → branch name
+            manual_client_ids_in_branch = Shop.objects.filter(
+                branch__name__in=user_branch_names
+            ).values_list("client_id", flat=True)
+
+            demos = demos.filter(
+                Q(original_license__shop__branch__name__in=user_branch_names) |
+                Q(original_license__isnull=True, client_id__in=manual_client_ids_in_branch)
+            )
+        else:
+            demos = demos.none()
+
     now = timezone.now()
 
     # Build a client_id → branch name map for manual demos in one query
-    from StoreShop.models import Shop
     manual_client_ids = [
         d.client_id for d in demos
         if d.original_license is None and d.client_id
@@ -59,7 +88,13 @@ def demo_license_list(request):
 def add_mobile_demo_licencing(request):
     from branch.models import Branch
     og_licenses = MobileControl.objects.select_related('shop', 'project').all()
-    branches = Branch.objects.all().order_by('name')
+
+    # Restrict branches for non-superusers
+    if _is_super_level_user(request):
+        branches = Branch.objects.all().order_by('name')
+    else:
+        user_branch_names = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branch_names).order_by('name')
 
     if request.method == "POST":
         og_id = request.POST.get("og_license")
@@ -117,7 +152,19 @@ from .models import DemoMobileLicense
 
 
 def add_manual_demo_license(request):
+    from branch.models import Branch as BranchModel
     projects = MobileProject.objects.all()
+
+    # Pass allowed branches to template so JS can pre-filter on page load
+    if _is_super_level_user(request):
+        allowed_branches = list(BranchModel.objects.values("id", "name").order_by("name"))
+    else:
+        user_branch_names = request.session.get("custom_user_branches", [])
+        allowed_branches = list(
+            BranchModel.objects.filter(name__in=user_branch_names)
+            .values("id", "name")
+            .order_by("name")
+        )
 
     if request.method == "POST":
         # 🔹 company = SHOP ID (from dropdown)
@@ -151,7 +198,11 @@ def add_manual_demo_license(request):
     return render(
         request,
         "add_manual_demo_license.html",
-        {"projects": projects}
+        {
+            "projects": projects,
+            "allowed_branches": allowed_branches,
+            "is_super": _is_super_level_user(request),
+        }
     )
 
 
@@ -178,13 +229,22 @@ from branch.models import Branch
 from StoreShop.models import Store, Shop
 
 def get_all_branches(request):
-    """Return all branches as JSON."""
-    branches = Branch.objects.values("id", "name")
+    """Return branches as JSON — filtered to user's allowed branches for non-superusers."""
+    if _is_super_level_user(request):
+        branches = Branch.objects.values("id", "name").order_by("name")
+    else:
+        user_branch_names = request.session.get("custom_user_branches", [])
+        branches = Branch.objects.filter(name__in=user_branch_names).values("id", "name").order_by("name")
     return JsonResponse(list(branches), safe=False)
 
 def get_licenses_by_branch(request, branch_id):
-    """Return OG MobileControl licenses filtered by branch via shop__branch."""
+    """Return OG MobileControl licenses filtered by branch via shop__branch — restricted to user's allowed branches."""
     from MobileApp.models import MobileControl
+    # Security: non-superusers can only query their own branches
+    if not _is_super_level_user(request):
+        user_branch_names = request.session.get("custom_user_branches", [])
+        if not Branch.objects.filter(id=branch_id, name__in=user_branch_names).exists():
+            return JsonResponse([], safe=False)
     licenses = MobileControl.objects.filter(
         shop__branch_id=branch_id
     ).select_related('shop', 'project').values(
@@ -200,7 +260,12 @@ def get_licenses_by_branch(request, branch_id):
     return JsonResponse(data, safe=False)
 
 def get_corporates_by_branch(request, branch_id):
-    """Return Stores (Corporates) for a given Branch."""
+    """Return Stores (Corporates) for a given Branch — restricted to user's allowed branches."""
+    if not _is_super_level_user(request):
+        user_branch_names = request.session.get("custom_user_branches", [])
+        # Verify the requested branch is in the user's allowed list
+        if not Branch.objects.filter(id=branch_id, name__in=user_branch_names).exists():
+            return JsonResponse([], safe=False)
     stores = Store.objects.filter(branch_id=branch_id).values("id", "name")
     return JsonResponse(list(stores), safe=False)
 
