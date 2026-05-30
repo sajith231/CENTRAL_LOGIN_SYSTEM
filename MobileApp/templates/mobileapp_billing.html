@@ -708,6 +708,37 @@
         </div>
     </div>
 
+    <!-- PAYMENT REFERENCE MODAL -->
+    <div id="paymentRefModal" style="display:none;
+        position:fixed; inset:0; background:rgba(0,0,0,.6);
+        z-index:9999; align-items:center; justify-content:center;">
+
+        <div style="background:#0f172a; padding:24px; border-radius:12px;
+                    width:420px; border:1px solid #1e293b;">
+
+            <h5 style="color:white; margin-bottom:16px;">
+                Enter Reference Number
+            </h5>
+
+            <input type="hidden" id="payment_ref_history_id">
+            <input type="hidden" id="payment_ref_status_value">
+
+            <div class="mb-3">
+                <label style="color:#94a3b8;">Ref No *</label>
+                <input type="text" id="popup_ref_no" class="form-control"
+                    style="background:#1e293b; color:white;">
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button onclick="closePaymentRefModal()" class="btn btn-secondary btn-sm">
+                    Cancel
+                </button>
+                <button onclick="submitPaymentRefModal()" class="btn btn-primary btn-sm">
+                    Save Reference
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- LEFT + RIGHT SPLIT ROW -->
     <div class="row g-3 align-items-start">
@@ -1292,13 +1323,37 @@
                                     {% endif %}
                                     {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
                                     <td style="padding:12px; background:transparent;">
-                                        <select onchange="updatePaymentStatus({{ h.id }}, this.value)"
-                                                style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
-                                            <option value="Paid" {% if h.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
-                                            <option value="Partially Paid" {% if h.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
-                                            <option value="Not Paid" {% if h.payment_status == 'Not Paid' %}selected{% endif %}>Not Paid</option>
-                                            <option value="Not Applicable" {% if h.payment_status == 'Not Applicable' %}selected{% endif %}>Not Applicable</option>
-                                        </select>
+                                        {% if h.payment_status == 'Paid' or h.payment_status == 'Partially Paid' %}
+                                        <div style="display:flex; flex-direction:column; gap:8px;">
+                                            <select disabled
+                                                    data-prev-status="{{ h.payment_status }}"
+                                                    data-ref-no="{{ h.ref_no|default:''|escapejs }}"
+                                                    style="background:#334155; color:#94a3b8; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:not-allowed;">
+                                                <option value="Paid" {% if h.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                                                <option value="Partially Paid" {% if h.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                                <option value="Not Paid" {% if h.payment_status == 'Not Paid' %}selected{% endif %}>Not Paid</option>
+                                                <option value="Not Applicable" {% if h.payment_status == 'Not Applicable' %}selected{% endif %}>Not Applicable</option>
+                                            </select>
+                                            {% if h.ref_no %}
+                                            <div id="payment_ref_{{ h.id }}" style="margin-top:6px; color:#94a3b8; font-size:0.75rem;">
+                                                Ref No: {{ h.ref_no }}{% if h.ref_no_saved_at %} · Saved: {{ h.ref_no_saved_at|date:"d M Y, H:i" }}{% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <div>
+                                            <select onchange="updatePaymentStatus({{ h.id }}, this)"
+                                                    data-prev-status="{{ h.payment_status }}"
+                                                    data-ref-no="{{ h.ref_no|default:''|escapejs }}"
+                                                    style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:0.8rem; outline:none; cursor:pointer;">
+                                                <option value="Paid" {% if h.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                                                <option value="Partially Paid" {% if h.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                                <option value="Not Paid" {% if h.payment_status == 'Not Paid' %}selected{% endif %}>Not Paid</option>
+                                                <option value="Not Applicable" {% if h.payment_status == 'Not Applicable' %}selected{% endif %}>Not Applicable</option>
+                                            </select>
+                                            <div id="payment_ref_{{ h.id }}" style="display:none; margin-top:6px; color:#94a3b8; font-size:0.75rem;"></div>
+                                        </div>
+                                        {% endif %}
                                     </td>
                                     {% endif %}
                                     <td style="padding:12px; color:#e2e8f0; font-size:0.85rem;">
@@ -1588,26 +1643,109 @@
             });
     }
 
-    function updatePaymentStatus(id, newStatus) {
+    let _paymentRefPendingSelect = null;
+
+    function sendPaymentStatusRequest(id, status, refNo) {
+        const body = { payment_status: status };
+        if (refNo) body.ref_no = refNo;
+
         fetch(`/mobileapp/billing-history/update-payment-status/${id}/`, {
             method: "POST",
             headers: { "X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/json" },
-            body: JSON.stringify({ payment_status: newStatus })
+            body: JSON.stringify(body)
         })
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
                 alert(data.error || "Failed to update payment status");
-                location.reload(); // restore previous value on UI
+                if (_paymentRefPendingSelect) {
+                    _paymentRefPendingSelect.value = _paymentRefPendingSelect.dataset.prevStatus || '';
+                }
+                location.reload();
             } else {
-                // Flash success or silently succeed
+                if (_paymentRefPendingSelect) {
+                    _paymentRefPendingSelect.dataset.prevStatus = status;
+                    if (data.ref_no) {
+                        _paymentRefPendingSelect.dataset.refNo = data.ref_no;
+                    }
+                    const refEl = document.getElementById('payment_ref_' + id);
+                    const show = status === 'Paid' || status === 'Partially Paid';
+                    if (refEl) {
+                        refEl.style.display = show ? 'block' : 'none';
+                        if (data.ref_no) {
+                            let refText = 'Ref No: ' + data.ref_no;
+                            if (data.ref_no_saved_at) refText += ' · Saved: ' + data.ref_no_saved_at;
+                            refEl.textContent = refText;
+                        }
+                    } else if (show && data.ref_no) {
+                        const container = _paymentRefPendingSelect.parentNode;
+                        const newRefEl = document.createElement('div');
+                        newRefEl.id = 'payment_ref_' + id;
+                        newRefEl.style.cssText = 'margin-top:6px; color:#94a3b8; font-size:0.75rem;';
+                        let refText = 'Ref No: ' + data.ref_no;
+                        if (data.ref_no_saved_at) refText += ' · Saved: ' + data.ref_no_saved_at;
+                        newRefEl.textContent = refText;
+                        container.appendChild(newRefEl);
+                    }
+                }
             }
         })
         .catch(err => {
             console.error(err);
             alert("Error updating payment status");
+            if (_paymentRefPendingSelect) {
+                _paymentRefPendingSelect.value = _paymentRefPendingSelect.dataset.prevStatus || '';
+            }
             location.reload();
         });
+    }
+
+    function updatePaymentStatus(id, selectElem) {
+        const newStatus = selectElem.value;
+        const prevStatus = selectElem.dataset.prevStatus || '';
+        const currentRefNo = selectElem.dataset.refNo || '';
+
+        if ((newStatus === 'Paid' || newStatus === 'Partially Paid') && !currentRefNo) {
+            _paymentRefPendingSelect = selectElem;
+            document.getElementById('payment_ref_history_id').value = id;
+            document.getElementById('payment_ref_status_value').value = newStatus;
+            document.getElementById('popup_ref_no').value = '';
+            document.getElementById('paymentRefModal').style.display = 'flex';
+            return;
+        }
+
+        selectElem.dataset.prevStatus = newStatus;
+        sendPaymentStatusRequest(id, newStatus, currentRefNo);
+    }
+
+    function closePaymentRefModal() {
+        const modal = document.getElementById('paymentRefModal');
+        modal.style.display = 'none';
+        if (_paymentRefPendingSelect) {
+            _paymentRefPendingSelect.value = _paymentRefPendingSelect.dataset.prevStatus || '';
+            _paymentRefPendingSelect = null;
+        }
+    }
+
+    function submitPaymentRefModal() {
+        const id = document.getElementById('payment_ref_history_id').value;
+        const newStatus = document.getElementById('payment_ref_status_value').value;
+        const refNo = document.getElementById('popup_ref_no').value.trim();
+
+        if (!refNo) {
+            alert('Reference number is required.');
+            return;
+        }
+
+        if (!_paymentRefPendingSelect) {
+            alert('Unable to submit payment reference.');
+            closePaymentRefModal();
+            return;
+        }
+
+        document.getElementById('paymentRefModal').style.display = 'none';
+        sendPaymentStatusRequest(id, newStatus, refNo);
+        _paymentRefPendingSelect = null;
     }
 
     // ── Superuser: Edit unbilled record (separate modal → posts to edit URL) ──
@@ -1630,6 +1768,9 @@
     });
     document.getElementById("invoiceModal")?.addEventListener("click", function (e) {
         if (e.target === this) closeInvoiceModal();
+    });
+    document.getElementById("paymentRefModal")?.addEventListener("click", function (e) {
+        if (e.target === this) closePaymentRefModal();
     });
 </script>
 <script>

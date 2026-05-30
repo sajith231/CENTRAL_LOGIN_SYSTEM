@@ -201,6 +201,8 @@ class MobileBillingHistory(models.Model):
         default='Not Paid'
     )
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
+    ref_no = models.CharField(max_length=100, null=True, blank=True)
+    ref_no_saved_at = models.DateTimeField(null=True, blank=True)
     invoice_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     remark = models.CharField(max_length=255, blank=True)
     added_by = models.CharField(max_length=255, null=True, blank=True)

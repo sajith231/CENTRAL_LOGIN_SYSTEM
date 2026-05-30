@@ -1193,16 +1193,39 @@ def toggle_billing_history_status(request, pk):
 @csrf_exempt
 @require_POST
 def update_payment_status(request, pk):
+    from django.utils import timezone
+    
     history = get_object_or_404(MobileBillingHistory, pk=pk)
     try:
         data = json.loads(request.body or "{}")
         new_payment_status = data.get("payment_status")
+        ref_no = data.get("ref_no", '').strip() if data.get("ref_no") is not None else ''
+
         if new_payment_status not in dict(MobileBillingHistory.PAYMENT_STATUS_CHOICES):
             return JsonResponse({"success": False, "error": "Invalid payment status"})
-            
+
+        if history.payment_status in ['Paid', 'Partially Paid'] and history.ref_no and new_payment_status != history.payment_status:
+            return JsonResponse({"success": False, "error": "Payment status cannot be changed once it is paid."})
+
+        update_fields = ['payment_status']
         history.payment_status = new_payment_status
-        history.save(update_fields=['payment_status'])
-        return JsonResponse({"success": True, "payment_status": history.payment_status})
+
+        if new_payment_status in ['Paid', 'Partially Paid'] and not history.ref_no:
+            if not ref_no:
+                return JsonResponse({"success": False, "error": "Reference number is required for paid statuses."})
+            history.ref_no = ref_no
+            history.ref_no_saved_at = timezone.now()
+            update_fields.extend(['ref_no', 'ref_no_saved_at'])
+
+        history.save(update_fields=update_fields)
+        
+        saved_at_str = history.ref_no_saved_at.strftime('%d %b %Y, %H:%M') if history.ref_no_saved_at else ''
+        return JsonResponse({
+            "success": True,
+            "payment_status": history.payment_status,
+            "ref_no": history.ref_no,
+            "ref_no_saved_at": saved_at_str
+        })
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
