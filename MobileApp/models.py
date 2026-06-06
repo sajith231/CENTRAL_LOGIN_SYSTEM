@@ -4,8 +4,20 @@ from ModuleAndPackage.models import Package
 from branch.models import Branch
 
 class MobileProject(models.Model):
+    APP_TYPE_CHOICES = [
+        ('mobile_app', 'Mobile app'),
+        ('web_app', 'Web app'),
+        ('ra', 'RA'),
+        ('other', 'Other'),
+    ]
+
     project_name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
+    app_type = models.CharField(
+        max_length=20,
+        choices=APP_TYPE_CHOICES,
+        default='mobile_app'
+    )
     customized_package = models.BooleanField(default=False)  # ← ADD THIS
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)

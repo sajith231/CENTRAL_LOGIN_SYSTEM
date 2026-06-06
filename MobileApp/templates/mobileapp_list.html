@@ -39,6 +39,7 @@
                     <th style="padding:12px; text-align:left;white-space: nowrap;">No</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Created Date</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Project Name</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">App Type</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">GET API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Register API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">License Remove API</th>
@@ -59,6 +60,12 @@
 
                     <td style="padding:12px;white-space: nowrap;">
                         <strong>{{ project.project_name }}</strong>
+                    </td>
+
+                    <td style="padding:12px;white-space: nowrap;">
+                        <span class="badge" style="background:#334155; color:white; padding:5px 10px; border-radius:15px; font-size:12px;">
+                            {{ project.get_app_type_display }}
+                        </span>
                     </td>
 
                     <td style="padding:12px;">

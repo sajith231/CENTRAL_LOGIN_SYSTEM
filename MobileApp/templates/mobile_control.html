@@ -160,13 +160,20 @@
                 <th style="padding:12px;white-space: nowrap;">Company</th>
                 <th style="padding:12px;white-space: nowrap;">Project</th>
                 <th style="padding:12px;white-space: nowrap;">More details</th>
+
+                {% if any_mobile_app %}
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Device List</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">T.Lic</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Reg.Dev</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Bal.Lic</th>
+                {% endif %}
+
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Type</th>
+
+                {% if any_mobile_app %}
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Licence Key Copy</th>
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Licence QR</th>
+                {% endif %}
 
                 <th style="padding:12px;text-align:center;white-space: nowrap;">Billing</th>
 
@@ -241,7 +248,7 @@
                     <small style="color:#9ca3af;">No Package</small>
                     {% endif %}
                 </td>
-                <td style="padding:12px;white-space: nowrap; text-align:center;">
+                <td style="padding:12px; white-space: nowrap; text-align:center;">
                     <button class="btn btn-sm"
                         style="background:#0ea5e9; color:white; padding:6px 10px; border-radius:6px;"
                         data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
@@ -253,22 +260,31 @@
                     </button>
 
                 </td>
+
+                {% if any_mobile_app %}
                 <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.project.app_type == 'mobile_app' %}
                     <button class="btn btn-sm"
                         style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px;"
                         data-bs-toggle="modal" data-bs-target="#deviceModal{{ c.id }}"
                         onclick="loadDeviceList('{{ c.project.api_endpoint }}', '{{ c.license_key }}', {{ forloop.counter }})">
                         <i class="fa-solid fa-eye"></i>
                     </button>
+                    {% else %}
+                    <span style="color:#6b7280;">—</span>
+                    {% endif %}
                 </td>
 
-                <td style="padding:12px;text-align:center;white-space: nowrap">{{ c.login_limit }}</td>
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    {{ c.registered_count }}
+                    {% if c.project.app_type == 'mobile_app' %}{{ c.login_limit }}{% else %}<span style="color:#6b7280;">—</span>{% endif %}
                 </td>
                 <td style="padding:12px;text-align:center;white-space: nowrap">
-                    {{ c.balance_count }}
+                    {% if c.project.app_type == 'mobile_app' %}{{ c.registered_count }}{% else %}<span style="color:#6b7280;">—</span>{% endif %}
                 </td>
+                <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.project.app_type == 'mobile_app' %}{{ c.balance_count }}{% else %}<span style="color:#6b7280;">—</span>{% endif %}
+                </td>
+                {% endif %}
 
 
                 <td style="padding:12px;text-align:center;white-space:nowrap;">
@@ -290,7 +306,9 @@
                     {% endif %}
                 </td>
 
+                {% if any_mobile_app %}
                 <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.project.app_type == 'mobile_app' %}
                     <span id="license_{{ c.id }}" style="display:none;">{{ c.license_key }}</span>
                     <button
                         onclick="openLicenceKeyPopup('{{ c.id }}', '{{ c.customer_name }}', '{{ c.client_id }}', '{{ c.license_key }}')"
@@ -298,13 +316,21 @@
                         style="background:#475569; color:white; padding:6px 12px; border-radius:6px;">
                         <i class="fa-solid fa-key"></i> Key
                     </button>
+                    {% else %}
+                    <span style="color:#6b7280;">—</span>
+                    {% endif %}
                 </td>
                 <td style="padding:12px;text-align:center;white-space: nowrap">
+                    {% if c.project.app_type == 'mobile_app' %}
                     <button onclick="openQRPopup('{{ c.license_key }}', '{{ c.customer_name }}')" class="btn btn-sm"
                         style="background:#7c3aed; color:white; padding:6px 12px; border-radius:6px;">
                         <i class="fa-solid fa-qrcode"></i>
                     </button>
+                    {% else %}
+                    <span style="color:#6b7280;">—</span>
+                    {% endif %}
                 </td>
+                {% endif %}
 
                 <td style="padding:12px;text-align:center;">
 

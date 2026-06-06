@@ -44,12 +44,14 @@ def mobileproject_create(request):
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
+        app_type = request.POST.get('app_type', 'mobile_app')
         customized_package = request.POST.get('customized_package') == 'yes'
         
         if project_name:
             MobileProject.objects.create(
                 project_name=project_name,
                 description=description if description else None,
+                app_type=app_type,
                 customized_package=customized_package
             )
             messages.success(request, 'Mobile project created successfully!')
@@ -148,10 +150,13 @@ def mobile_control_list(request):
     else:
         branch_names = request.session.get('custom_user_branches', [])
 
+    any_mobile_app = controls.filter(project__app_type='mobile_app').exists()
+
     return render(request, "mobile_control.html", {
         "controls": controls,
         "project_names": project_names,
         "branch_names": branch_names,
+        "any_mobile_app": any_mobile_app,
     })
 
 
