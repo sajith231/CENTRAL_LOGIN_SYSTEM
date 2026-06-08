@@ -63,7 +63,7 @@
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
                 <option value="">Select Project</option>
                 {% for project in projects %}
-                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                <option value="{{ project.id }}">{{ project.project_name }} ({{ project.get_app_type_display }})</option>
                 {% endfor %}
             </select>
         </div>

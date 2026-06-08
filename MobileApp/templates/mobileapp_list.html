@@ -2,6 +2,30 @@
 {% load static %}
 
 {% block active_mobile_app_list %}active{% endblock %}
+
+{% block extra_js %}
+<script>
+    function applyListFilters() {
+        const searchText = document.getElementById('searchProject').value.toLowerCase();
+        const appTypeFilter = document.getElementById('appTypeFilter').value;
+        const rows = document.querySelectorAll('.project-row');
+
+        rows.forEach(row => {
+            const projectName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const appType = row.dataset.appType;
+
+            const matchesSearch = projectName.includes(searchText);
+            const matchesAppType = !appTypeFilter || appType === appTypeFilter;
+
+            if (matchesSearch && matchesAppType) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
 {% block header_title %}<strong>Mobile App List</strong>{% endblock %}
 
 {% block content %}
@@ -16,9 +40,19 @@
         </a>
     </div>
 
-    <div style="margin-bottom:15px; display:flex; gap:10px;">
+    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <input type="text" id="searchProject" placeholder="Search Project..."
-            style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
+            style="padding:8px; width:250px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;"
+            oninput="applyListFilters()">
+
+        <select id="appTypeFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;" onchange="applyListFilters()">
+            <option value="">All App Types</option>
+            <option value="mobile_app">Mobile app</option>
+            <option value="web_app">Web app</option>
+            <option value="ra">RA</option>
+            <option value="other">Other</option>
+        </select>
     </div>
 
     <!-- Messages -->
@@ -51,7 +85,7 @@
 
             <tbody>
                 {% for project in projects %}
-                <tr style="border-bottom:1px solid #1e293b;">
+                <tr class="project-row" data-app-type="{{ project.app_type }}" style="border-bottom:1px solid #1e293b;">
                     <td style="padding:12px;white-space: nowrap;">{{ forloop.counter }}</td>
 
                     <td style="padding:12px;white-space: nowrap;">

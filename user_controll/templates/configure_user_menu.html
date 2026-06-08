@@ -21,6 +21,30 @@
     <form method="post">
       {% csrf_token %}
 
+      {# 1) App Type Permissions #}
+      <div style="margin-top:16px; padding:12px; border-radius:10px; background:#020617;">
+        <div style="font-weight:600; margin-bottom:8px;">
+          <i class="fa-solid fa-layer-group"></i> Allowed App Types
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          {% for code, label in app_types %}
+            <label style="display:flex; align-items:center; gap:6px; background:#0b1220; padding:8px 10px; border-radius:8px; font-size:14px;">
+              <input
+                type="checkbox"
+                name="app_type_{{ code }}"
+                value="1"
+                {% if code in allowed_app_types %}checked{% endif %}
+                style="accent-color:#16a34a;"
+              >
+              {{ label }}
+            </label>
+          {% endfor %}
+        </div>
+        <small class="muted" style="font-size:11px; display:block; margin-top:6px;">
+          <i class="fa-solid fa-circle-info"></i> If none are selected, user can see all app types (default).
+        </small>
+      </div>
+
       {% for m in menus %}
         {# show whole main menu only if at least one submenu is allowed OR we are configuring; in configure page we show all #}
         <div style="margin-top:16px; padding:12px; border-radius:10px; background:#020617;">

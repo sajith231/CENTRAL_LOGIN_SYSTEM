@@ -5,6 +5,8 @@ from .models import Module
 from django.http import JsonResponse
 from django.db.models import Exists, OuterRef
 
+from MobileApp.views import is_super_level_user
+
 def module_list(request):
     # Check if module is part of any package used by an active mobile control to prevent deletion
     is_used_subquery = MobileControl.objects.filter(
@@ -15,6 +17,12 @@ def module_list(request):
     modules = Module.objects.annotate(
         is_used=Exists(is_used_subquery)
     ).select_related('project').all()
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            modules = modules.filter(project__app_type__in=allowed_app_types)
     
     return render(request, "module_list.html", {
         "modules": modules
@@ -22,6 +30,13 @@ def module_list(request):
 
 def add_module_page(request):
     projects = MobileProject.objects.all()
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
+
     return render(request, "add_module.html", {
         "projects": projects
     })
@@ -86,12 +101,25 @@ def package_list(request):
     packages = Package.objects.annotate(
         is_used=Exists(is_used_subquery)
     ).prefetch_related("modules", "project")
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            packages = packages.filter(project__app_type__in=allowed_app_types)
     
     return render(request, "packages.html", {"packages": packages})
 
 
 def add_package_page(request):
     projects = MobileProject.objects.all()
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
+
     return render(request, "add_packages.html", {"projects": projects})
 
 

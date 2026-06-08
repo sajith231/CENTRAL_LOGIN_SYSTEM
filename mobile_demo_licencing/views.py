@@ -34,6 +34,8 @@ def demo_license_list(request):
     # ── Branch-based filtering for non-superusers ──
     if not _is_super_level_user(request):
         user_branch_names = request.session.get("custom_user_branches", [])
+        allowed_app_types = request.session.get("allowed_app_types", [])
+
         if user_branch_names:
             # OG-linked demos: filter via shop → branch name
             # Manual demos: filter via client_id → shop → branch name
@@ -45,8 +47,13 @@ def demo_license_list(request):
                 Q(original_license__shop__branch__name__in=user_branch_names) |
                 Q(original_license__isnull=True, client_id__in=manual_client_ids_in_branch)
             )
-        else:
-            demos = demos.none()
+        
+        if allowed_app_types:
+            # Filter by project app_type
+            demos = demos.filter(
+                Q(original_license__project__app_type__in=allowed_app_types) |
+                Q(original_license__isnull=True, project__app_type__in=allowed_app_types)
+            )
 
     now = timezone.now()
 
@@ -87,7 +94,14 @@ def demo_license_list(request):
 
 def add_mobile_demo_licencing(request):
     from branch.models import Branch
+    from MobileApp.models import MobileProject
     og_licenses = MobileControl.objects.select_related('shop', 'project').all()
+
+    # Restrict by app_type
+    if not _is_super_level_user(request):
+        allowed_app_types = request.session.get("allowed_app_types", [])
+        if allowed_app_types:
+            og_licenses = og_licenses.filter(project__app_type__in=allowed_app_types)
 
     # Restrict branches for non-superusers
     if _is_super_level_user(request):
@@ -154,6 +168,12 @@ from .models import DemoMobileLicense
 def add_manual_demo_license(request):
     from branch.models import Branch as BranchModel
     projects = MobileProject.objects.all()
+
+    # Restrict by app_type
+    if not _is_super_level_user(request):
+        allowed_app_types = request.session.get("allowed_app_types", [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
 
     # Pass allowed branches to template so JS can pre-filter on page load
     if _is_super_level_user(request):
@@ -248,12 +268,12 @@ def get_licenses_by_branch(request, branch_id):
     licenses = MobileControl.objects.filter(
         shop__branch_id=branch_id
     ).select_related('shop', 'project').values(
-        "id", "customer_name", "license_key", "project__project_name", "shop__place"
+        "id", "customer_name", "license_key", "project__project_name", "project__app_type", "shop__place"
     )
     data = [
         {
             "id": lic["id"],
-            "label": f"{lic['customer_name']} ({lic['shop__place'] or ''}) — {lic['project__project_name']} ({lic['license_key']})"
+            "label": f"{lic['customer_name']} ({lic['shop__place'] or ''}) — {lic['project__project_name']} [{lic['project__app_type']}] ({lic['license_key']})"
         }
         for lic in licenses
     ]

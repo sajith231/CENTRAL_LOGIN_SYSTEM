@@ -24,6 +24,7 @@ class Users(models.Model):
     )
     # 🔴 NEW FIELD – will store list of allowed submenu IDs
     allowed_menus = models.JSONField(default=list, blank=True)
+    allowed_app_types = models.JSONField(default=list, blank=True)
 
     is_active = models.BooleanField(default=True)
 

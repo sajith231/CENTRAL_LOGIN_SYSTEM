@@ -62,6 +62,16 @@
             <option value="developer">Developer Licence</option>
         </select>
 
+        <!-- App Type Filter -->
+        <select id="appTypeFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All App Types</option>
+            <option value="mobile_app">Mobile app</option>
+            <option value="web_app">Web app</option>
+            <option value="ra">RA</option>
+            <option value="other">Other</option>
+        </select>
+
         <!-- Bill Status Filter -->
         <select id="billStatusFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white;">
@@ -202,6 +212,7 @@
                 data-status="{% if c.status %}active{% else %}inactive{% endif %}"
                 data-project="{{ c.project.project_name }}" data-branch="{{ c.shop.branch.name|default:'' }}"
                 data-company="{{ c.customer_name }}" data-type="{{ c.licence_type }}"
+                data-app-type="{{ c.project.app_type }}"
                 data-bill-status="{% if c.bill_status %}billed{% else %}unbilled{% endif %}"
                 data-payment="{{ c.latest_payment_status|default:'' }}"
                 data-created="{{ c.created_date|date:'Y-m-d' }}">
@@ -940,6 +951,7 @@
             project: document.getElementById("projectFilter").value,
             branch: document.getElementById("branchFilter").value,
             type: document.getElementById("typeFilter").value,
+            appType: document.getElementById("appTypeFilter").value,
             billStatus: document.getElementById("billStatusFilter").value,
             payment: document.getElementById("paymentFilter").value,
             dateFrom: document.getElementById("dateFrom").value,
@@ -961,6 +973,7 @@
                 document.getElementById("projectFilter").value = state.project || "";
                 document.getElementById("branchFilter").value = state.branch || "";
                 document.getElementById("typeFilter").value = state.type || "";
+                document.getElementById("appTypeFilter").value = state.appType || "";
                 document.getElementById("billStatusFilter").value = state.billStatus || "";
                 document.getElementById("paymentFilter").value = state.payment || "";
                 document.getElementById("dateFrom").value = state.dateFrom || "";
@@ -985,6 +998,7 @@
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
+        const appTypeFilter = document.getElementById("appTypeFilter").value;
         const billStatusFilter = document.getElementById("billStatusFilter").value;
         const paymentFilter = document.getElementById("paymentFilter").value;
         const dateFrom = document.getElementById("dateFrom").value;   // "YYYY-MM-DD" or ""
@@ -1001,6 +1015,7 @@
             const project = row.dataset.project || "";
             const branch = row.dataset.branch || "";
             const type = row.dataset.type || "";
+            const appType = row.dataset.appType || "";
             const billStatus = row.dataset.billStatus || "";
             const payment = row.dataset.payment || "";
             const created = row.dataset.created || "";   // "YYYY-MM-DD"
@@ -1014,6 +1029,7 @@
                 && (projectFilter === "" || project === projectFilter)
                 && (branchFilter === "" || branch === branchFilter)
                 && (typeFilter === "" || type === typeFilter)
+                && (appTypeFilter === "" || appType === appTypeFilter)
                 && (billStatusFilter === "" || billStatus === billStatusFilter)
                 && (paymentFilter === "" || payment === paymentFilter)
                 && afterFrom && beforeTo;
@@ -1068,7 +1084,8 @@
     document.getElementById("projectFilter").addEventListener("change", applyFilters);
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
     document.getElementById("typeFilter").addEventListener("change", applyFilters);
-    document.getElementById("billStatusFilter").addEventListener("change", applyFilters);
+    document.getElementById("appTypeFilter").addEventListener("change", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
     document.getElementById("dateFrom").addEventListener("change", applyFilters);
     document.getElementById("dateTo").addEventListener("change", applyFilters);
     document.getElementById("rowsPerPage").addEventListener("change", applyFilters);

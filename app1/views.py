@@ -56,6 +56,7 @@ def login_view(request):
                 request.session['custom_user_role'] = custom_user.user_role
                 request.session['custom_user_level'] = custom_user.level
                 request.session['allowed_menus'] = custom_user.allowed_menus or []
+                request.session['allowed_app_types'] = custom_user.allowed_app_types or []
 
                 messages.success(request, f"Welcome, {custom_user.name}!")
                 return redirect("admin_dashboard")

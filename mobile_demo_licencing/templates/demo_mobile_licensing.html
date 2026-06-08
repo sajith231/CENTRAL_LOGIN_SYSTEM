@@ -40,6 +40,18 @@
       <option value="inactive">Inactive</option>
     </select>
 
+    <!-- App Type Filter -->
+    <select id="appTypeFilter"
+      style="background:#1e293b; color:white; border:1px solid #334155; border-radius:6px;
+             padding:7px 12px; font-size:13px; outline:none;"
+      onchange="applyFilters()">
+      <option value="">All App Types</option>
+      <option value="mobile_app">Mobile app</option>
+      <option value="web_app">Web app</option>
+      <option value="ra">RA</option>
+      <option value="other">Other</option>
+    </select>
+
   </div>
 
   <!-- Table -->
@@ -52,6 +64,7 @@
           <th style="padding:12px; white-space:nowrap;">Created</th>
           <th style="padding:12px; white-space:nowrap;">Branch</th>
           <th style="padding:12px; white-space:nowrap;">Company</th>
+          <th style="padding:12px; white-space:nowrap;">App Type</th>
           <th style="padding:12px; white-space:nowrap;">Project / OG License</th>
           <th style="padding:12px; white-space:nowrap;">Demo License</th>
           <th style="padding:12px; white-space:nowrap;">Demo Key Copy</th>
@@ -70,6 +83,7 @@
         <tr class="demo-row"
             data-branch="{{ d.branch_name|default:'' |lower }}"
             data-status="{% if d.status %}active{% else %}inactive{% endif %}"
+            data-app-type="{% if d.original_license %}{{ d.original_license.project.app_type }}{% else %}{{ d.project.app_type }}{% endif %}"
             style="background:#0f172a; border-bottom:1px solid #1e293b;">
 
           <td style="padding:12px; white-space:nowrap;">{{ forloop.counter }}</td>
@@ -95,6 +109,17 @@
             {% else %}
               {{ d.company_name }}
             {% endif %}
+          </td>
+
+          <!-- App Type -->
+          <td style="padding:12px; white-space:nowrap;">
+            <span class="badge" style="background:#334155; color:white; padding:5px 10px; border-radius:15px; font-size:12px;">
+              {% if d.original_license %}
+                {{ d.original_license.project.get_app_type_display }}
+              {% else %}
+                {{ d.project.get_app_type_display }}
+              {% endif %}
+            </span>
           </td>
 
           <!-- Project / OG -->
@@ -272,6 +297,7 @@
   function applyFilters() {
     const branchVal = document.getElementById('branchSearch').value.toLowerCase().trim();
     const statusVal = document.getElementById('statusFilter').value;
+    const appTypeVal = document.getElementById('appTypeFilter').value;
 
     const rows = document.querySelectorAll('.demo-row');
     let visible = 0;
@@ -279,11 +305,13 @@
     rows.forEach(function (row) {
       const branch = row.getAttribute('data-branch');
       const status = row.getAttribute('data-status');
+      const appType = row.getAttribute('data-app-type');
 
       const branchMatch = branchVal === '' || branch.includes(branchVal);
       const statusMatch = statusVal === '' || status === statusVal;
+      const appTypeMatch = appTypeVal === '' || appType === appTypeVal;
 
-      if (branchMatch && statusMatch) {
+      if (branchMatch && statusMatch && appTypeMatch) {
         row.style.display = '';
         visible++;
       } else {

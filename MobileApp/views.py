@@ -29,6 +29,12 @@ def mobile_home(request):
     """Display list of all mobile projects"""
     projects = MobileProject.objects.all()
 
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
+
     # build_absolute_uri('/') returns e.g. "http://127.0.0.1:8000/"
     # strip trailing slash so later joins are consistent
     base_url = request.build_absolute_uri('/')[:-1]
@@ -118,11 +124,19 @@ def mobile_control_list(request):
     # Apply restriction ONLY if NOT Django superuser AND NOT custom Super User
     if not is_super_level_user(request):
         user_branches = request.session.get('custom_user_branches', [])
+        allowed_app_types = request.session.get('allowed_app_types', [])
 
         if user_branches:
             controls = controls.filter(shop__branch__name__in=user_branches)
-        else:
-            controls = controls.none()
+        
+        if allowed_app_types:
+            controls = controls.filter(project__app_type__in=allowed_app_types)
+
+        if not user_branches and not allowed_app_types:
+            # If both are empty, user sees everything by default (as per user instruction)
+            # but wait, user_branches empty usually means no branches assigned.
+            # User said: "deafult get all data(without assign anything)"
+            pass 
 
     # ---------------- CALCULATIONS ----------------
     now = timezone.now()
@@ -170,6 +184,12 @@ from branch.models import Branch  # 👈 add this
 def add_mobile_control(request):
     projects = MobileProject.objects.all()
     packages = Package.objects.all()
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
 
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
@@ -239,6 +259,12 @@ def edit_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
     packages = Package.objects.all()
+
+    # 🔑 APP TYPE FILTERING
+    if not is_super_level_user(request):
+        allowed_app_types = request.session.get('allowed_app_types', [])
+        if allowed_app_types:
+            projects = projects.filter(app_type__in=allowed_app_types)
 
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):

@@ -65,7 +65,7 @@
                 {% for project in projects %}
                 <option value="{{ project.id }}"
                     {% if control.project_id == project.id %}selected{% endif %}>
-                    {{ project.project_name }}
+                    {{ project.project_name }} ({{ project.get_app_type_display }})
                 </option>
                 {% endfor %}
             </select>

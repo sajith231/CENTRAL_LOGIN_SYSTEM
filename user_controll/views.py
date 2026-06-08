@@ -99,6 +99,8 @@ def user_menu_user_list(request):
 
 @login_required
 def configure_user_menu(request, user_id):
+    from MobileApp.models import MobileProject
+    
     # only Django superuser can configure
     if not request.user.is_superuser:
         messages.error(request, "Only superuser can configure user menus.")
@@ -106,23 +108,31 @@ def configure_user_menu(request, user_id):
 
     user = get_object_or_404(Users, id=user_id)
     menus = get_all_menus()
+    app_types = MobileProject.APP_TYPE_CHOICES
 
     # current menus from DB
     allowed = user.allowed_menus or []
+    allowed_app_types = user.allowed_app_types or []
 
     if request.method == "POST":
-        selected = []
+        selected_menus = []
+        selected_app_types = []
+        
         for key in request.POST:
             if key.startswith("menu_"):
-                selected.append(key.replace("menu_", ""))
+                selected_menus.append(key.replace("menu_", ""))
+            elif key.startswith("app_type_"):
+                selected_app_types.append(key.replace("app_type_", ""))
 
-        user.allowed_menus = selected
+        user.allowed_menus = selected_menus
+        user.allowed_app_types = selected_app_types
         user.save()
 
         # if editing your own permissions, update session
         custom_id = request.session.get("custom_user_id")
         if custom_id and int(custom_id) == user.id:
-            request.session["allowed_menus"] = selected
+            request.session["allowed_menus"] = selected_menus
+            request.session["allowed_app_types"] = selected_app_types
 
         messages.success(request, f"Menu permissions for {user.name} have been updated.")
         return redirect("user_controll:user_menu_user_list")
@@ -131,4 +141,6 @@ def configure_user_menu(request, user_id):
         "u": user,
         "menus": menus,
         "allowed": allowed,
+        "app_types": app_types,
+        "allowed_app_types": allowed_app_types,
     })
