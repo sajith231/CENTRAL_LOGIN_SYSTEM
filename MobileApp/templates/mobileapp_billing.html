@@ -264,6 +264,7 @@
             </div>
         </div>
 
+        {% if control.project.app_type == 'mobile_app' %}
         <div class="col-md-4">
             <div class="compact-stat-card" style="padding:10px 12px;">
                 <div class="d-flex align-items-center">
@@ -280,6 +281,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <div class="col-md-4">
             <div class="compact-stat-card" style="padding:10px 12px;">
@@ -765,7 +767,7 @@
                             style="background:#1e293b; border:1px solid #3b82f6; border-radius:10px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px;">
                             <i class="fas fa-info-circle" style="color:#3b82f6;"></i>
                             <span style="color:#93c5fd; font-size:0.82rem; font-weight:500;">First billing — set the
-                                validity package <strong>and</strong> initial user count together.</span>
+                                validity package {% if control.project.app_type == 'mobile_app' %}<strong>and</strong> initial user count together{% else %}for this project{% endif %}.</span>
                         </div>
 
                         <fieldset>
@@ -853,6 +855,7 @@
                                 <i class="fas fa-info-circle me-1"></i>Select a package to extend validity period
                             </small>
 
+                            {% if control.project.app_type == 'mobile_app' %}
                             <hr style="border-color:#1e293b; margin:12px 0;">
 
                             <label class="form-label mb-2" style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
@@ -867,6 +870,10 @@
                             <small style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:14px;">
                                 <i class="fas fa-info-circle me-1"></i>Set the starting number of users for this licence
                             </small>
+                            {% else %}
+                            <!-- Hidden input for non-mobile apps to satisfy backend if needed, or simply not send -->
+                            <input type="hidden" name="extend_login" value="0">
+                            {% endif %}
 
                             <div class="mt-2">
                                 <label class="form-label mb-2"
@@ -898,9 +905,11 @@
                                     <i class="fas fa-calendar-alt me-1"></i>Update Validity
                                 </div>
                                 {% endif %}
+                                {% if control.project.app_type == 'mobile_app' %}
                                 <div class="operation-tab {% if not request.user.is_superuser and request.session.custom_user_level != 'Super User' %}active{% endif %}" id="tab_users" onclick="toggleOperation('users')">
                                     <i class="fas fa-users me-1"></i>Update Users
                                 </div>
+                                {% endif %}
                                 {% if control.active_custom_package %}
                                 <div class="operation-tab" id="tab_change_package" style="opacity:0.5; cursor:not-allowed;" title="Cannot change from a custom package">
                                     <i class="fas fa-exchange-alt me-1"></i>Change Package
@@ -937,6 +946,7 @@
                                 </div>
 
                                 <!-- USER LIMIT SECTION -->
+                                {% if control.project.app_type == 'mobile_app' %}
                                 <div class="col-12" id="section_users" style="display:none;">
                                     <label class="form-label mb-2"
                                         style="color:#94a3b8; font-size:0.85rem; font-weight:500;">
@@ -953,6 +963,7 @@
                                         remove
                                     </small>
                                 </div>
+                                {% endif %}
 
                                 <!-- CHANGE PACKAGE SECTION -->
                                 <div class="col-12" id="section_change_package" style="display:none;">
@@ -1097,10 +1108,14 @@
                             }
                         }
 
-                        // On load: if Update Validity tab is not present, default to Users
+                        // On load: default to the first available tab
                         document.addEventListener('DOMContentLoaded', function() {
-                            if (!document.getElementById('tab_validity')) {
+                            if (document.getElementById('tab_validity')) {
+                                toggleOperation('validity');
+                            } else if (document.getElementById('tab_users')) {
                                 toggleOperation('users');
+                            } else if (document.getElementById('tab_change_package')) {
+                                toggleOperation('change_package');
                             }
                         });
 
@@ -1183,10 +1198,12 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-calendar me-1"></i>Days
                                     </th>
+                                    {% if control.project.app_type == 'mobile_app' %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-users me-1"></i>Users
                                     </th>
+                                    {% endif %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-box-open me-1"></i>Package
@@ -1250,6 +1267,7 @@
                                         </span>
                                     </td>
 
+                                    {% if control.project.app_type == 'mobile_app' %}
                                     <td style="padding:12px; background:transparent;">
                                         <span class="badge"
                                             style="background:#1e293b; padding:6px 10px; border-radius:6px; font-size:0.8rem;
@@ -1257,6 +1275,7 @@
                                             {% if h.extended_login_limit >= 0 %}+{% endif %}{{ h.extended_login_limit }}
                                         </span>
                                     </td>
+                                    {% endif %}
 
                                     <td style="padding:12px; color:#e2e8f0;">
                                         {% if h.custom_package %}

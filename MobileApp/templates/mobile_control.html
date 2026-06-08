@@ -255,7 +255,7 @@
                         data-corporate="{{ c.store.name }}" data-branch="{{ c.shop.branch.name|default:'-' }}"
                         data-place="{{ c.shop.place|default:'-' }}"
                         data-corporate-id="{{ c.store.store_id|default:'-' }}" data-client="{{ c.client_id }}"
-                        data-license="{{ c.license_key }}" onclick="openMoreDetails(this)">
+                        data-license="{{ c.license_key }}" data-app-type="{{ c.project.app_type }}" onclick="openMoreDetails(this)">
                         <i class="fa-solid fa-eye"></i>
                     </button>
 
@@ -536,7 +536,7 @@
                         <td><strong>Client ID</strong></td>
                         <td id="md_client"></td>
                     </tr>
-                    <tr>
+                    <tr id="md_license_row">
                         <td style="vertical-align:middle;"><strong>Licence Key</strong></td>
                         <td style="word-break:break-all;">
                             <code id="md_license" style="color:#38bdf8; font-size:0.85rem; font-weight:600;"></code>
@@ -880,7 +880,18 @@
         document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
         document.getElementById("md_corporate_id").innerText = btn.dataset.corporateId || "-";
         document.getElementById("md_client").innerText = btn.dataset.client || "-";
-        document.getElementById("md_license").innerText = btn.dataset.license || "-";
+        
+        const licenseRow = document.getElementById("md_license_row");
+        const appType = btn.dataset.appType;
+        
+        if (appType === 'mobile_app') {
+            licenseRow.style.display = "";
+            document.getElementById("md_license").innerText = btn.dataset.license || "-";
+        } else {
+            licenseRow.style.display = "none";
+            document.getElementById("md_license").innerText = "";
+        }
+
         // Reset copy all button
         const copyBtn = document.getElementById("md_copy_all_btn");
         copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
@@ -896,7 +907,11 @@
         const client = document.getElementById("md_client").innerText;
         const license = document.getElementById("md_license").innerText;
 
-        const text = `Company      : ${company}\nCorporate    : ${corporate}\nCorporate ID : ${corporateId}\nBranch       : ${branch}\nPlace        : ${place}\nClient ID    : ${client}\nLicence Key  : ${license}`;
+        let text = `Company      : ${company}\nCorporate    : ${corporate}\nCorporate ID : ${corporateId}\nBranch       : ${branch}\nPlace        : ${place}\nClient ID    : ${client}`;
+        
+        if (license) {
+            text += `\nLicence Key  : ${license}`;
+        }
 
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.getElementById("md_copy_all_btn");
