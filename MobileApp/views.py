@@ -695,8 +695,21 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
 
-@require_http_methods(["GET"])
+def add_cors_headers(response):
+    """Add CORS headers to allow frontend access"""
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Accept"
+    response["Access-Control-Max-Age"] = "3600"
+    return response
+
+@require_http_methods(["GET", "OPTIONS"])
 def api_get_project_data(request, endpoint):
+    # Handle preflight OPTIONS request
+    if request.method == "OPTIONS":
+        response = JsonResponse({"status": "ok"})
+        return add_cors_headers(response)
+    
     try:
         project = MobileProject.objects.get(api_endpoint=endpoint)
         controls = MobileControl.objects.filter(project=project).select_related(
@@ -801,18 +814,20 @@ def api_get_project_data(request, endpoint):
                 "status": "Active" if control.status else "Inactive",
             })
 
-        return JsonResponse({
+        response = JsonResponse({
             "success": True,
             "project_name": project.project_name,
             "demo_licenses": demo_keys,
             "customers": customers_data
         })
+        return add_cors_headers(response)
 
     except MobileProject.DoesNotExist:
-        return JsonResponse({
+        response = JsonResponse({
             "success": False,
             "error": "Project not found"
         }, status=404)
+        return add_cors_headers(response)
 
 
 
