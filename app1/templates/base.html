@@ -403,18 +403,18 @@
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
               <i class="fa-solid fa-mobile-screen-button"></i>
-              <span>Mobile App</span>
+              <span>App Control</span>
               <i class="fa-solid fa-chevron-right chev"></i>
             </button>
             <div id="submenu-mobile" class="submenu">
               {% if request.user.is_superuser or 'mobile_control' in am %}
               <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');">
-                <i class="fa-solid fa-sliders"></i> Mobile Licensing
+                <i class="fa-solid fa-sliders"></i> Licensing
               </a>
               {% endif %}
               {% if request.user.is_superuser or 'mobileapp_list' in am %}
               <a href="{% url 'MobileApp:mobileapp_list' %}">
-                <i class="fa-solid fa-list-check"></i> Mobile App List
+                <i class="fa-solid fa-list-check"></i> Project List
               </a>
               {% endif %}
               {% if request.user.is_superuser or 'module_list' in am %}
@@ -430,7 +430,7 @@
 
               {% if request.user.is_superuser or 'mobile_demo' in am %}
               <a href="/mobile-demo/">
-                <i class="fa-solid fa-mobile-screen-button"></i> Mobile Demo Licensing
+                <i class="fa-solid fa-mobile-screen-button"></i> Demo Licensing
               </a>
               {% endif %}
 

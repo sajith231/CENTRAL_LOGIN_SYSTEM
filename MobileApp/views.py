@@ -153,8 +153,8 @@ def mobile_control_list(request):
             control.is_expired = False
 
     # ---------------- FILTER DROPDOWNS ----------------
-    project_names = controls.values_list(
-        'project__project_name', flat=True
+    projects_data = controls.values(
+        'project__project_name', 'project__app_type'
     ).distinct().order_by('project__project_name')
 
     if is_super_level_user(request):
@@ -168,7 +168,7 @@ def mobile_control_list(request):
 
     return render(request, "mobile_control.html", {
         "controls": controls,
-        "project_names": project_names,
+        "projects_data": projects_data,
         "branch_names": branch_names,
         "any_mobile_app": any_mobile_app,
     })

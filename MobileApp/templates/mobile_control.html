@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block active_mobile_control %}active{% endblock %}
-{% block header_title %}<strong>Mobile Control</strong>{% endblock %}
+{% block header_title %}<strong>App Licensing</strong>{% endblock %}
 
 {% block content %}
 <div class="card">
@@ -29,8 +29,15 @@
             style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
             <option value="">All Projects</option>
 
-            {% for name in project_names %}
-            <option value="{{ name }}">{{ name }}</option>
+            {% for p in projects_data %}
+            <option value="{{ p.project__project_name }}">
+                {{ p.project__project_name }} - 
+                {% if p.project__app_type == 'mobile_app' %}Mobile App
+                {% elif p.project__app_type == 'web_app' %}Web App
+                {% elif p.project__app_type == 'ra' %}RA
+                {% elif p.project__app_type == 'other' %}Other
+                {% else %}{{ p.project__app_type }}{% endif %}
+            </option>
             {% endfor %}
         </select>
 
@@ -315,6 +322,22 @@
                     <span
                         style="background:#374151; color:#d1d5db; padding:3px 10px; border-radius:20px; font-size:0.75rem;">—</span>
                     {% endif %}
+
+                    {% if c.project.app_type %}
+                    <div style="margin-top: 6px;">
+                        <span style="color:#9ca3af; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.025em; font-weight: 500;">
+                            {% if c.project.app_type == 'mobile_app' %}
+                                Mobile App
+                            {% elif c.project.app_type == 'web_app' %}
+                                Web App
+                            {% elif c.project.app_type == 'ra' %}
+                                RA
+                            {% else %}
+                                {{ c.project.app_type }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
                 </td>
 
                 {% if any_mobile_app %}
@@ -546,6 +569,10 @@
                     <tr>
                         <td><strong>Client ID</strong></td>
                         <td id="md_client"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>App Type</strong></td>
+                        <td id="md_app_type"></td>
                     </tr>
                     <tr id="md_license_row">
                         <td style="vertical-align:middle;"><strong>Licence Key</strong></td>
@@ -894,6 +921,16 @@
         
         const licenseRow = document.getElementById("md_license_row");
         const appType = btn.dataset.appType;
+
+        // Map app type to display name
+        let appTypeDisplay = "-";
+        if (appType === 'mobile_app') appTypeDisplay = "Mobile App";
+        else if (appType === 'web_app') appTypeDisplay = "Web App";
+        else if (appType === 'ra') appTypeDisplay = "RA";
+        else if (appType === 'other') appTypeDisplay = "Other";
+        else if (appType) appTypeDisplay = appType;
+
+        document.getElementById("md_app_type").innerText = appTypeDisplay;
         
         if (appType === 'mobile_app') {
             licenseRow.style.display = "";
@@ -916,9 +953,10 @@
         const branch = document.getElementById("md_branch").innerText;
         const place = document.getElementById("md_place").innerText;
         const client = document.getElementById("md_client").innerText;
+        const appType = document.getElementById("md_app_type").innerText;
         const license = document.getElementById("md_license").innerText;
 
-        let text = `Company      : ${company}\nCorporate    : ${corporate}\nCorporate ID : ${corporateId}\nBranch       : ${branch}\nPlace        : ${place}\nClient ID    : ${client}`;
+        let text = `Company      : ${company}\nCorporate    : ${corporate}\nCorporate ID : ${corporateId}\nBranch       : ${branch}\nPlace        : ${place}\nClient ID    : ${client}\nApp Type     : ${appType}`;
         
         if (license) {
             text += `\nLicence Key  : ${license}`;
