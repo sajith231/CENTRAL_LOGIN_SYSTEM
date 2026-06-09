@@ -440,9 +440,10 @@ def api_register_license(request, endpoint):
             return JsonResponse(response, status=200)
 
         # Device limit check
+        if registered_count >= control.login_limit:
             return JsonResponse({
                 'success': False,
-                'error': 'License limit reached',
+                'error': 'limit is full add more slot in lice',
                 'max_devices': control.login_limit,
                 'registered_count': registered_count
             }, status=403)
@@ -503,7 +504,7 @@ def api_register_license(request, endpoint):
         if reg_count >= limit:
             return JsonResponse({
                 'success': False,
-                'error': f'Demo limit reached ({reg_count}/{limit})',
+                'error': 'limit is full add more slot in lice',
                 'max_devices': limit,
                 'registered_count': reg_count
             }, status=403)
