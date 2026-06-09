@@ -9,20 +9,30 @@
         const searchText = document.getElementById('searchProject').value.toLowerCase();
         const appTypeFilter = document.getElementById('appTypeFilter').value;
         const rows = document.querySelectorAll('.project-row');
+        let visibleCount = 0;
 
         rows.forEach(row => {
             const projectName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-            const appType = row.dataset.appType;
+            const appType = row.dataset.appType || '';
 
             const matchesSearch = projectName.includes(searchText);
             const matchesAppType = !appTypeFilter || appType === appTypeFilter;
 
             if (matchesSearch && matchesAppType) {
                 row.style.display = '';
+                visibleCount++;
+                // Update the "No" column (first cell)
+                row.cells[0].textContent = visibleCount;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        // Update the total count display if it exists
+        const totalCountElement = document.getElementById('totalProjectCount');
+        if (totalCountElement) {
+            totalCountElement.textContent = visibleCount;
+        }
     }
 </script>
 {% endblock %}
@@ -163,7 +173,7 @@
     </div>
 
     <p style="margin-top:16px; color:#9ca3af;">
-        Total Projects: {{ projects.count }}
+        Total Projects: <span id="totalProjectCount">{{ projects.count }}</span>
     </p>
 
     {% else %}

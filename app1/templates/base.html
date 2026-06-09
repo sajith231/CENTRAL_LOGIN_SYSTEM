@@ -397,8 +397,8 @@
           </li>
           {% endif %}
 
-          {# 2) MOBILE APP #}
-          {% if request.user.is_superuser or 'mobile_control' in am or 'mobileapp_list' in am or 'module_list' in am or 'package_list' in am %}
+          {# 2) APP CONTROL #}
+          {% if request.user.is_superuser or 'mobile_control' in am or 'mobile_demo' in am %}
 
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
@@ -410,21 +410,6 @@
               {% if request.user.is_superuser or 'mobile_control' in am %}
               <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');">
                 <i class="fa-solid fa-sliders"></i> Licensing
-              </a>
-              {% endif %}
-              {% if request.user.is_superuser or 'mobileapp_list' in am %}
-              <a href="{% url 'MobileApp:mobileapp_list' %}">
-                <i class="fa-solid fa-list-check"></i> Project List
-              </a>
-              {% endif %}
-              {% if request.user.is_superuser or 'module_list' in am %}
-              <a href="{% url 'ModuleAndPackage:module_list' %}">
-                <i class="fa-solid fa-puzzle-piece"></i> Module
-              </a>
-              {% endif %}
-              {% if request.user.is_superuser or 'package_list' in am %}
-              <a href="{% url 'ModuleAndPackage:package_list' %}">
-                <i class="fa-solid fa-box-open"></i> Package
               </a>
               {% endif %}
 
@@ -519,7 +504,7 @@
 
 
           {# 6) MASTER #}
-          {% if request.user.is_superuser or 'branch_list' in am %}
+          {% if request.user.is_superuser or 'branch_list' in am or 'mobileapp_list' in am or 'module_list' in am or 'package_list' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
               <i class="fa-solid fa-layer-group"></i>
@@ -530,6 +515,21 @@
               {% if request.user.is_superuser or 'branch_list' in am %}
               <a href="{% url 'branch_list' %}" class="{% block active_branch %}{% endblock %}">
                 <i class="fa-solid fa-code-branch"></i> Branch
+              </a>
+              {% endif %}
+              {% if request.user.is_superuser or 'mobileapp_list' in am %}
+              <a href="{% url 'MobileApp:mobileapp_list' %}">
+                <i class="fa-solid fa-list-check"></i> Project List
+              </a>
+              {% endif %}
+              {% if request.user.is_superuser or 'module_list' in am %}
+              <a href="{% url 'ModuleAndPackage:module_list' %}">
+                <i class="fa-solid fa-puzzle-piece"></i> Module
+              </a>
+              {% endif %}
+              {% if request.user.is_superuser or 'package_list' in am %}
+              <a href="{% url 'ModuleAndPackage:package_list' %}">
+                <i class="fa-solid fa-box-open"></i> Package
               </a>
               {% endif %}
             </div>
@@ -592,6 +592,8 @@
   </div>
 
   <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  {% block extra_js %}{% endblock %}
 
   <script>
     // Mobile sidebar toggle
