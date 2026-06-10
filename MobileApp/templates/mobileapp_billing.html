@@ -304,7 +304,7 @@
     </div>
 
 
-    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or control.licence_type == 'transfer' %}
+    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_billing' in request.session.allowed_menus %}
     <!-- EDIT RECORD MODAL -->
     <div id="editUnbilledModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
         z-index:9999; align-items:center; justify-content:center;">
@@ -1216,7 +1216,7 @@
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-credit-card me-1"></i>Status
                                     </th>
-                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus %}
                                     <th
                                         style="color:#94a3b8; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:10px; background:#0a0f1e;">
                                         <i class="fas fa-money-check-alt me-1"></i>Pymt Status
@@ -1296,7 +1296,7 @@
                                         <span style="color:#3b82f6; font-weight:600;">{{ h.new_login_limit }}</span>
                                     </td>
 
-                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_billing' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_billing' in request.session.allowed_menus %}
                                     <td style="padding:12px; background:transparent;">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <button id="billingStatusBtn{{ h.id }}"
@@ -1311,8 +1311,8 @@
                                                 {% endif %}
                                             </button>
 
-                                            {% if not h.bill_status or control.licence_type == 'transfer' %}
-                                            {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or control.licence_type == 'transfer' %}
+                                            {% if not h.bill_status %}
+                                            {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_billing' in request.session.allowed_menus %}
                                             <button type="button"
                                                 onclick="openEditModal({{ h.id }}, {{ h.extended_days }}, {{ h.extended_login_limit }}, '{{ h.remark|escapejs }}', this.dataset.expiry, this.dataset.oldExpiry)"
                                                 data-expiry="{% if h.new_expiry_date %}{{ h.new_expiry_date|date:'Y-m-d' }}{% endif %}"
@@ -1340,7 +1340,7 @@
                                         </div>
                                     </td>
                                     {% endif %}
-                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus or control.licence_type == 'transfer' %}
+                                    {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' or 'mobile_payment_status' in request.session.allowed_menus %}
                                     <td style="padding:12px; background:transparent;">
                                         {% if h.payment_status == 'Paid' or h.payment_status == 'Partially Paid' %}
                                         <div style="display:flex; flex-direction:column; gap:8px;">
@@ -1397,8 +1397,16 @@
                                         {{ h.added_by|default:"—" }}
                                     </td>
                                     <td
-                                        style="padding:12px; color:#94a3b8; max-width:200px; background:transparent; font-size:0.8rem;">
-                                        <span id="inv_remark_{{ h.id }}">{{ h.remark|default:"—" }}</span>
+                                        style="padding:12px; background:transparent; max-width:220px;">
+                                        {% if h.remark %}
+                                        <div style="display:flex; align-items:flex-start;">
+                                            <span id="inv_remark_{{ h.id }}" style="color:#94a3b8; font-size:0.8rem; white-space:normal; line-height:1.4;">
+                                                {{ h.remark }}
+                                            </span>
+                                        </div>
+                                        {% else %}
+                                        <span style="color:#64748b;">—</span>
+                                        {% endif %}
                                     </td>
                                     {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                                     <td style="padding:12px; background:transparent; text-align:center; white-space:nowrap;">

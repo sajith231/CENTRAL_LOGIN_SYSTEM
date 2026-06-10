@@ -222,8 +222,8 @@ def add_mobile_control(request):
             messages.error(request, f'A licence already exists for the company "{shop.name}" under the project "{project.project_name}".')
             return redirect("MobileApp:add_mobile_control")
 
-        # For transfer or developer licences, set default bill status to True
-        is_billed = licence_type in ['transfer', 'developer']
+        # For transfer or developer licences, set default bill status to False (same as others)
+        is_billed = False
 
         control = MobileControl.objects.create(
             project=project,
@@ -235,8 +235,8 @@ def add_mobile_control(request):
             licence_type=licence_type,
             package=None,
             expiry_date=None,
-            status=is_billed,  # Active by default for Transfer/Developer
-            bill_status=is_billed
+            status=False,  # Inactive by default
+            bill_status=False
         )
 
         messages.success(request, 'Mobile control saved successfully!')
@@ -924,11 +924,7 @@ def mobile_control_billing(request, pk):
         bill_status = request.POST.get("bill_status") in ["1", "on", "true"]
         remark = request.POST.get("remark", "").strip()
 
-        # For Transfer or Developer licenses, default to Billed and Not Applicable
         payment_status = 'Not Paid'
-        if control.licence_type in ['transfer', 'developer']:
-            bill_status = True
-            payment_status = 'Not Applicable'
         # ---------- STORE OLD VALUES ----------
         old_login_limit = control.login_limit
         old_expiry = control.expiry_date
@@ -961,9 +957,6 @@ def mobile_control_billing(request, pk):
             else:
                 messages.error(request, "No package assigned to renew.")
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
-                
-            if not remark:
-                remark = "Package Renewed (Manual)"
             
             bill_status = False  # Renewals start as unbilled as per request
             
@@ -971,7 +964,6 @@ def mobile_control_billing(request, pk):
             if not control.status:
                 control.status = True
 
-                
         elif operation_type == 'validity':
             # Only Django superuser or Super User level can update validity
             is_super = request.user.is_superuser or request.session.get('custom_user_level') == 'Super User'
@@ -1021,6 +1013,35 @@ def mobile_control_billing(request, pk):
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
 
             control.expiry_date = new_expiry
+
+        # ---------- AUTO-REMARK GENERATOR ----------
+        if not remark:
+            auto_parts = []
+            if operation_type == 'renew':
+                pkg = (control.active_custom_package.package_name if control.active_custom_package 
+                       else (control.package.package_name if control.package else ""))
+                auto_parts.append(f"Renewed {pkg}" if pkg else "Renewed Package")
+            elif operation_type == 'change_package':
+                pkg = (control.active_custom_package.package_name if control.active_custom_package 
+                       else (control.package.package_name if control.package else ""))
+                auto_parts.append(f"Changed to {pkg}" if pkg else "Changed Package")
+            elif operation_type == 'validity' and extend_days != 0:
+                auto_parts.append(f"{'Added' if extend_days > 0 else 'Reduced'} {abs(extend_days)} days")
+            elif operation_type == 'both':
+                pkg = (control.active_custom_package.package_name if control.active_custom_package 
+                       else (control.package.package_name if control.package else ""))
+                if pkg:
+                    auto_parts.append(f"Switched to {pkg}")
+                if extend_days != 0:
+                    auto_parts.append(f"{'Added' if extend_days > 0 else 'Reduced'} {abs(extend_days)} days")
+
+            if extend_login != 0:
+                auto_parts.append(f"{'Increased' if extend_login > 0 else 'Decreased'} users by {abs(extend_login)}")
+            
+            if auto_parts:
+                remark = " & ".join(auto_parts)
+            else:
+                remark = "Billing Updated"
 
         # ---------- SAVE BILLING HISTORY ----------
         MobileBillingHistory.objects.create(
