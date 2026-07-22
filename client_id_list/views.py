@@ -15,7 +15,9 @@ def get_client_ids(request):
         data.append({
             "client_id": shop.client_id,
             "company_name": shop.name,     # Shop name = company
-            "place": shop.place
+            "place": shop.place,
+            "currency_name": shop.country,
+            "currency_code": shop.currency_code
         })
 
     return JsonResponse({

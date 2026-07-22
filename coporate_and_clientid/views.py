@@ -38,7 +38,9 @@ def corporate_and_clientid_list(request):
             shops_data.append({
                 "shop_name": shop.name,
                 "client_id": shop.client_id,
-                "projects": list(projects)  # ✅ added safely
+                "projects": list(projects),
+                "currency_name": shop.country,
+                "currency_code": shop.currency_code
             })
 
         data.append({

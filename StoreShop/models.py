@@ -40,7 +40,8 @@ class Shop(models.Model):
     place = models.CharField(max_length=150, null=True, blank=True)
     email = models.EmailField(blank=True, null=True)
     contact_no = models.CharField(max_length=15, blank=True, null=True)
-
+    country = models.CharField(max_length=100, default='India')
+    currency_code = models.CharField(max_length=10, default='INR')
 
     # 13 characters now
     client_id = models.CharField(max_length=50, unique=True)

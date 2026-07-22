@@ -153,6 +153,8 @@ def add_shop(request):
         place = request.POST.get("place")
         email = request.POST.get("email")
         contact_no = request.POST.get("contact_no")
+        country = request.POST.get("country", "India")
+        currency_code = request.POST.get("currency_code", "INR")
         is_active = bool(request.POST.get("is_active"))
 
         store = get_object_or_404(Store, id=store_id)
@@ -179,6 +181,8 @@ def add_shop(request):
             place=place,
             email=email,
             contact_no=contact_no,
+            country=country,
+            currency_code=currency_code,
             is_active=is_active,
             created_by=request.user if request.user.is_authenticated else None,
             created_by_name=request.user.username if request.user.is_authenticated else request.session.get("custom_user_name", "Unknown")
@@ -213,6 +217,8 @@ def edit_shop(request, id):
         shop.place = request.POST.get("place")
         shop.email = request.POST.get("email")
         shop.contact_no = request.POST.get("contact_no")
+        shop.country = request.POST.get("country", "India")
+        shop.currency_code = request.POST.get("currency_code", "INR")
         shop.is_active = bool(request.POST.get("is_active"))
 
         shop.store = get_object_or_404(Store, id=store_id)
