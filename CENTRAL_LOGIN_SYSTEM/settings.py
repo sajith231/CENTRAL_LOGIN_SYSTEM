@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'coporate_and_clientid',
     'mobile_demo_licencing',
     "downloads",
+    "login_with_token",
+    "licenses",
 ]
 
 # ------------------------------------------------------------------
