@@ -242,6 +242,44 @@
         
     </div>
 
+    {% if control.active_custom_package %}
+    <!-- ACTIVE CUSTOM PACKAGE MODULES SECTION -->
+    <div id="customPkgModulesSection"
+        style="background:#0f172a; border:1px solid #10b981; border-radius:10px; padding:14px 18px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-cube" style="color:#10b981; font-size:0.9rem;"></i>
+                <span style="color:#10b981; font-weight:600; font-size:0.9rem;">
+                    [Custom] {{ control.active_custom_package.package_name }}
+                </span>
+                <span style="color:#64748b; font-size:0.75rem;">
+                    ({{ control.active_custom_package.days_limit }} days)
+                </span>
+            </div>
+            <span id="customPkgModuleCount" style="color:#94a3b8; font-size:0.75rem;">
+                {{ control.active_custom_package.modules.count }} module{{ control.active_custom_package.modules.count|pluralize }}
+            </span>
+        </div>
+        <div id="customPkgModulesList" style="display:flex; flex-wrap:wrap; gap:6px;">
+            {% for mod in control.active_custom_package.modules.all %}
+            <span class="pkg-module-tag" id="cpModule_{{ mod.id }}">
+                <i class="fas fa-puzzle-piece" style="color:#8b5cf6; font-size:0.65rem;"></i>
+                {{ mod.module_name }}
+                {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
+                <button onclick="removeCustomPkgModule({{ control.id }}, {{ control.active_custom_package.id }}, {{ mod.id }}, '{{ mod.module_name|escapejs }}')"
+                    style="background:transparent; border:none; color:#ef4444; cursor:pointer; padding:0 2px; font-size:0.7rem; line-height:1;"
+                    title="Remove module">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+            </span>
+            {% empty %}
+            <span style="color:#64748b; font-size:0.8rem; font-style:italic;">No modules in this package</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- COMPACT OVERVIEW CARDS -->
     <div class="row g-2 mb-3">
         <div class="col-md-4">
@@ -2324,5 +2362,46 @@
     }
 </script>
 
+<script>
+    async function removeCustomPkgModule(controlPk, pkgPk, modulePk, moduleName) {
+        if (!confirm(`Remove module "${moduleName}" from this custom package?`)) return;
+
+        try {
+            const res = await fetch(`/mobileapp/mobile_control/${controlPk}/custom-package/${pkgPk}/module/${modulePk}/remove/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                const el = document.getElementById('cpModule_' + modulePk);
+                if (el) el.remove();
+
+                const countEl = document.getElementById('customPkgModuleCount');
+                if (countEl && data.remaining_modules !== undefined) {
+                    const c = data.remaining_modules.length;
+                    countEl.textContent = c + ' module' + (c !== 1 ? 's' : '');
+                }
+
+                if (data.remaining_modules && data.remaining_modules.length === 0) {
+                    const listEl = document.getElementById('customPkgModulesList');
+                    if (listEl) {
+                        listEl.innerHTML = '<span style="color:#64748b; font-size:0.8rem; font-style:italic;">No modules in this package</span>';
+                    }
+                }
+
+                alert(data.message);
+            } else {
+                alert(data.error || 'Failed to remove module');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to remove module');
+        }
+    }
+</script>
 
 {% endblock %}

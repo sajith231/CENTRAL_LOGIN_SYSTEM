@@ -38,8 +38,8 @@ urlpatterns = [
     path('mobile_control/<int:control_pk>/custom-package/<int:pkg_pk>/add-modules/', views.add_modules_to_custom_package, name='add_modules_to_custom_package'),
     path('billing-history/update-invoice/<int:pk>/', views.update_invoice_details, name='update_invoice_details'),
     path('billing-history/super-delete/<int:pk>/', views.super_delete_billing_history, name='super_delete_billing_history'),
-
-
-    
+    path('mobile_control/<int:control_pk>/custom-packages/', views.get_custom_packages, name='get_custom_packages'),
+    path('mobile_control/<int:control_pk>/custom-package/<int:pkg_pk>/remove/', views.remove_custom_package, name='remove_custom_package'),
+    path('mobile_control/<int:control_pk>/custom-package/<int:pkg_pk>/module/<int:module_pk>/remove/', views.remove_custom_package_module, name='remove_custom_package_module'),
 
 ]

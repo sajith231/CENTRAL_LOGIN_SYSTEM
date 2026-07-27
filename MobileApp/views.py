@@ -1538,3 +1538,82 @@ def super_delete_billing_history(request, pk):
     control.save()
 
     return JsonResponse({'success': True})
+
+
+@csrf_exempt
+@require_POST
+def get_custom_packages(request, control_pk):
+    """Return JSON list of custom packages for a given control (super user only)."""
+    if not is_super_level_user(request):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    control = get_object_or_404(MobileControl, pk=control_pk)
+    packages = CustomPackage.objects.filter(control=control).order_by('-created_at')
+
+    packages_data = []
+    for pkg in packages:
+        modules = list(pkg.modules.values('module_name', 'module_code'))
+        packages_data.append({
+            'id': pkg.id,
+            'package_name': pkg.package_name,
+            'days_limit': pkg.days_limit,
+            'created_at': pkg.created_at.strftime('%d-%m-%Y %H:%M'),
+            'modules': modules,
+            'is_active': control.active_custom_package_id == pkg.id,
+        })
+
+    return JsonResponse({
+        'success': True,
+        'control_id': control.id,
+        'customer_name': control.customer_name,
+        'client_id': control.client_id,
+        'packages': packages_data,
+    })
+
+
+@csrf_exempt
+@require_POST
+def remove_custom_package(request, control_pk, pkg_pk):
+    """Remove a custom package from a control. Super user only. No billing history created."""
+    if not is_super_level_user(request):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    control = get_object_or_404(MobileControl, pk=control_pk)
+    pkg = get_object_or_404(CustomPackage, pk=pkg_pk, control=control)
+
+    # If this is the active custom package, deactivate it
+    if control.active_custom_package_id == pkg.id:
+        control.active_custom_package = None
+        control.save(update_fields=['active_custom_package', 'updated_date'])
+
+    pkg_name = pkg.package_name
+    pkg.delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Custom package "{pkg_name}" removed successfully.',
+    })
+
+
+@csrf_exempt
+@require_POST
+def remove_custom_package_module(request, control_pk, pkg_pk, module_pk):
+    """Remove a single module from a custom package. Super user only. No billing history created."""
+    if not is_super_level_user(request):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    control = get_object_or_404(MobileControl, pk=control_pk)
+    pkg = get_object_or_404(CustomPackage, pk=pkg_pk, control=control)
+    module = get_object_or_404(CustomPackageModule, pk=module_pk, package=pkg)
+
+    module_name = module.module_name
+    module.delete()
+
+    # Return updated modules list
+    remaining = list(pkg.modules.values('id', 'module_name', 'module_code'))
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Module "{module_name}" removed successfully.',
+        'remaining_modules': remaining,
+    })
