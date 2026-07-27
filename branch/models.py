@@ -29,10 +29,16 @@ CURRENCY_CODES = {
 }
 
 class Branch(models.Model):
+    AUTO_CUT_CHOICES = [
+        ('disable', 'Disable'),
+        ('enable', 'Enable'),
+    ]
+
     name = models.CharField(max_length=200)
     place = models.CharField(max_length=200, default="")
     country = models.CharField(max_length=100, choices=COUNTRIES, default="India")
     currency_code = models.CharField(max_length=10, default="INR")
+    auto_cut = models.CharField(max_length=10, choices=AUTO_CUT_CHOICES, default='disable')
 
     def save(self, *args, **kwargs):
         self.currency_code = CURRENCY_CODES.get(self.country, "INR")

@@ -390,7 +390,21 @@
                     {% elif c.latest_payment_status == 'Partially Paid' %}
                     <span style="background:#f59e0b; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Partial</span>
                     {% elif c.latest_payment_status == 'Not Paid' %}
-                    <span style="background:#dc2626; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Unpaid</span>
+                        {% if c.auto_cut_data %}
+                            {% if c.auto_cut_data.expired %}
+                            <span style="background:#dc2626; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Unpaid</span>
+                            <div style="color:#dc2626; font-size:0.65rem; margin-top:4px; font-weight:600;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Auto-deactivated
+                            </div>
+                            {% else %}
+                            <span style="background:#dc2626; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Unpaid</span>
+                            <div style="color:#f59e0b; font-size:0.65rem; margin-top:4px; font-weight:600;">
+                                <i class="fa-solid fa-clock"></i> Auto-deact in {{ c.auto_cut_data.remaining }}d
+                            </div>
+                            {% endif %}
+                        {% else %}
+                        <span style="background:#dc2626; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Unpaid</span>
+                        {% endif %}
                     {% elif c.latest_payment_status == 'Not Applicable' %}
                     <span style="background:#4b5563; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">N/A</span>
                     {% else %}

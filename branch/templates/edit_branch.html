@@ -50,6 +50,16 @@
                    style="background:#0f1b31; font-family:monospace; color:#00ff9d; border:1px solid #334155;">
         </div>
 
+        <!-- Auto Cut -->
+        <div class="mb-3">
+            <label>Auto Cut <span style="color:red;">*</span></label>
+            <select name="auto_cut" class="form-control" required
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+                <option value="disable" {% if branch.auto_cut == 'disable' %}selected{% endif %}>Disable</option>
+                <option value="enable" {% if branch.auto_cut == 'enable' %}selected{% endif %}>Enable</option>
+            </select>
+        </div>
+
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
 </div>

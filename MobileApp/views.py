@@ -140,6 +140,8 @@ def mobile_control_list(request):
 
     # ---------------- CALCULATIONS ----------------
     now = timezone.now()
+    now_date = now.date()
+
     for control in controls:
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
@@ -151,6 +153,25 @@ def mobile_control_list(request):
         else:
             control.remaining_days = None
             control.is_expired = False
+
+        # ── AUTO-CUT CHECK ──
+        control.auto_cut_data = None
+        branch = getattr(getattr(control, 'shop', None), 'branch', None)
+        if branch and getattr(branch, 'auto_cut', 'disable') == 'enable':
+            latest_bill = control.billing_history.order_by('-created_at').first()
+
+            if latest_bill and latest_bill.payment_status == 'Not Paid':
+                bill_date = latest_bill.created_at.date()
+                days_since_bill = (now_date - bill_date).days
+                remaining = 20 - days_since_bill
+
+                if remaining <= 0:
+                    control.status = False
+                    control.bill_status = False
+                    control.save(update_fields=['status', 'bill_status', 'updated_date'])
+                    control.auto_cut_data = {'expired': True, 'remaining': 0}
+                else:
+                    control.auto_cut_data = {'expired': False, 'remaining': remaining}
 
     # ---------------- FILTER DROPDOWNS ----------------
     projects_data = controls.values(
@@ -899,6 +920,17 @@ from .models import MobileControl, MobileBillingHistory, CustomPackage, CustomPa
 
 def mobile_control_billing(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
+
+    # ── AUTO-CUT CHECK ──
+    branch = getattr(getattr(control, 'shop', None), 'branch', None)
+    if branch and getattr(branch, 'auto_cut', 'disable') == 'enable':
+        latest_bill = control.billing_history.order_by('-created_at').first()
+        if latest_bill and latest_bill.payment_status == 'Not Paid':
+            days_since_bill = (timezone.now().date() - latest_bill.created_at.date()).days
+            if days_since_bill >= 20:
+                control.status = False
+                control.bill_status = False
+                control.save(update_fields=['status', 'bill_status', 'updated_date'])
 
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date

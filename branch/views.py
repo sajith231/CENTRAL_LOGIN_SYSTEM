@@ -10,11 +10,13 @@ def add_branch(request):
         name = request.POST.get("name")
         place = request.POST.get("place")
         country = request.POST.get("country")
+        auto_cut = request.POST.get("auto_cut", "disable")
 
         Branch.objects.create(
             name=name,
             place=place,
-            country=country
+            country=country,
+            auto_cut=auto_cut
         )
         return redirect("branch_list")
     return render(request, "add_branch.html")
@@ -25,6 +27,7 @@ def edit_branch(request, id):
         branch.name = request.POST.get("name")
         branch.place = request.POST.get("place")
         branch.country = request.POST.get("country")
+        branch.auto_cut = request.POST.get("auto_cut", "disable")
         branch.save()
         return redirect("branch_list")
     return render(request, "edit_branch.html", {"branch": branch})

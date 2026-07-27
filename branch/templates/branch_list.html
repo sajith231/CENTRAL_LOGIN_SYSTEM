@@ -29,6 +29,7 @@
             <th style="padding:12px; text-align:left;">Place</th>
             <th style="padding:12px; text-align:left;">Country</th>
             <th style="padding:12px; text-align:left;">Currency</th>
+            <th style="padding:12px; text-align:left;">Auto Cut</th>
             <th style="padding:12px; text-align:left;">Edit</th>
             <th style="padding:12px; text-align:left;">Delete</th>
           </tr>
@@ -54,6 +55,14 @@
 
               <td style="padding:12px; font-family:monospace; color:#00ff9d;">
                 {{ br.currency_code }}
+              </td>
+
+              <td style="padding:12px;">
+                {% if br.auto_cut == 'enable' %}
+                  <span style="background:#16a34a; color:white; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Enable</span>
+                {% else %}
+                  <span style="background:#dc2626; color:white; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Disable</span>
+                {% endif %}
               </td>
 
               <!-- Edit Button -->
@@ -94,7 +103,7 @@
             </tr>
           {% empty %}
             <tr style="background:#0f1b31;">
-              <td colspan="7" style="padding:14px;">No branches yet.</td>
+              <td colspan="8" style="padding:14px;">No branches yet.</td>
             </tr>
           {% endfor %}
         </tbody>
