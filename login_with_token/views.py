@@ -4,7 +4,8 @@ from django.views.decorators.http import require_http_methods
 import json
 
 from app1.models import Users
-from .models import ApiToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 def get_user_from_token(request):
@@ -13,18 +14,16 @@ def get_user_from_token(request):
         return None
     token_str = auth.split(' ', 1)[1].strip()
     try:
-        api_token = ApiToken.objects.select_related('user').get(token=token_str, is_active=True)
-        if api_token.user.is_active:
-            return api_token.user
-    except ApiToken.DoesNotExist:
-        pass
-    return None
+        access_token = AccessToken(token_str)
+        user = Users.objects.get(id=access_token['user_id'], is_active=True)
+        return user
+    except (TokenError, Users.DoesNotExist):
+        return None
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_login(request):
-    """POST /api/auth/login/  —  {"email": "...", "password": "..."}"""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -47,14 +46,13 @@ def api_login(request):
     if not user.is_active:
         return JsonResponse({'success': False, 'error': 'Account is deactivated'}, status=403)
 
-    ApiToken.objects.filter(user=user).update(is_active=False)
-    api_token = ApiToken.objects.create(user=user)
-
+    refresh = RefreshToken.for_user(user)
     branches = list(user.branches.values('id', 'name', 'place', 'country', 'currency_code', 'auto_cut'))
 
     return JsonResponse({
         'success': True,
-        'token': api_token.token,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
         'user': {
             'id': user.id,
             'name': user.name,
@@ -69,13 +67,8 @@ def api_login(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_logout(request):
-    """POST /api/auth/logout/  —  header: Authorization: Bearer <token>"""
     user = get_user_from_token(request)
     if not user:
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=401)
-
-    auth = request.META.get('HTTP_AUTHORIZATION', '')
-    token_str = auth.split(' ', 1)[1].strip()
-    ApiToken.objects.filter(user=user, token=token_str).update(is_active=False)
 
     return JsonResponse({'success': True, 'message': 'Logged out successfully'})

@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "downloads",
     "login_with_token",
     "licenses",
+    "rest_framework",
+    "rest_framework_simplejwt",
 ]
 
 # ------------------------------------------------------------------
@@ -132,6 +134,24 @@ DATABASES = {
 
 
 LOGIN_URL = "/login/"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
 
 # -------------------- Auth ----------------------
 AUTH_PASSWORD_VALIDATORS = [
