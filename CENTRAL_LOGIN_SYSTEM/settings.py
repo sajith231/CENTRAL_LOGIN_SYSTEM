@@ -42,8 +42,13 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
 ]
 
-# ------------------------------------------------------------------
-# Cloudflare R2 (S3-compatible) – controlled by CLOUDFLARE_R2_ENABLED
+# -------------------- Uploads -------------------
+# Allow file uploads up to 500 MB (whole request body)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000  # 500 MB
+# Files above 10 MB are streamed to a temp file on disk (not kept in RAM)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760   # 10 MB
+
+# -------------------- Cloudflare R2 (S3-compatible) – controlled by CLOUDFLARE_R2_ENABLED
 # ------------------------------------------------------------------
 CLOUDFLARE_R2_ENABLED = os.getenv("CLOUDFLARE_R2_ENABLED", "false").lower() == "true"
 
