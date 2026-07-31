@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "downloads",
     "login_with_token",
     "licenses",
+    "billing_operations",
     "rest_framework",
     "rest_framework_simplejwt",
 ]
