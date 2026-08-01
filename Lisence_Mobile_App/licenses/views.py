@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery
+from urllib.parse import urlencode
 
 from Lisence_Mobile_App.login_with_token.views import get_user_from_token
 
@@ -37,6 +38,7 @@ def api_branch_licenses(request):
 
     mobile_licenses = []
     now = timezone.now()
+    verify_base = request.build_absolute_uri('/downloads/verify/')
     for c in mobile_controls:
         remaining_days = None
         is_expired = False
@@ -45,6 +47,12 @@ def api_branch_licenses(request):
             remaining_days = delta.days
             is_expired = delta.total_seconds() <= 0
 
+        package_name = c.package.package_name if c.package else None
+        qr_url = verify_base + '?' + urlencode({
+            'client_id': c.client_id,
+            'key': c.license_key,
+        })
+
         mobile_licenses.append({
             'id': c.id,
             'customer_name': c.customer_name,
@@ -52,7 +60,8 @@ def api_branch_licenses(request):
             'license_key': c.license_key,
             'project': c.project.project_name if c.project else None,
             'app_type': c.project.app_type if c.project else None,
-            'package': c.package.package_name if c.package else None,
+            'package': package_name,
+            'package_name': package_name,
             'custom_package': c.active_custom_package.package_name if c.active_custom_package else None,
             'branch': c.shop.branch.name if c.shop and c.shop.branch else None,
             'store': c.store.name if c.store else None,
@@ -67,6 +76,7 @@ def api_branch_licenses(request):
             'is_expired': is_expired,
             'licence_type': c.licence_type,
             'created_date': c.created_date.isoformat() if c.created_date else None,
+            'qr_url': qr_url,
         })
 
     # ── WEB LICENSES ──
