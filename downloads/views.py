@@ -3,7 +3,37 @@ from django.http import JsonResponse, HttpResponse
 from .r2 import get_r2
 import os
 
+from StoreShop.models import Shop
+
 BUCKET = os.getenv("CLOUDFLARE_R2_BUCKET")
+
+
+def qr_verify(request):
+    """Public page opened when a licence QR code is scanned.
+    The QR encodes a site URL: /downloads/verify/?client_id=...&key=...
+    Shows the client id with a copy option."""
+    client_id = request.GET.get("client_id", "").strip()
+    licence_key = request.GET.get("key", "").strip()
+
+    company = None
+    if client_id:
+        shop = Shop.objects.filter(client_id=client_id).select_related("store", "branch").first()
+        if shop:
+            company = {
+                "name": shop.name,
+                "place": shop.place,
+                "email": shop.email,
+                "contact_no": shop.contact_no,
+                "country": shop.country,
+                "branch": shop.branch.name if shop.branch else None,
+                "corporate": shop.store.name if shop.store else None,
+            }
+
+    return render(request, "qr_verify.html", {
+        "client_id": client_id,
+        "licence_key": licence_key,
+        "company": company,
+    })
 
 # ---------- UPLOAD PAGE ----------
 def upload_page(request):

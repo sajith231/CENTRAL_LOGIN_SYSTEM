@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery
 
-from login_with_token.views import get_user_from_token
+from Lisence_Mobile_App.login_with_token.views import get_user_from_token
 
 
 @csrf_exempt

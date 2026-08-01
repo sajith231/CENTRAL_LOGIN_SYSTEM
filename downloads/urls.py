@@ -9,4 +9,5 @@ urlpatterns = [
     path("delete-file/<str:folder>/<str:filename>/", views.delete_file, name="delete_file"),
     path("download/", views.download_page, name="download"),
     path("download/<str:folder>/<str:filename>/", views.download_file, name="download_file"),
+    path("verify/", views.qr_verify, name="qr_verify"),
 ]

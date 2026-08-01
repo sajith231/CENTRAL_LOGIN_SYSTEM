@@ -7,7 +7,7 @@ from django.db.models import OuterRef, Subquery
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from login_with_token.views import get_user_from_token
+from Lisence_Mobile_App.login_with_token.views import get_user_from_token
 from MobileApp.models import MobileControl, MobileBillingHistory
 
 

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class LicensesConfig(AppConfig):
+class CustomersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'licenses'
+    name = 'Lisence_Mobile_App.customers'

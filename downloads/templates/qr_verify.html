@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>License Verification</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #7c3aed;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      color: var(--text);
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    .icon-badge {
+      width: 64px; height: 64px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: #fff;
+    }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+    .copy-field {
+      display: flex; align-items: center; gap: 8px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .copy-field .value {
+      flex: 1;
+      text-align: left;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #e2e8f0;
+      overflow-wrap: anywhere;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: transform .1s ease, background .2s ease;
+    }
+    .copy-btn:hover { background: #6d28d9; }
+    .copy-btn:active { transform: scale(.96); }
+    .copy-btn.copied { background: var(--success); }
+    .details {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+    }
+    .details .row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 14px; }
+    .details .row .k { color: var(--muted); }
+    .details .row .v { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+    .badge {
+      display: inline-block; margin-top: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+    }
+    .error-box {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-badge"><i class="fa-solid fa-qrcode"></i></div>
+    <h1>License Verification</h1>
+    <p class="sub">Scan result from your license QR code</p>
+
+    {% if client_id %}
+      <div class="label">Client ID</div>
+      <div class="copy-field">
+        <span class="value" id="clientId">{{ client_id }}</span>
+        <button class="copy-btn" id="copyClientBtn" onclick="copyText('clientId', this)">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
+
+      {% if company %}
+        <div class="details">
+          <div class="row"><span class="k">Company</span><span class="v">{{ company.name }}</span></div>
+          {% if company.corporate %}<div class="row"><span class="k">Corporate</span><span class="v">{{ company.corporate }}</span></div>{% endif %}
+          {% if company.branch %}<div class="row"><span class="k">Branch</span><span class="v">{{ company.branch }}</span></div>{% endif %}
+          {% if company.place %}<div class="row"><span class="k">Place</span><span class="v">{{ company.place }}</span></div>{% endif %}
+          {% if company.country %}<div class="row"><span class="k">Country</span><span class="v">{{ company.country }}</span></div>{% endif %}
+        </div>
+      {% else %}
+        <div class="badge"><i class="fa-solid fa-shield-halved"></i> Client ID verified</div>
+      {% endif %}
+
+      {% if licence_key %}
+        <div class="label" style="margin-top:18px;">License Key</div>
+        <div class="copy-field">
+          <span class="value" id="licenceKey">{{ licence_key }}</span>
+          <button class="copy-btn" id="copyKeyBtn" onclick="copyText('licenceKey', this)">
+            <i class="fa-regular fa-copy"></i> Copy
+          </button>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="error-box">
+        <i class="fa-solid fa-triangle-exclamation"></i> Invalid QR code. Please scan the official license QR again.
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function copyText(elementId, btn) {
+      const value = document.getElementById(elementId).innerText;
+      const done = function () {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done).catch(function () { fallbackCopy(value, done); });
+      } else {
+        fallbackCopy(value, done);
+      }
+    }
+
+    function fallbackCopy(value, done) {
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) { }
+      document.body.removeChild(ta);
+      done();
+    }
+  </script>
+</body>
+</html>

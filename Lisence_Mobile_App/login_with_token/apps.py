@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class LoginWithTokenConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'login_with_token'
+    name = 'Lisence_Mobile_App.login_with_token'
