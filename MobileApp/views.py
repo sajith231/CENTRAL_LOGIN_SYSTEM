@@ -962,7 +962,10 @@ def mobile_control_billing(request, pk):
         old_expiry = control.expiry_date
 
         operation_type = request.POST.get("operation_type", "validity")
-        
+
+        # ---------- TRACK WHETHER A PACKAGE WAS SELECTED ----------
+        package_selected = False
+
         # ---------- EXTEND DAYS LOGIC ----------
         extend_days = 0
         
@@ -975,11 +978,13 @@ def mobile_control_billing(request, pk):
                 extend_days = custom_pkg.days_limit
                 control.active_custom_package = custom_pkg
                 control.package = None                 # clear standard package
+                package_selected = True
             elif package_id:
                 package = get_object_or_404(Package, pk=package_id)
                 extend_days = package.days_limit
                 control.package = package
                 control.active_custom_package = None   # clear any previous custom pkg
+                package_selected = True
                 
         elif operation_type == 'renew':
             if control.active_custom_package:
@@ -1013,13 +1018,20 @@ def mobile_control_billing(request, pk):
                 extend_days = custom_pkg.days_limit
                 control.active_custom_package = custom_pkg
                 control.package = None
+                package_selected = True
             elif package_id:
                 package = get_object_or_404(Package, pk=package_id)
                 extend_days = package.days_limit
                 control.package = package
                 control.active_custom_package = None
+                package_selected = True
             else:
                 extend_days = int(request.POST.get("extend_days") or 0)
+
+        # ---------- BLOCK EMPTY SUBMIT (NO CHANGES PROVIDED) ----------
+        if extend_days == 0 and extend_login == 0 and not package_selected:
+            messages.error(request, "No billing changes provided. Enter a value to update.")
+            return redirect("MobileApp:mobile_control_billing", pk=pk)
 
         # ---------- LOGIN LIMIT (+ / -) ----------
         if extend_login != 0:

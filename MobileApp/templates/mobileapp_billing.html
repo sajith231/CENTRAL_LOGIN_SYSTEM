@@ -1201,6 +1201,32 @@
                                 select.name = 'change_package_id';
                             }
                         }
+
+                        // Block empty "Update Billing" submits — no changes = don't submit
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const billingForm = document.getElementById('billingForm');
+                            if (!billingForm) return;
+                            billingForm.addEventListener('submit', function(e) {
+                                const firstBilling = billingForm.querySelector('select[name="package"]');
+                                if (firstBilling) return; // first billing uses required fields + browser validation
+
+                                const op = (document.getElementById('operation_type') || {}).value || '';
+
+                                const manualDays = document.getElementById('manualDaysInput');
+                                const extendUsers = document.getElementById('extendUsersInput');
+                                const changePkg = document.getElementById('changePkgSelect');
+                                const changeCust = document.getElementById('changeCustPkgInput');
+
+                                const hasDays = manualDays && manualDays.value && parseInt(manualDays.value, 10) !== 0;
+                                const hasUsers = extendUsers && extendUsers.value && parseInt(extendUsers.value, 10) !== 0;
+                                const hasPkg = (changePkg && changePkg.value) || (changeCust && changeCust.value);
+
+                                if (!hasDays && !hasUsers && !hasPkg) {
+                                    e.preventDefault();
+                                    alert('No billing changes provided. Enter a value to update.');
+                                }
+                            });
+                        });
                     </script>
                 </div><!-- end card-body -->
             </div><!-- end card -->
