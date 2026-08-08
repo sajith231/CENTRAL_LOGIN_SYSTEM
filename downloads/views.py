@@ -11,6 +11,54 @@ logger = logging.getLogger(__name__)
 BUCKET = os.getenv("CLOUDFLARE_R2_BUCKET")
 
 
+def _safe_filename(filename):
+    """Strip path components and control chars from a client-supplied filename."""
+    name = os.path.basename((filename or "").strip()).replace("\x00", "").strip()
+    if not name or name in (".", ".."):
+        return None
+    return name[:255]
+
+
+def upload_presign(request):
+    """Return a presigned PUT URL so the browser uploads directly to R2.
+
+    Keeps large files (e.g. APKs) out of the gunicorn/nginx request path,
+    which avoids 502s caused by worker timeouts or overload.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    folder = (request.POST.get("folder") or "").strip()
+    filename = _safe_filename(request.POST.get("filename"))
+    content_type = request.POST.get("content_type") or "application/octet-stream"
+
+    if not folder or "/" in folder or ".." in folder:
+        return JsonResponse({"error": "Folder name is required"}, status=400)
+    if not filename:
+        return JsonResponse({"error": "Invalid file name"}, status=400)
+
+    key = f"{folder}/{filename}"
+    r2 = get_r2()
+
+    try:
+        presigned_url = r2.generate_presigned_url(
+            "put_object",
+            Params={"Bucket": BUCKET, "Key": key, "ContentType": content_type},
+            ExpiresIn=3600,
+        )
+    except Exception as e:
+        logger.exception("Error generating presigned URL for %s", key)
+        return JsonResponse({"error": f"Could not prepare upload: {e}"}, status=500)
+
+    return JsonResponse({
+        "success": True,
+        "presigned_url": presigned_url,
+        "key": key,
+        "filename": filename,
+        "content_type": content_type,
+    })
+
+
 def qr_verify(request):
     """Public page opened when a licence QR code is scanned.
     The QR encodes a site URL: /downloads/verify/?client_id=...&key=...

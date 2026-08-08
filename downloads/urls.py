@@ -5,6 +5,7 @@ app_name = "downloads"
 
 urlpatterns = [
     path("upload/", views.upload_page, name="upload"),
+    path("upload/presign/", views.upload_presign, name="upload_presign"),
     path("delete/<str:name>/", views.delete_folder, name="delete_folder"),
     path("delete-file/<str:folder>/<str:filename>/", views.delete_file, name="delete_file"),
     path("download/", views.download_page, name="download"),
