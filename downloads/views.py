@@ -1,62 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from .r2 import get_r2
-import logging
 import os
 
 from StoreShop.models import Shop
 
-logger = logging.getLogger(__name__)
-
 BUCKET = os.getenv("CLOUDFLARE_R2_BUCKET")
-
-
-def _safe_filename(filename):
-    """Strip path components and control chars from a client-supplied filename."""
-    name = os.path.basename((filename or "").strip()).replace("\x00", "").strip()
-    if not name or name in (".", ".."):
-        return None
-    return name[:255]
-
-
-def upload_presign(request):
-    """Return a presigned PUT URL so the browser uploads directly to R2.
-
-    Keeps large files (e.g. APKs) out of the gunicorn/nginx request path,
-    which avoids 502s caused by worker timeouts or overload.
-    """
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
-
-    folder = (request.POST.get("folder") or "").strip()
-    filename = _safe_filename(request.POST.get("filename"))
-    content_type = request.POST.get("content_type") or "application/octet-stream"
-
-    if not folder or "/" in folder or ".." in folder:
-        return JsonResponse({"error": "Folder name is required"}, status=400)
-    if not filename:
-        return JsonResponse({"error": "Invalid file name"}, status=400)
-
-    key = f"{folder}/{filename}"
-    r2 = get_r2()
-
-    try:
-        presigned_url = r2.generate_presigned_url(
-            "put_object",
-            Params={"Bucket": BUCKET, "Key": key, "ContentType": content_type},
-            ExpiresIn=3600,
-        )
-    except Exception as e:
-        logger.exception("Error generating presigned URL for %s", key)
-        return JsonResponse({"error": f"Could not prepare upload: {e}"}, status=500)
-
-    return JsonResponse({
-        "success": True,
-        "presigned_url": presigned_url,
-        "key": key,
-        "filename": filename,
-        "content_type": content_type,
-    })
 
 
 def qr_verify(request):
@@ -91,7 +40,7 @@ def upload_page(request):
     r2 = get_r2()
 
     if request.method == "POST":
-        folder = (request.POST.get("folder") or "").strip()
+        folder = request.POST.get("folder").strip()
         files = request.FILES.getlist("files")
 
         if not folder:
@@ -101,29 +50,19 @@ def upload_page(request):
             return JsonResponse({"error": "No files selected"}, status=400)
 
         uploaded_count = 0
-        failed = []
         for f in files:
             try:
                 key = f"{folder}/{f.name}"
                 r2.upload_fileobj(f, BUCKET, key)
                 uploaded_count += 1
             except Exception as e:
-                logger.exception("Error uploading %s to %s", f.name, folder)
-                failed.append({"name": f.name, "error": str(e)})
+                print(f"Error uploading {f.name}: {e}")
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            if uploaded_count == 0 and failed:
-                return JsonResponse({
-                    "success": False,
-                    "error": f"Upload failed for {len(failed)} file(s): {failed[0]['error']}",
-                    "failed": failed,
-                }, status=500)
-
             return JsonResponse({
                 "success": True,
                 "message": f"{uploaded_count} file(s) uploaded successfully",
-                "count": uploaded_count,
-                "failed": failed,
+                "count": uploaded_count
             })
         
         return redirect("downloads:upload")
@@ -167,7 +106,7 @@ def delete_folder(request, name):
                 r2.delete_object(Bucket=BUCKET, Key=obj["Key"])
                 deleted_count += 1
             except Exception as e:
-                logger.exception("Error deleting %s", obj["Key"])
+                print(f"Error deleting {obj['Key']}: {e}")
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
@@ -191,7 +130,7 @@ def delete_file(request, folder, filename):
                     "message": f"File '{filename}' deleted successfully"
                 })
         except Exception as e:
-            logger.exception("Error deleting file %s", key)
+            print(f"Error deleting file {key}: {e}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"success": False, "message": str(e)}, status=500)
 

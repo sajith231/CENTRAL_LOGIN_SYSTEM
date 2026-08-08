@@ -995,11 +995,25 @@
       return;
     }
 
-    const folder = isNewFolder ? newFolderInput.value.trim() : existingFolderSelect.value;
-    if (!folder) {
-      showAlert('Please enter a folder name', 'error');
-      return;
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    // Add folder name based on mode
+    if (isNewFolder) {
+      formData.append('folder', newFolderInput.value);
+    } else {
+      formData.append('folder', existingFolderSelect.value);
     }
+
+    // Update file input with selected files
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    fileInput.files = dt.files;
+
+    // Add files to form data
+    selectedFiles.forEach(file => {
+      formData.append('files', file);
+    });
 
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = `
@@ -1007,90 +1021,49 @@
       Uploading...
     `;
 
-    const csrf = '{{ csrf_token }}';
-    const presignUrl = '{% url "downloads:upload_presign" %}';
-    let uploaded = 0;
-    const failed = [];
-
-    // 1) Get presigned PUT URLs (small same-origin JSON request)
-    const presignPromises = selectedFiles.map(async (file) => {
-      const presignData = new FormData();
-      presignData.append('folder', folder);
-      presignData.append('filename', file.name);
-      presignData.append('content_type', file.type || 'application/octet-stream');
-
-      const res = await fetch(presignUrl, {
+    try {
+      const response = await fetch('', {
         method: 'POST',
-        body: presignData,
+        body: formData,
         headers: {
-          'X-CSRFToken': csrf,
           'X-Requested-With': 'XMLHttpRequest',
         },
       });
 
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (err) {
-        let bodySnippet = '';
-        try {
-          bodySnippet = (await res.text()).substring(0, 200);
-        } catch (e2) {}
-        throw new Error(`HTTP ${res.status} - ${bodySnippet || 'non-JSON response'}`);
-      }
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
-      return { file, url: data.presigned_url, contentType: data.content_type };
-    });
+      const data = await response.json();
 
-    const ready = await Promise.allSettled(presignPromises);
+      if (data.success) {
+        showAlert(data.message, 'success');
+        uploadForm.reset();
+        selectedFiles = [];
+        displayFiles();
 
-    // 2) Upload each file directly to R2
-    const putPromises = ready.map(async (settled, index) => {
-      if (settled.status === 'rejected') {
-        failed.push(`${selectedFiles[index].name}: ${settled.reason && settled.reason.message || settled.reason}`);
-        return;
+        // Reset to new folder mode
+        isNewFolder = true;
+        newFolderBtn.classList.add('active');
+        existingFolderBtn.classList.remove('active');
+        newFolderInput.style.display = 'block';
+        newFolderInput.required = true;
+        existingFolderSelect.style.display = 'none';
+        existingFolderSelect.required = false;
+
+        // Reload page after short delay to show updated folders
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        showAlert(data.error || 'Upload failed', 'error');
       }
-      const { file, url, contentType } = settled.value;
-      try {
-        const putRes = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': contentType },
-          body: file,
-        });
-        if (putRes.ok) {
-          uploaded += 1;
-        } else {
-          failed.push(`${file.name}: direct upload HTTP ${putRes.status}`);
-        }
-      } catch (err) {
-        failed.push(`${file.name}: ${err.message || err}`);
-        console.error('Direct upload error:', err);
-      }
-    });
-
-    await Promise.allSettled(putPromises);
-
-    if (failed.length === 0) {
-      showAlert(`${uploaded} file(s) uploaded successfully`, 'success');
-      uploadForm.reset();
-      selectedFiles = [];
-      displayFiles();
-      setTimeout(() => location.reload(), 1500);
-    } else if (uploaded > 0) {
-      showAlert(`${uploaded} uploaded, ${failed.length} failed: ${failed[0]}`, 'error');
-    } else {
-      showAlert(`Upload failed: ${failed[0]}`, 'error');
+    } catch (error) {
+      showAlert('An error occurred during upload', 'error');
+      console.error('Upload error:', error);
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        Upload Files
+      `;
     }
-
-    uploadBtn.disabled = false;
-    uploadBtn.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-      </svg>
-      Upload Files
-    `;
   });
 
   // Function to toggle file list visibility
