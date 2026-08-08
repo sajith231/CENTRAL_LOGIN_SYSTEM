@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from .r2 import get_r2
+import logging
 import os
 
 from StoreShop.models import Shop
+
+logger = logging.getLogger(__name__)
 
 BUCKET = os.getenv("CLOUDFLARE_R2_BUCKET")
 
@@ -40,7 +43,7 @@ def upload_page(request):
     r2 = get_r2()
 
     if request.method == "POST":
-        folder = request.POST.get("folder").strip()
+        folder = (request.POST.get("folder") or "").strip()
         files = request.FILES.getlist("files")
 
         if not folder:
@@ -50,19 +53,29 @@ def upload_page(request):
             return JsonResponse({"error": "No files selected"}, status=400)
 
         uploaded_count = 0
+        failed = []
         for f in files:
             try:
                 key = f"{folder}/{f.name}"
                 r2.upload_fileobj(f, BUCKET, key)
                 uploaded_count += 1
             except Exception as e:
-                print(f"Error uploading {f.name}: {e}")
+                logger.exception("Error uploading %s to %s", f.name, folder)
+                failed.append({"name": f.name, "error": str(e)})
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if uploaded_count == 0 and failed:
+                return JsonResponse({
+                    "success": False,
+                    "error": f"Upload failed for {len(failed)} file(s): {failed[0]['error']}",
+                    "failed": failed,
+                }, status=500)
+
             return JsonResponse({
                 "success": True,
                 "message": f"{uploaded_count} file(s) uploaded successfully",
-                "count": uploaded_count
+                "count": uploaded_count,
+                "failed": failed,
             })
         
         return redirect("downloads:upload")
@@ -106,7 +119,7 @@ def delete_folder(request, name):
                 r2.delete_object(Bucket=BUCKET, Key=obj["Key"])
                 deleted_count += 1
             except Exception as e:
-                print(f"Error deleting {obj['Key']}: {e}")
+                logger.exception("Error deleting %s", obj["Key"])
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
@@ -130,7 +143,7 @@ def delete_file(request, folder, filename):
                     "message": f"File '{filename}' deleted successfully"
                 })
         except Exception as e:
-            print(f"Error deleting file {key}: {e}")
+            logger.exception("Error deleting file %s", key)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"success": False, "message": str(e)}, status=500)
 

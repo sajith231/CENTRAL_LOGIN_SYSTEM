@@ -1030,28 +1030,40 @@
         },
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        showAlert(data.message, 'success');
-        uploadForm.reset();
-        selectedFiles = [];
-        displayFiles();
-
-        // Reset to new folder mode
-        isNewFolder = true;
-        newFolderBtn.classList.add('active');
-        existingFolderBtn.classList.remove('active');
-        newFolderInput.style.display = 'block';
-        newFolderInput.required = true;
-        existingFolderSelect.style.display = 'none';
-        existingFolderSelect.required = false;
-
-        // Reload page after short delay to show updated folders
-        setTimeout(() => location.reload(), 1500);
-      } else {
-        showAlert(data.error || 'Upload failed', 'error');
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        // Non-JSON response (e.g. proxy/HTML error page) - surface it
+        let bodySnippet = '';
+        try {
+          bodySnippet = (await response.text()).substring(0, 200);
+        } catch (e2) {}
+        showAlert(`Upload failed: HTTP ${response.status} - ${bodySnippet || 'non-JSON response'}`, 'error');
+        return;
       }
+
+      if (!response.ok || !data.success) {
+        showAlert(data.error || data.message || `Upload failed (HTTP ${response.status})`, 'error');
+        return;
+      }
+
+      showAlert(data.message, 'success');
+      uploadForm.reset();
+      selectedFiles = [];
+      displayFiles();
+
+      // Reset to new folder mode
+      isNewFolder = true;
+      newFolderBtn.classList.add('active');
+      existingFolderBtn.classList.remove('active');
+      newFolderInput.style.display = 'block';
+      newFolderInput.required = true;
+      existingFolderSelect.style.display = 'none';
+      existingFolderSelect.required = false;
+
+      // Reload page after short delay to show updated folders
+      setTimeout(() => location.reload(), 1500);
     } catch (error) {
       showAlert('An error occurred during upload', 'error');
       console.error('Upload error:', error);
