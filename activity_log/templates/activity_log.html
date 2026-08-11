@@ -66,7 +66,6 @@
             <th style="text-align:left; padding:10px;">Action</th>
             <th style="text-align:left; padding:10px;">Details</th>
             <th style="text-align:left; padding:10px;">Module</th>
-            <th style="text-align:left; padding:10px;">IP Address</th>
           </tr>
         </thead>
         <tbody>
@@ -89,11 +88,10 @@
               </td>
               <td style="padding:10px; word-break:break-all;">{{ log.details|default:"-" }}</td>
               <td style="padding:10px;">{{ log.module_display|default:"-" }}</td>
-              <td style="padding:10px;">{{ log.ip_address|default:"-" }}</td>
             </tr>
           {% empty %}
             <tr style="background:#0f1b31;">
-              <td colspan="8" style="padding:12px;">No activity found.</td>
+              <td colspan="7" style="padding:12px;">No activity found.</td>
             </tr>
           {% endfor %}
         </tbody>
