@@ -536,6 +536,18 @@
           </li>
           {% endif %}
 
+          {# 7) ACTIVITY LOG – SUPERUSER ONLY #}
+          {% if request.user.is_superuser %}
+          <li>
+            <a href="{% url 'activity_log:activity_log' %}"
+               class="{% block active_activity_log %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-clock-rotate-left" style="width:20px; text-align:center; font-size:16px; color:rgba(255,255,255,.7);"></i>
+              <span>Activity Log</span>
+            </a>
+          </li>
+          {% endif %}
+
           {% endwith %}
         </ul>
       </div>

@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import Users, LEVEL_CHOICES
 from branch.models import Branch
+from activity_log.services import log_activity
 
 
 # ================= SUPER LEVEL CHECK =================
@@ -38,6 +39,7 @@ def login_view(request):
         user = authenticate(request, username=username_or_email, password=password)
         if user is not None and user.is_superuser:
             login(request, user)
+            log_activity(request, "Login", url="/login/")
             return redirect("admin_dashboard")
 
         try:
@@ -59,6 +61,7 @@ def login_view(request):
                 request.session['allowed_app_types'] = custom_user.allowed_app_types or []
 
                 messages.success(request, f"Welcome, {custom_user.name}!")
+                log_activity(request, "Login", url="/login/")
                 return redirect("admin_dashboard")
         except Users.DoesNotExist:
             pass
@@ -82,6 +85,7 @@ def admin_dashboard(request):
 
 # ================= LOGOUT =================
 def logout_view(request):
+    log_activity(request, "Logout", url="/logout/")
     for key in [
         'custom_user_id',
         'custom_user_name',

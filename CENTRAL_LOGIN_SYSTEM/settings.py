@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "billing_operations",
     "rest_framework",
     "rest_framework_simplejwt",
+    "activity_log",
 ]
 
 # -------------------- Uploads -------------------
@@ -102,6 +103,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'app1.middleware.MenuPermissionMiddleware',
+    'activity_log.middleware.ActivityLogMiddleware',
 ]
 
 # -------------------- URLs / Templates ----------

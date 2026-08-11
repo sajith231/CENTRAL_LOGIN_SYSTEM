@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Activity Log{% endblock %}
+{% block header_title %}<strong>Activity Log</strong><span class="muted"> / all user actions</span>{% endblock %}
+{% block active_activity_log %}active{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="card" style="margin-bottom:12px;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card" style="padding:0; margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+      <h2 style="margin:0;"><i class="fa-solid fa-trash-can"></i> Delete Month</h2>
+      <span class="muted" style="font-size:13px;">Removes the entire selected month's data</span>
+    </div>
+    <form method="post" action="{% url 'activity_log:activity_log_delete_month' %}"
+          style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:16px 20px;"
+          onsubmit="return confirm('Delete ALL activity log records for the selected month? This cannot be undone.');">
+      {% csrf_token %}
+      <input type="month" name="month" value="{% now 'Y-m' %}" required
+             style="background:#0f1b31; color:var(--text); border:1px solid rgba(255,255,255,.15); padding:8px 12px; border-radius:8px;">
+      <button type="submit" style="background:#dc2626; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer;">
+        <i class="fa-solid fa-trash-can"></i> Delete Month
+      </button>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0; margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
+      <h2 style="margin:0;">Activity Log</h2>
+      <span class="muted" style="font-size:13px;">{{ page_obj.paginator.count }} total record(s)</span>
+    </div>
+
+    <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:16px 20px;">
+      <select name="user" style="background:#0f1b31; color:var(--text); border:1px solid rgba(255,255,255,.15); padding:8px 12px; border-radius:8px;">
+        <option value="">All Users</option>
+        {% for u in users %}
+          <option value="{{ u }}" {% if u == selected_user %}selected{% endif %}>{{ u }}</option>
+        {% endfor %}
+      </select>
+
+      <input type="month" name="month" value="{{ selected_month }}"
+             style="background:#0f1b31; color:var(--text); border:1px solid rgba(255,255,255,.15); padding:8px 12px; border-radius:8px;">
+      <input type="hidden" name="page" value="">
+
+      <button type="submit" style="background:#2563eb; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer;">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+      <a href="{% url 'activity_log:activity_log' %}" style="background:var(--hover); color:var(--text); padding:8px 16px; border-radius:8px; text-decoration:none;">
+        <i class="fa-solid fa-rotate-left"></i> Reset
+      </a>
+    </form>
+
+    <div style="padding:0 20px 20px; overflow:auto;">
+      <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px;">#</th>
+            <th style="text-align:left; padding:10px;">Date &amp; Time</th>
+            <th style="text-align:left; padding:10px;">User</th>
+            <th style="text-align:left; padding:10px;">Type</th>
+            <th style="text-align:left; padding:10px;">Action</th>
+            <th style="text-align:left; padding:10px;">Details</th>
+            <th style="text-align:left; padding:10px;">Module</th>
+            <th style="text-align:left; padding:10px;">IP Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in page_obj %}
+            <tr style="background:#0f1b31;">
+              <td style="padding:10px;">{{ forloop.counter }}</td>
+              <td style="padding:10px; white-space:nowrap;">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+              <td style="padding:10px;">{{ log.user_name }}</td>
+              <td style="padding:10px;">{{ log.user_type|default:"-" }}</td>
+              <td style="padding:10px;">
+                {% if log.action == "Added" %}
+                  <span style="color:#34d399;">{{ log.action }}</span>
+                {% elif log.action == "Deleted" %}
+                  <span style="color:#f87171;">{{ log.action }}</span>
+                {% elif log.action == "Updated" %}
+                  <span style="color:#60a5fa;">{{ log.action }}</span>
+                {% else %}
+                  {{ log.action }}
+                {% endif %}
+              </td>
+              <td style="padding:10px; word-break:break-all;">{{ log.details|default:"-" }}</td>
+              <td style="padding:10px;">{{ log.module_display|default:"-" }}</td>
+              <td style="padding:10px;">{{ log.ip_address|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr style="background:#0f1b31;">
+              <td colspan="8" style="padding:12px;">No activity found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if page_obj.has_other_pages %}
+        <div style="display:flex; gap:8px; justify-content:center; padding:16px 0 4px;">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if selected_user %}&user={{ selected_user }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}"
+               style="background:var(--hover); color:var(--text); padding:6px 12px; border-radius:6px; text-decoration:none;">Previous</a>
+          {% endif %}
+          <span style="padding:6px 12px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if selected_user %}&user={{ selected_user }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}"
+               style="background:var(--hover); color:var(--text); padding:6px 12px; border-radius:6px; text-decoration:none;">Next</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
