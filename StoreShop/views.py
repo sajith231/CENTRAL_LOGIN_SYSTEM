@@ -157,6 +157,11 @@ def add_shop(request):
         currency_code = request.POST.get("currency_code", "INR")
         is_active = bool(request.POST.get("is_active"))
 
+        if email and Shop.objects.filter(email=email).exists():
+            from django.contrib import messages
+            messages.error(request, f"The email '{email}' is already used by another company. Please use a different email.")
+            return render(request, "add_shop.html", {"stores": stores, "branches": branches})
+
         store = get_object_or_404(Store, id=store_id)
         branch = get_object_or_404(Branch, id=branch_id)
 
@@ -221,6 +226,11 @@ def edit_shop(request, id):
         shop.currency_code = request.POST.get("currency_code", "INR")
         shop.is_active = bool(request.POST.get("is_active"))
 
+        if shop.email and Shop.objects.filter(email=shop.email).exclude(id=shop.id).exists():
+            from django.contrib import messages
+            messages.error(request, f"The email '{shop.email}' is already used by another company. Please use a different email.")
+            return render(request, "edit_shop.html", {"shop": shop, "stores": stores, "branches": branches})
+
         shop.store = get_object_or_404(Store, id=store_id)
         shop.branch = get_object_or_404(Branch, id=branch_id)
         shop.save()
@@ -248,4 +258,17 @@ def check_client_id(request):
     if not client_id:
         return JsonResponse({"available": False, "error": "Empty"})
     taken = Shop.objects.filter(client_id=client_id).exists()
+    return JsonResponse({"available": not taken})
+
+
+def check_email(request):
+    """AJAX: check if an email is already used by another company."""
+    email = request.GET.get("email", "").strip()
+    exclude_id = request.GET.get("exclude_id", "")
+    if not email:
+        return JsonResponse({"available": True})
+    qs = Shop.objects.filter(email=email)
+    if exclude_id:
+        qs = qs.exclude(id=exclude_id)
+    taken = qs.exists()
     return JsonResponse({"available": not taken})

@@ -38,7 +38,7 @@ class Shop(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     place = models.CharField(max_length=150, null=True, blank=True)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
     contact_no = models.CharField(max_length=15, blank=True, null=True)
     country = models.CharField(max_length=100, default='India')
     currency_code = models.CharField(max_length=10, default='INR')

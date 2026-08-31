@@ -4,6 +4,14 @@
 {% block active_shop %}active{% endblock %}
 
 {% block content %}
+{% if messages %}
+{% for message in messages %}
+<div class="card" style="margin-bottom:12px; border-left:4px solid #ef4444; padding:12px;">
+    <span style="color:#ef4444;">{{ message }}</span>
+</div>
+{% endfor %}
+{% endif %}
+
 <div class="card" style="padding:20px;">
     <h2 style="color:white;">Add Company</h2>
 
@@ -268,8 +276,10 @@
         <!-- Email -->
         <div class="mb-3">
             <label>Email</label>
-            <input type="email" name="email" class="form-control"
-                style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <input type="email" name="email" id="shopEmail" class="form-control"
+                style="background:#0f1b31; color:white; border:1px solid #334155;"
+                oninput="checkEmailAvailability()">
+            <div id="email_feedback" style="margin-top:6px; font-size:0.82rem;"></div>
         </div>
 
         <!-- Client ID Mode -->
@@ -628,6 +638,37 @@
         if (fb.innerHTML.includes('Already taken')) {
             e.preventDefault();
         }
+
+        const emailFb = document.getElementById('email_feedback');
+        if (emailFb.innerHTML.includes('Already in use')) {
+            e.preventDefault();
+        }
     });
+
+    // ── Live email uniqueness check ──
+    let _emailTimer = null;
+    function checkEmailAvailability() {
+        const val = document.getElementById('shopEmail').value.trim();
+        const fb  = document.getElementById('email_feedback');
+
+        clearTimeout(_emailTimer);
+        if (!val) { fb.innerHTML = ''; document.getElementById('shopEmail').style.borderColor = '#334155'; return; }
+
+        fb.innerHTML = '<span style="color:#64748b;"><i class="fas fa-spinner fa-spin me-1"></i>Checking...</span>';
+
+        _emailTimer = setTimeout(() => {
+            fetch(`/store-shop/shops/check-email/?email=${encodeURIComponent(val)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.available) {
+                        fb.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle me-1"></i>Available</span>';
+                        document.getElementById('shopEmail').style.borderColor = '#10b981';
+                    } else {
+                        fb.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle me-1"></i>Already in use — choose another</span>';
+                        document.getElementById('shopEmail').style.borderColor = '#ef4444';
+                    }
+                });
+        }, 400);
+    }
 </script>
 {% endblock %}

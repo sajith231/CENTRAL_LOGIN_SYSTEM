@@ -420,6 +420,13 @@ def api_register_license(request, endpoint):
             Q(original_license__project=project)
         ).first()
 
+    # 🔹 3) If still not found and the key looks like a shop email,
+    #       resolve it to that shop's main license (same count as its license key)
+    if not control and not demo and '@' in license_key:
+        shop = Shop.objects.filter(email=license_key).first()
+        if shop:
+            control = MobileControl.objects.filter(project=project, shop=shop).first()
+
     if not control and not demo:
         return JsonResponse({'success': False, 'error': 'Invalid license key for this project'}, status=404)
 
