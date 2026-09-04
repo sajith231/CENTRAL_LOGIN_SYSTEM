@@ -10,9 +10,20 @@
     <a href="{% url 'ModuleAndPackage:add_package_page' %}" class="btn btn-success">Add New</a>
   </div>
 
+  <!-- 🔍 Project Filter -->
+  <div style="padding:12px 20px;">
+    <select id="projectFilter"
+      style="padding:8px 12px; border-radius:6px; border:1px solid #334155; background:#0f1b31; color:white;">
+      <option value="">All Projects</option>
+      {% for project in projects %}
+      <option value="{{ project }}">{{ project }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
   <!-- Table -->
   <div style="padding:20px;">
-    <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+    <table id="packageTable" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
       <thead>
         <tr style="background: var(--hover);">
           <th style="padding:12px;">#</th>
@@ -20,6 +31,7 @@
           <th style="padding:12px;">Project</th>
           <th style="padding:12px;">Modules</th>
           <th style="padding:12px;">Days Limit</th>
+          <th style="padding:12px;">Users Count</th>
           <th style="padding:12px;">Edit</th>
           <th style="padding:12px;">Delete</th>
         </tr>
@@ -27,7 +39,8 @@
 
       <tbody>
         {% for p in packages %}
-        <tr style="background:#0f1b31;">
+        <tr style="background:#0f1b31;"
+            data-project="{{ p.project.project_name|lower }}">
           <td style="padding:12px;">{{ forloop.counter }}</td>
           <td style="padding:12px;">{{ p.package_name }}</td>
           <td style="padding:12px;">{{ p.project.project_name }}</td>
@@ -50,6 +63,14 @@
           </td>
 
           <td style="padding:12px;">
+            {% if p.users_count == 0 %}
+            <span style="color:#9ca3af;">Unlimited</span>
+            {% else %}
+            <span style="color:#34d399;">{{ p.users_count }} users</span>
+            {% endif %}
+          </td>
+
+          <td style="padding:12px;">
             <a href="{% url 'ModuleAndPackage:edit_package' p.id %}" class="btn btn-primary btn-sm">Edit</a>
           </td>
 
@@ -66,7 +87,7 @@
 
         {% empty %}
         <tr style="background:#0f1b31;">
-          <td colspan="7" style="padding:12px;">No packages yet.</td>
+          <td colspan="8" style="padding:12px;">No packages yet.</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -74,5 +95,26 @@
   </div>
 
 </div>
+
+<script>
+  function filterPackages() {
+    const selectedProject = document.getElementById("projectFilter").value.toLowerCase();
+    const rows = document.querySelectorAll("#packageTable tbody tr");
+
+    let counter = 0;
+    rows.forEach(row => {
+      if (row.dataset.project === undefined) return;
+      const project = (row.dataset.project || "").toLowerCase();
+      const match = !selectedProject || project === selectedProject;
+      row.style.display = match ? "" : "none";
+      if (match) {
+        counter++;
+        row.cells[0].textContent = counter;
+      }
+    });
+  }
+
+  document.getElementById("projectFilter").addEventListener("change", filterPackages);
+</script>
 
 {% endblock %}

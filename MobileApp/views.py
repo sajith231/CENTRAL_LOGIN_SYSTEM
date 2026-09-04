@@ -985,6 +985,9 @@ def mobile_control_billing(request, pk):
                 control.package = package
                 control.active_custom_package = None   # clear any previous custom pkg
                 package_selected = True
+                # If the package enforces a user count, drive login_limit from it
+                if package.users_count:
+                    control.login_limit = package.users_count
                 
         elif operation_type == 'renew':
             if control.active_custom_package:
@@ -1025,6 +1028,10 @@ def mobile_control_billing(request, pk):
                 control.package = package
                 control.active_custom_package = None
                 package_selected = True
+                # If the package enforces a user count, drive login_limit from it
+                if package.users_count:
+                    control.login_limit = package.users_count
+                    extend_login = 0   # ignore manually-entered initial user count
             else:
                 extend_days = int(request.POST.get("extend_days") or 0)
 
@@ -1034,7 +1041,13 @@ def mobile_control_billing(request, pk):
             return redirect("MobileApp:mobile_control_billing", pk=pk)
 
         # ---------- LOGIN LIMIT (+ / -) ----------
-        if extend_login != 0:
+        enforced_users = (control.package.users_count if control.package and control.package.users_count else 0)
+        if enforced_users:
+            # Package enforces a user count → login_limit is driven by the package,
+            # and cannot be changed from the billing section.
+            control.login_limit = enforced_users
+            extend_login = 0   # ignore any manual (or stale read-only) user input
+        elif extend_login != 0:
             new_login_limit = control.login_limit + extend_login
             if new_login_limit < 1:
                 messages.error(request, "Login limit cannot be less than 1")

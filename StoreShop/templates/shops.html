@@ -24,28 +24,40 @@
     </select>
   </div>
 
-  <script>
-    function filterShops() {
-      let keyword = document.getElementById("shopSearch").value.toLowerCase();
-      let selectedBranch = document.getElementById("branchFilter").value.toLowerCase();
-      let rows = document.querySelectorAll("table tbody tr");
-
-      rows.forEach(row => {
-        let shopName = row.querySelector("td:nth-child(4)").innerText.toLowerCase();
-        let branch = row.querySelector("td:nth-child(9)").innerText.toLowerCase();
-        let nameMatch = shopName.includes(keyword);
-        let branchMatch = selectedBranch === "" || branch === selectedBranch;
-        row.style.display = nameMatch && branchMatch ? "" : "none";
-      });
-    }
-
-    document.getElementById("shopSearch").addEventListener("keyup", filterShops);
-    document.getElementById("branchFilter").addEventListener("change", filterShops);
-  </script>
+  {% if shops %}
+  <!-- Pagination bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center;
+              margin:0 20px 10px; background:#1e293b; border:1px solid #334155;
+              border-radius:10px; padding:8px 16px; gap:12px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label style="color:#9ca3af; font-size:13px; white-space:nowrap;">Rows per page:</label>
+      <select id="rowsPerPage" style="padding:5px 10px; border-radius:6px; border:1px solid #334155;
+                 background:#0f172a; color:white; font-size:13px; cursor:pointer;">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+    <p id="paginationInfo" style="color:#9ca3af; margin:0; font-size:13px;">Loading...</p>
+    <div style="display:flex; gap:6px;">
+      <button id="btnPrev" onclick="prevPage()" style="padding:5px 14px; border-radius:6px; border:1px solid #334155;
+                 background:#1e293b; color:#cbd5e1; font-size:13px; cursor:pointer;
+                 transition:background 0.15s;">
+        &#8249; Prev
+      </button>
+      <button id="btnNext" onclick="nextPage()" style="padding:5px 14px; border-radius:6px; border:1px solid #334155;
+                 background:#1e293b; color:#cbd5e1; font-size:13px; cursor:pointer;
+                 transition:background 0.15s;">
+        Next &#8250;
+      </button>
+    </div>
+  </div>
+  {% endif %}
 
   <div style="padding:0 20px 20px;">
     <div style="overflow: scroll;">
-      <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+      <table id="shopTable" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
         <thead>
           <tr style="background: var(--hover);">
             <th style="padding:12px;">#</th>
@@ -67,7 +79,11 @@
 
         <tbody>
           {% for shop in shops %}
-          <tr style="background:#0f1b31;">
+          <tr style="background:#0f1b31;"
+              data-name="{{ shop.name|lower }}"
+              data-branch="{{ shop.branch.name|lower }}"
+              data-email="{{ shop.email|lower }}"
+              data-client="{{ shop.client_id|lower }}">
             <td style="padding:12px;">{{ forloop.counter }}</td>
             <td style="padding:12px;">{{ shop.created_at|date:"d-m-Y" }} <br> <span
                 style="font-size: 11px; color:#888;">{{ shop.created_at|date:"h:i A" }}</span></td>
@@ -102,13 +118,80 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="10" style="padding:12px;">No shops yet.</td>
+            <td colspan="14" style="padding:12px;">No shops yet.</td>
           </tr>
           {% endfor %}
+        </tbody>
+      </table>
     </div>
-    </tbody>
-    </table>
   </div>
 </div>
 </div>
+
+<script>
+  let currentPage = 1;
+  let totalPages = 1;
+
+  function getRowsPerPage() {
+    return parseInt(document.getElementById("rowsPerPage").value, 10);
+  }
+
+  function renderTable() {
+    const keyword = document.getElementById("shopSearch").value.toLowerCase();
+    const selectedBranch = document.getElementById("branchFilter").value.toLowerCase();
+    const rowsPerPage = getRowsPerPage();
+
+    const allRows = Array.from(document.querySelectorAll("#shopTable tbody tr"));
+
+    const matchedRows = allRows.filter(row => {
+      const name = (row.dataset.name || "").trim();
+      const email = (row.dataset.email || "").trim();
+      const client = (row.dataset.client || "").trim();
+      const branch = (row.dataset.branch || "").trim();
+      const nameMatch = !keyword || name.includes(keyword) || email.includes(keyword) || client.includes(keyword);
+      const branchMatch = !selectedBranch || branch === selectedBranch;
+      return nameMatch && branchMatch;
+    });
+
+    totalPages = Math.max(1, Math.ceil(matchedRows.length / rowsPerPage));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+
+    allRows.forEach(row => row.style.display = "none");
+
+    matchedRows.forEach((row, i) => {
+      const isVisible = (i >= startIndex && i < endIndex);
+      row.style.display = isVisible ? "" : "none";
+      if (isVisible) row.cells[0].textContent = i + 1;
+    });
+
+    document.getElementById("paginationInfo").textContent =
+      `Showing ${matchedRows.length === 0 ? 0 : startIndex + 1}\u2013${Math.min(endIndex, matchedRows.length)} of ${matchedRows.length} record${matchedRows.length !== 1 ? 's' : ''}`;
+
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    btnPrev.disabled = currentPage === 1;
+    btnPrev.style.opacity = currentPage === 1 ? "0.4" : "1";
+    btnPrev.style.cursor = currentPage === 1 ? "not-allowed" : "pointer";
+    btnNext.disabled = currentPage >= totalPages;
+    btnNext.style.opacity = currentPage >= totalPages ? "0.4" : "1";
+    btnNext.style.cursor = currentPage >= totalPages ? "not-allowed" : "pointer";
+  }
+
+  function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+  function nextPage() { if (currentPage < totalPages) { currentPage++; renderTable(); } }
+
+  function applyFilters() {
+    currentPage = 1;
+    renderTable();
+  }
+
+  document.getElementById("shopSearch").addEventListener("keyup", applyFilters);
+  document.getElementById("branchFilter").addEventListener("change", applyFilters);
+  document.getElementById("rowsPerPage").addEventListener("change", applyFilters);
+
+  document.addEventListener("DOMContentLoaded", renderTable);
+</script>
 {% endblock %}

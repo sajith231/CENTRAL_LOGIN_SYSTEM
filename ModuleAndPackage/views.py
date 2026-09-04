@@ -108,7 +108,9 @@ def package_list(request):
         if allowed_app_types:
             packages = packages.filter(project__app_type__in=allowed_app_types)
     
-    return render(request, "packages.html", {"packages": packages})
+    projects = Package.objects.values_list('project__project_name', flat=True).distinct().order_by('project__project_name')
+    
+    return render(request, "packages.html", {"packages": packages, "projects": projects})
 
 
 def add_package_page(request):
@@ -128,13 +130,15 @@ def save_package(request):
         project_id = request.POST.get("project")
         package_name = request.POST.get("package_name")
         days_limit = request.POST.get("days_limit", "0")
+        users_count = request.POST.get("users_count", "")
         selected_modules = request.POST.getlist("modules")
 
         project = MobileProject.objects.get(id=project_id)
         package = Package.objects.create(
             project=project, 
             package_name=package_name,
-            days_limit=int(days_limit) if days_limit else 0
+            days_limit=int(days_limit) if days_limit else 0,
+            users_count=int(users_count) if users_count else 0
         )
 
         # Add multiple modules
@@ -154,9 +158,11 @@ def edit_package(request, pk):
     if request.method == "POST":
         package.package_name = request.POST.get("package_name")
         days_limit = request.POST.get("days_limit", "0")
+        users_count = request.POST.get("users_count", "")
         selected_modules = request.POST.getlist("modules")
 
         package.days_limit = int(days_limit) if days_limit else 0
+        package.users_count = int(users_count) if users_count else 0
         package.modules.set(selected_modules)
         package.save()
 

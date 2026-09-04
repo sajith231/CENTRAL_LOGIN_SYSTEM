@@ -36,6 +36,7 @@ class Package(models.Model):
     modules = models.ManyToManyField(Module)
     package_name = models.CharField(max_length=200)
     days_limit = models.PositiveIntegerField(default=0, help_text="Number of days before auto-deactivation (0 = unlimited)")
+    users_count = models.PositiveIntegerField(default=0, blank=True, null=True, help_text="Optional package user count limit (0/blank = no limit)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

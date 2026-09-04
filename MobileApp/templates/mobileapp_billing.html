@@ -822,7 +822,7 @@
                                     {% if packages %}
                                     <optgroup label="— Standard Packages —" style="color:#64748b;">
                                         {% for p in packages %}
-                                        <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard"
+                                        <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard" data-users="{{ p.users_count }}"
                                             {% if control.package.id == p.id %}selected{% endif %}>
                                             {{ p.package_name }} (+{{ p.days_limit }} days)
                                         </option>
@@ -905,6 +905,10 @@
                                     placeholder="e.g. 5" required
                                     style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
                             </div>
+                            <small id="pkgUsersLockNote"
+                                style="color:#fbbf24; font-size:0.75rem; display:none; margin-bottom:14px;">
+                                <i class="fas fa-lock me-1"></i>User count is set by the package. To change it, edit the package in the Package section.
+                            </small>
                             <small style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:14px;">
                                 <i class="fas fa-info-circle me-1"></i>Set the starting number of users for this licence
                             </small>
@@ -996,6 +1000,10 @@
                                             class="form-control" placeholder="e.g. +5 or -2"
                                             style="background:#1e293b; color:white; border:1px solid #334155; padding:10px 16px; border-radius:8px; font-size:0.9rem;">
                                     </div>
+                                    <small id="pkgUsersLockNote"
+                                        style="color:#fbbf24; font-size:0.75rem; display:none; margin-bottom:8px;">
+                                        <i class="fas fa-lock me-1"></i>User count is set by the package. To change it, edit the package in the Package section.
+                                    </small>
                                     <small style="color:#64748b; font-size:0.75rem; display:block;">
                                         <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to
                                         remove
@@ -1023,7 +1031,7 @@
                                             {% if packages %}
                                             <optgroup label="— Standard Packages —" style="color:#64748b;">
                                                 {% for p in packages %}
-                                                <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard"
+                                                <option value="{{ p.id }}" data-days="{{ p.days_limit }}" data-type="standard" data-users="{{ p.users_count }}"
                                                     {% if not control.active_custom_package and control.package.id == p.id %}selected{% endif %}>
                                                     {{ p.package_name }} (+{{ p.days_limit }} days)
                                                 </option>
@@ -1196,9 +1204,13 @@
                                 if (custInput) custInput.value = opt.getAttribute('data-custom-id');
                                 // clear the standard package field name so only custom_package is submitted
                                 select.name = '';
+                                applyPackageUsersLock(false, null);
                             } else {
                                 if (custInput) custInput.value = '';
                                 select.name = 'change_package_id';
+                                // Enforce user count if the package defines one
+                                const users = opt.getAttribute('data-users');
+                                applyPackageUsersLock(users && parseInt(users, 10) > 0, parseInt(users, 10));
                             }
                         }
 
@@ -2029,6 +2041,8 @@
             const customId = opt.getAttribute('data-custom-id');
             if (customHidden) customHidden.value = customId;
             if (helper) helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Custom package adds <b>${days} days</b>`;
+            // Custom packages have no enforced user count → restore manual editing
+            applyPackageUsersLock(false, null);
         } else {
             // Restore name
             sel.name = nameInputId;
@@ -2036,7 +2050,27 @@
             const manualInput = document.getElementById('manualDaysInput');
             if (manualInput) manualInput.value = '';
             if (helper) helper.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#10b981;"></i>Selected package adds <b>${days} days</b>`;
+            // Enforce user count if the package defines one
+            const users = opt.getAttribute('data-users');
+            applyPackageUsersLock(users && parseInt(users, 10) > 0, parseInt(users, 10));
         }
+    }
+
+    // Apply users-count lock to ALL user limit inputs in the form
+    function applyPackageUsersLock(locked, userCount) {
+        var inputs = document.querySelectorAll('#billingForm input[name="extend_login"]');
+        inputs.forEach(function (input) {
+            if (locked && userCount) {
+                input.value = userCount;
+                input.readOnly = true;
+                input.style.opacity = '0.7';
+            } else {
+                input.readOnly = false;
+                input.style.opacity = '';
+            }
+        });
+        var lockNote = document.getElementById('pkgUsersLockNote');
+        if (lockNote) lockNote.style.display = locked && userCount ? 'block' : 'none';
     }
 
     function handlePackageChangeFirst(sel) {
@@ -2045,6 +2079,29 @@
     function handlePackageChangeSubseq(sel) {
         _handlePkgChange(sel, 'package', 'customPkgInputSubseq', 'helperText');
     }
+
+    // On load, lock the user count if the current package enforces one
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('billingForm');
+        if (!form) return;
+
+        // First billing: preselected package
+        var firstSel = document.getElementById('packageSelectFirst');
+        if (firstSel && firstSel.value) {
+            var firstOpt = firstSel.options[firstSel.selectedIndex];
+            var fUsers = firstOpt.getAttribute('data-users');
+            if (fUsers && parseInt(fUsers, 10) > 0) {
+                applyPackageUsersLock(true, parseInt(fUsers, 10));
+            }
+        }
+
+        // Subsequent billing: reflect current package's user count in Update Users tab
+        var curUsers = {{ control.package.users_count|default:0 }};
+        var changePkg = document.getElementById('changePkgSelect');
+        if (curUsers > 0 && changePkg) {
+            applyPackageUsersLock(true, curUsers);
+        }
+    });
 
     // ── Auto-generate package name from customer + selected modules ──
     function _updateCustomPkgName() {

@@ -46,6 +46,14 @@
             <small style="color:#9ca3af;">Enter number of days before auto-deactivation. 0 means unlimited.</small>
         </div>
 
+        <!-- Package Users Count (Optional) -->
+        <div class="mb-3">
+            <label>Package Users Count</label>
+            <input type="number" name="users_count" class="form-control" value="0" min="0" placeholder="0 = No limit"
+                style="background:#0f1b31; color:white; border:1px solid #334155;">
+            <small style="color:#9ca3af;">Optional. Enter the number of users allowed for this package. Leave 0 for no limit. Once set, this count cannot be edited in the billing section.</small>
+        </div>
+
         <button class="btn btn-success">Save</button>
         <a href="{% url 'ModuleAndPackage:package_list' %}" class="btn btn-secondary"
             style="background:#64748b; border:none; margin-left:10px;">Back</a>
