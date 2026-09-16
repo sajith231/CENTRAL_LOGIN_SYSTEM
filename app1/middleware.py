@@ -61,6 +61,10 @@ class MenuPermissionMiddleware:
         # Menu control
         "user_controll:user_menu_user_list": "user_menu_control",
         "user_controll:configure_user_menu": "user_menu_control",
+        # Upcoming Expiry
+        "upcoming_expiry:upcoming_expiry": "upcoming_expiry",
+        # Billing (Upcoming Expiry Billing button)
+        "MobileApp:mobile_control_billing": "mobile_billing",
     }
 
     def __init__(self, get_response):

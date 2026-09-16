@@ -8,8 +8,9 @@ from MobileApp.models import MobileControl
 
 
 def upcoming_expiry_view(request):
-    # Superuser only
-    if not (request.user.is_authenticated and request.user.is_superuser):
+    allowed = request.session.get("allowed_menus") or []
+    # Superuser, or a custom user granted the 'upcoming_expiry' menu
+    if not (request.user.is_authenticated and request.user.is_superuser) and "upcoming_expiry" not in allowed:
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()

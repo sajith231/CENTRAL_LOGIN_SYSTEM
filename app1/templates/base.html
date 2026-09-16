@@ -548,8 +548,8 @@
           </li>
           {% endif %}
 
-          {# 8) UPCOMING EXPIRY – SUPERUSER ONLY #}
-          {% if request.user.is_superuser %}
+          {# 8) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
                class="{% block active_upcoming_expiry %}{% endblock %}"

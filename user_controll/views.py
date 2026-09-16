@@ -69,6 +69,13 @@ def get_all_menus():
                 {"id": "package_list", "name": "Package", "icon": "fa-solid fa-box-open"},
             ],
         },
+        {
+            "name": "Upcoming Expiry",
+            "icon": "fa-solid fa-hourglass-half",
+            "submenus": [
+                {"id": "upcoming_expiry", "name": "Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
+            ],
+        },
     ]
 
 

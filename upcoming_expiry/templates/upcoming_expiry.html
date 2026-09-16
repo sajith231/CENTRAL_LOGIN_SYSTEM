@@ -16,53 +16,29 @@
       <table style="width:100%; border-collapse:separate; border-spacing:0 8px;">
         <thead>
           <tr>
-            <th style="text-align:left; padding:10px;">#</th>
             <th style="text-align:left; padding:10px;">Customer</th>
-            <th style="text-align:left; padding:10px;">Licence Type</th>
-            <th style="text-align:left; padding:10px;">Company</th>
-            <th style="text-align:left; padding:10px;">Corporate</th>
+            <th style="text-align:left; padding:10px;">Place</th>
             <th style="text-align:left; padding:10px;">Branch</th>
             <th style="text-align:left; padding:10px;">Project</th>
-            <th style="text-align:left; padding:10px;">License Key</th>
-            <th style="text-align:left; padding:10px;">Client ID</th>
             <th style="text-align:left; padding:10px;">Package</th>
+            <th style="text-align:left; padding:10px;">Expiry</th>
             <th style="text-align:center; padding:10px;">Login Limit</th>
-            <th style="text-align:center; padding:10px;">Reg / Balance</th>
-            <th style="text-align:left; padding:10px;">Expiry Date</th>
-            <th style="text-align:center; padding:10px;">Days Left</th>
+            <th style="text-align:center; padding:10px;">Reg Limit</th>
+            <th style="text-align:center; padding:10px;">Day Left</th>
             <th style="text-align:center; padding:10px;">Status</th>
             <th style="text-align:center; padding:10px;">Bill Status</th>
+            {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
             <th style="text-align:center; padding:10px;">Billing</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
           {% for c in controls %}
             <tr style="background:#0f1b31;">
-              <td style="padding:10px;">{{ forloop.counter }}</td>
               <td style="padding:10px;">{{ c.customer_name }}</td>
-              <td style="padding:10px;">{{ c.get_licence_type_display|default:"-" }}</td>
-              <td style="padding:10px;">{{ c.shop.name|default:"-" }}</td>
-              <td style="padding:10px;">{{ c.shop.store.name|default:"-" }}</td>
+              <td style="padding:10px;">{{ c.shop.branch.place|default:"-" }}</td>
               <td style="padding:10px;">{{ c.shop.branch.name|default:"-" }}</td>
               <td style="padding:10px;">{{ c.project.project_name|default:"-" }}</td>
-              <td style="padding:10px; white-space:nowrap;">
-                <span style="font-weight:700; color:#fbbf24; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.35); padding:3px 8px; border-radius:6px; font-family:monospace;">{{ c.license_key|default:"-" }}</span>
-                {% if c.license_key %}
-                <button type="button" onclick="copyText(this, '{{ c.license_key }}')" title="Copy"
-                        style="margin-left:6px; background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--text); border-radius:6px; padding:2px 8px; cursor:pointer; font-size:12px;">
-                  <i class="fa-solid fa-copy"></i>
-                </button>
-                {% endif %}
-              </td>
-              <td style="padding:10px; white-space:nowrap;">
-                <span style="font-weight:700; color:#60a5fa; background:rgba(96,165,250,.12); border:1px solid rgba(96,165,250,.35); padding:3px 8px; border-radius:6px; font-family:monospace;">{{ c.client_id|default:"-" }}</span>
-                {% if c.client_id %}
-                <button type="button" onclick="copyText(this, '{{ c.client_id }}')" title="Copy"
-                        style="margin-left:6px; background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--text); border-radius:6px; padding:2px 8px; cursor:pointer; font-size:12px;">
-                  <i class="fa-solid fa-copy"></i>
-                </button>
-                {% endif %}
-              </td>
               <td style="padding:10px;">
                 {% if c.active_custom_package %}
                   {{ c.active_custom_package.package_name }}
@@ -72,11 +48,11 @@
                   -
                 {% endif %}
               </td>
+              <td style="padding:10px; white-space:nowrap;">{{ c.expiry_date|date:"Y-m-d H:i" }}</td>
               <td style="padding:10px; text-align:center;">{{ c.login_limit }}</td>
               <td style="padding:10px; text-align:center;">
                 {{ c.registered_count }} / {{ c.balance_count }}
               </td>
-              <td style="padding:10px; white-space:nowrap;">{{ c.expiry_date|date:"Y-m-d H:i" }}</td>
               <td style="padding:10px; text-align:center;">
                 {% if c.remaining_days <= 3 %}
                   <span style="color:#f87171;">{{ c.remaining_days }}d</span>
@@ -100,16 +76,18 @@
                   <span style="color:#f87171;">Not Billed</span>
                 {% endif %}
               </td>
+              {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
               <td style="padding:10px; text-align:center;">
                 <a href="{% url 'MobileApp:mobile_control_billing' c.id %}" class="btn btn-sm"
                    style="background:#0ea5e9; color:white; padding:6px 12px; border-radius:6px; text-decoration:none; white-space:nowrap; font-size:13px;">
                   <i class="fa-solid fa-file-invoice-dollar"></i> Billing
                 </a>
               </td>
+              {% endif %}
             </tr>
           {% empty %}
             <tr style="background:#0f1b31;">
-              <td colspan="17" style="padding:12px;">No upcoming expiring licences found.</td>
+              <td colspan="{% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}12{% else %}11{% endif %}" style="padding:12px;">No upcoming expiring licences found.</td>
             </tr>
           {% endfor %}
         </tbody>
