@@ -22,9 +22,9 @@ def stores_list(request):
         active_devices__isnull=False
     )
 
-    # 🔑 Superuser → see all
+    # 🔑 Superuser → see all (non-demo) corporates
     if is_super_level_user(request):
-        stores = Store.objects.annotate(
+        stores = Store.objects.exclude(is_demo=True).annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).order_by('-created_at')
         branches = Branch.objects.all().order_by('name')
@@ -35,7 +35,7 @@ def stores_list(request):
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
         stores = Store.objects.filter(
             branch__name__in=user_branches
-        ).annotate(
+        ).exclude(is_demo=True).annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).order_by('-created_at')
 
@@ -117,7 +117,7 @@ def shop_list(request):
     )
 
     if is_super_level_user(request):
-        shops = Shop.objects.annotate(
+        shops = Shop.objects.exclude(is_demo=True).annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).select_related('store', 'branch').order_by('-created_at')
         branches = Branch.objects.all().order_by('name')
@@ -126,7 +126,7 @@ def shop_list(request):
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
         shops = Shop.objects.filter(
             branch__name__in=user_branches
-        ).annotate(
+        ).exclude(is_demo=True).annotate(
             has_active_devices=Exists(has_devices_subquery)
         ).select_related('store', 'branch').order_by('-created_at')
 
@@ -139,12 +139,12 @@ from branch.models import Branch
 
 def add_shop(request):
     if is_super_level_user(request):
-        stores = Store.objects.all().order_by('name')
+        stores = Store.objects.exclude(is_demo=True).order_by('name')
         branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
-        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -189,6 +189,7 @@ def add_shop(request):
             country=country,
             currency_code=currency_code,
             is_active=is_active,
+            is_demo=False,
             created_by=request.user if request.user.is_authenticated else None,
             created_by_name=request.user.username if request.user.is_authenticated else request.session.get("custom_user_name", "Unknown")
         )
@@ -208,12 +209,12 @@ def edit_shop(request, id):
     shop = get_object_or_404(Shop, id=id)
 
     if is_super_level_user(request):
-        stores = Store.objects.all().order_by('name')
+        stores = Store.objects.exclude(is_demo=True).order_by('name')
         branches = Branch.objects.all().order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
-        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
 
     if request.method == "POST":
         shop.name = request.POST.get("name")

@@ -67,6 +67,15 @@
             <option value="new">New Licence</option>
             <option value="transfer">Transfer Licence</option>
             <option value="developer">Developer Licence</option>
+            <option value="demo">Demo Licence</option>
+        </select>
+
+        <!-- Demo / Main Filter -->
+        <select id="licenceKindFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
+               background:#0f172a; color:white;">
+            <option value="">All (Demo + Main)</option>
+            <option value="demo">DEMO</option>
+            <option value="main">MAIN LICENSE</option>
         </select>
 
         <!-- App Type Filter -->
@@ -272,6 +281,7 @@
                         data-bs-toggle="modal" data-bs-target="#moreDetailsModal" data-company="{{ c.customer_name }}"
                         data-corporate="{{ c.store.name }}" data-branch="{{ c.shop.branch.name|default:'-' }}"
                         data-place="{{ c.shop.place|default:'-' }}"
+                        data-demo="{% if c.licence_type == 'demo' %}1{% else %}0{% endif %}"
                         data-corporate-id="{{ c.store.store_id|default:'-' }}" data-client="{{ c.client_id }}"
                         data-license="{{ c.license_key }}" data-app-type="{{ c.project.app_type }}" onclick="openMoreDetails(this)">
                         <i class="fa-solid fa-eye"></i>
@@ -317,6 +327,10 @@
                     {% elif c.licence_type == 'developer' %}
                     <span
                         style="background:#065f46; color:#a7f3d0; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">Developer
+                        Licence</span>
+                    {% elif c.licence_type == 'demo' %}
+                    <span
+                        style="background:#92400e; color:#fde68a; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; border:1px solid #f59e0b;">Demo
                         Licence</span>
                     {% else %}
                     <span
@@ -455,6 +469,14 @@
                     {% else %}
                     <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
                     {% endif %}
+
+                    {% if c.licence_type == 'demo' and is_super %}
+                    <form method="POST" action="{% url 'auto_licence:convert_demo_to_main' c.id %}" style="display:inline;"
+                        onsubmit="return confirm('Convert this DEMO licence to a MAIN licence? The Company/Corporate will then appear in their tables.');">
+                        {% csrf_token %}
+                        <button class="btn" style="background:#f59e0b; color:black;">Convert to Main</button>
+                    </form>
+                    {% endif %}
                 </td>
 
 
@@ -528,6 +550,12 @@
 
             <div class="modal-body">
                 <p>Are you sure?</p>
+                {% if c.licence_type == 'demo' %}
+                <p style="color:#f59e0b; font-size:13px; margin-top:10px;">
+                    <i class="fa-solid fa-trash-can"></i> This is a DEMO licence — Corporate &amp;
+                    Company details will be <b>permanently deleted</b> too.
+                </p>
+                {% endif %}
                 <h4 class="text-center">{{ c.customer_name }}</h4>
             </div>
 
@@ -932,11 +960,22 @@
 
 <script>
     function openMoreDetails(btn) {
+        const isDemo = btn.dataset.demo === '1';
         document.getElementById("md_branch").innerText = btn.dataset.branch || "-";
-        document.getElementById("md_company").innerText = btn.dataset.company || "-";
-        document.getElementById("md_place").innerText = btn.dataset.place || "-";
-        document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
-        document.getElementById("md_corporate_id").innerText = btn.dataset.corporateId || "-";
+
+        if (isDemo) {
+            // Demo licences: corporate/company details stay hidden until converted to Main
+            document.getElementById("md_company").innerText = "Hidden (DEMO licence)";
+            document.getElementById("md_place").innerText = "-";
+            document.getElementById("md_corporate").innerText = "Hidden (DEMO licence)";
+            document.getElementById("md_corporate_id").innerText = "-";
+        } else {
+            document.getElementById("md_company").innerText = btn.dataset.company || "-";
+            document.getElementById("md_place").innerText = btn.dataset.place || "-";
+            document.getElementById("md_corporate").innerText = btn.dataset.corporate || "-";
+            document.getElementById("md_corporate_id").innerText = btn.dataset.corporateId || "-";
+        }
+
         document.getElementById("md_client").innerText = btn.dataset.client || "-";
         
         const licenseRow = document.getElementById("md_license_row");
@@ -1009,6 +1048,7 @@
             project: document.getElementById("projectFilter").value,
             branch: document.getElementById("branchFilter").value,
             type: document.getElementById("typeFilter").value,
+            licenceKind: document.getElementById("licenceKindFilter").value,
             appType: document.getElementById("appTypeFilter").value,
             billStatus: document.getElementById("billStatusFilter").value,
             payment: document.getElementById("paymentFilter").value,
@@ -1031,6 +1071,7 @@
                 document.getElementById("projectFilter").value = state.project || "";
                 document.getElementById("branchFilter").value = state.branch || "";
                 document.getElementById("typeFilter").value = state.type || "";
+                document.getElementById("licenceKindFilter").value = state.licenceKind || "";
                 document.getElementById("appTypeFilter").value = state.appType || "";
                 document.getElementById("billStatusFilter").value = state.billStatus || "";
                 document.getElementById("paymentFilter").value = state.payment || "";
@@ -1056,6 +1097,7 @@
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
+        const licenceKindFilter = document.getElementById("licenceKindFilter").value;
         const appTypeFilter = document.getElementById("appTypeFilter").value;
         const billStatusFilter = document.getElementById("billStatusFilter").value;
         const paymentFilter = document.getElementById("paymentFilter").value;
@@ -1081,12 +1123,20 @@
             const afterFrom = !dateFrom || created >= dateFrom;
             const beforeTo = !dateTo || created <= dateTo;
 
+            // DEMO / MAIN licence kind filter
+            const isDemoRow = type === 'demo';
+            const matchesLicenceKind =
+                licenceKindFilter === "" ||
+                (licenceKindFilter === "demo" && isDemoRow) ||
+                (licenceKindFilter === "main" && !isDemoRow);
+
             return clientId.includes(clientFilter)
                 && companyName.includes(companyFilter)
                 && (statusFilter === "" || status === statusFilter)
                 && (projectFilter === "" || project === projectFilter)
                 && (branchFilter === "" || branch === branchFilter)
                 && (typeFilter === "" || type === typeFilter)
+                && matchesLicenceKind
                 && (appTypeFilter === "" || appType === appTypeFilter)
                 && (billStatusFilter === "" || billStatus === billStatusFilter)
                 && (paymentFilter === "" || payment === paymentFilter)
@@ -1143,6 +1193,7 @@
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
     document.getElementById("typeFilter").addEventListener("change", applyFilters);
     document.getElementById("appTypeFilter").addEventListener("change", applyFilters);
+    document.getElementById("licenceKindFilter").addEventListener("change", applyFilters);
     document.getElementById("billStatusFilter").addEventListener("change", applyFilters);
     document.getElementById("dateFrom").addEventListener("change", applyFilters);
     document.getElementById("dateTo").addEventListener("change", applyFilters);

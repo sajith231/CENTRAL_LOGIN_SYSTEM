@@ -18,12 +18,12 @@ def corporate_and_clientid_list(request):
 
     data = []
 
-    stores = Store.objects.all().prefetch_related('shop_set')
+    stores = Store.objects.exclude(is_demo=True).prefetch_related('shop_set')
 
     for store in stores:
         shops_data = []
 
-        shops = Shop.objects.filter(store=store)
+        shops = Shop.objects.filter(store=store).exclude(is_demo=True)
 
         for shop in shops:
             # 🔹 Get all project names linked to this client_id

@@ -47,46 +47,55 @@ def mobile_home(request):
 
 def mobileproject_create(request):
     """Create a new mobile project"""
+    branches = Branch.objects.all().order_by('name')
+
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
         app_type = request.POST.get('app_type', 'mobile_app')
         customized_package = request.POST.get('customized_package') == 'yes'
-        
+        branch_id = request.POST.get('branch') or None
+        branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None
+
         if project_name:
             MobileProject.objects.create(
                 project_name=project_name,
                 description=description if description else None,
                 app_type=app_type,
-                customized_package=customized_package
+                customized_package=customized_package,
+                branch=branch,
             )
             messages.success(request, 'Mobile project created successfully!')
             return redirect('MobileApp:mobileapp_list')
         else:
             messages.error(request, 'Project name is required!')
     
-    return render(request, "mobileproject_create.html")
+    return render(request, "mobileproject_create.html", {"branches": branches})
 
 def mobileproject_edit(request, pk):
     """Edit an existing mobile project"""
     project = get_object_or_404(MobileProject, pk=pk)
+    branches = Branch.objects.all().order_by('name')
     
     if request.method == 'POST':
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
         customized_package = request.POST.get('customized_package') == 'yes'
+        branch_id = request.POST.get('branch') or None
+        branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None
         
         if project_name:
             project.project_name = project_name
             project.description = description if description else None
             project.customized_package = customized_package
+            project.branch = branch
             project.save()  # API endpoint will auto-update
             messages.success(request, 'Mobile project updated successfully!')
             return redirect('MobileApp:mobileapp_list')
         else:
             messages.error(request, 'Project name is required!')
     
-    context = {'project': project}
+    context = {'project': project, 'branches': branches}
     return render(request, "mobileproject_edit.html", context)
 
 def mobileproject_delete(request, pk):
@@ -192,6 +201,7 @@ def mobile_control_list(request):
         "projects_data": projects_data,
         "branch_names": branch_names,
         "any_mobile_app": any_mobile_app,
+        "is_super": is_super_level_user(request),
     })
 
 
@@ -215,13 +225,13 @@ def add_mobile_control(request):
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
         branches = Branch.objects.all().order_by('name')
-        stores = Store.objects.all().order_by('name')
-        shops = Shop.objects.all().order_by('name')
+        stores = Store.objects.exclude(is_demo=True).order_by('name')
+        shops = Shop.objects.exclude(is_demo=True).order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
-        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
-        shops = Shop.objects.filter(branch__name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
+        shops = Shop.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
 
     if request.method == 'POST':
         project_id = request.POST.get('project')
@@ -290,13 +300,13 @@ def edit_mobile_control(request, pk):
     # 🔑 BRANCH + STORE + SHOP FILTERING
     if is_super_level_user(request):
         branches = Branch.objects.all().order_by('name')
-        stores = Store.objects.all().order_by('name')
-        shops = Shop.objects.all().order_by('name')
+        stores = Store.objects.exclude(is_demo=True).order_by('name')
+        shops = Shop.objects.exclude(is_demo=True).order_by('name')
     else:
         user_branches = request.session.get("custom_user_branches", [])
         branches = Branch.objects.filter(name__in=user_branches).order_by('name')
-        stores = Store.objects.filter(branch__name__in=user_branches).order_by('name')
-        shops = Shop.objects.filter(branch__name__in=user_branches).order_by('name')
+        stores = Store.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
+        shops = Shop.objects.filter(branch__name__in=user_branches).exclude(is_demo=True).order_by('name')
 
     if request.method == 'POST':
         project = get_object_or_404(MobileProject, pk=request.POST.get('project'))
@@ -336,7 +346,20 @@ def delete_mobile_control(request, pk):
     """Delete mobile control"""
     control = get_object_or_404(MobileControl, pk=pk)
     name = str(control)
+
+    # DEMO licences (created via the Licence Create API) get fully removed:
+    # the linked Shop (Company) and Store (Corporate) are deleted too,
+    # so the same email / client_id can be reused. MAIN licences keep the old behaviour.
+    demo_shop = control.shop if control.licence_type == "demo" and control.shop and control.shop.is_demo else None
+    demo_store = control.store if control.licence_type == "demo" and control.store and control.store.is_demo else None
+
     control.delete()
+
+    if demo_shop:
+        demo_shop.delete()
+    if demo_store:
+        demo_store.delete()
+
     messages.success(request, f'Mobile control "{name}" deleted.')
     return redirect('MobileApp:mobile_control')
 

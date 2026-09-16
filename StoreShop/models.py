@@ -11,6 +11,7 @@ class Store(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
     place = models.CharField(max_length=150, null=True, blank=True)
     store_id = models.CharField(max_length=10, unique=True, editable=False, null=True, blank=True)
+    is_demo = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_by_name = models.CharField(max_length=150, null=True, blank=True)
@@ -50,6 +51,7 @@ class Shop(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_by_name = models.CharField(max_length=150, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_demo = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.client_id:

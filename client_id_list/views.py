@@ -7,7 +7,7 @@ def get_client_ids(request):
     Returns all client IDs with company name and place
     """
 
-    shops = Shop.objects.filter(is_active=True).select_related('store')
+    shops = Shop.objects.filter(is_active=True).exclude(is_demo=True).select_related('store')
 
     data = []
 

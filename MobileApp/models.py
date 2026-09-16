@@ -19,6 +19,8 @@ class MobileProject(models.Model):
         default='mobile_app'
     )
     customized_package = models.BooleanField(default=False)  # ← ADD THIS
+    # Default branch used when creating a licence via the auto Licence Create API
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name='mobile_projects')
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -75,6 +77,7 @@ class MobileControl(models.Model):
         ('new', 'New Licence'),
         ('transfer', 'Transfer Licence'),
         ('developer', 'Developer Licence'),
+        ('demo', 'Demo Licence'),
     ]
     licence_type = models.CharField(
         max_length=20,

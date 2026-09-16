@@ -44,6 +44,18 @@
             </div>
 
             <div class="mb-3">
+              <label for="branch" class="form-label">
+                Branch <span class="text-muted">(Default branch for Licence Create API)</span>
+              </label>
+              <select name="branch" id="branch" class="form-select" style="color: black;">
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                <option value="{{ branch.id }}" style="color: black;">{{ branch.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
               <label for="description" class="form-label">
                 Description <span class="text-muted">(Optional)</span>
               </label>

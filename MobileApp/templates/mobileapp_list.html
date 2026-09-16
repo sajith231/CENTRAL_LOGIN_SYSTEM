@@ -86,6 +86,7 @@
                     <th style="padding:12px; text-align:left;white-space: nowrap;">GET API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Register API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">License Remove API</th>
+                    <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Create API</th>
                     <th style="padding:12px; text-align:center;white-space: nowrap;">Description</th>
                     <th style="padding:12px; text-align:center; white-space:nowrap;">Customized Pkg</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Actions</th>
@@ -129,6 +130,13 @@
                         <button class="btn" style="background:#b91c1c; font-size:12px;"
                             data-bs-toggle="modal" data-bs-target="#removeApiModal{{ project.id }}">
                             <i class="fa-solid fa-ban"></i> Remove API
+                        </button>
+                    </td>
+
+                    <td style="padding:12px;">
+                        <button class="btn" style="background:#065f46; font-size:12px;"
+                            data-bs-toggle="modal" data-bs-target="#licenceCreateApiModal{{ project.id }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Create
                         </button>
                     </td>
 
@@ -408,6 +416,70 @@
 </div>
 
 
+<!-- Licence Create API Modal -->
+<div class="modal fade" id="licenceCreateApiModal{{ project.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="background:#1e293b; color:white;">
+      <div class="modal-header" style="border-bottom:1px solid #334155;">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Licence Create API - {{ project.project_name }}
+        </h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+          <strong style="color:#10b981;">Create Endpoint (POST):</strong>
+          <code id="licence-create-endpoint-{{ project.id }}" style="color:#60a5fa; font-size:14px;">
+            {{ base_url }}{% url 'auto_licence:api_licence_create' project.api_endpoint %}
+          </code>
+          <button class="btn btn-sm" style="background:#065f46; margin-left:10px;"
+              onclick="copyText('licence-create-endpoint-{{ project.id }}')">
+            <i class="fa-solid fa-copy"></i> Copy
+          </button>
+          <button class="btn btn-sm" style="background:#1f2937; margin-left:10px;"
+              onclick="tryLicenceCreate('{{ project.id }}')">
+            <i class="fa-solid fa-play"></i> Try Create
+          </button>
+        </div>
+
+        <h6 style="color:#f59e0b; margin-bottom:10px;">Request Body (JSON):</h6>
+        <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">
+          <pre style="color:#e5e7eb; margin:0; font-size:13px;">{
+  "corporate": {
+    "name": "Corporate Name",
+    "place": "Optional place"
+  },
+  "company": {
+    "name": "Company Name",
+    "place": "Optional place",
+    "email": "company@example.com",
+    "contact_no": "Optional",
+    "country": "India"
+  }
+}</pre>
+        </div>
+
+        <h6 style="color:#10b981; margin-bottom:10px;">Automatic Defaults:</h6>
+        <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px; font-size:13px; color:#cbd5e1;">
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Branch &rarr; project branch ({{ project.branch.name|default:'not set' }})</div>
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Client ID &rarr; automatically set to the company email</div>
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Users &rarr; 50 (no package selected)</div>
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Validity &rarr; 30 days</div>
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Billing &rarr; auto-created (Billed / Not Paid)</div>
+          <div><i class="fa-solid fa-check" style="color:#10b981;"></i> Licence Type &rarr; DEMO (once per company per project)</div>
+          <div><i class="fa-solid fa-info-circle" style="color:#38bdf8;"></i> Corporate &amp; Company are created automatically and stay hidden until a Super User converts the DEMO licence to Main.</div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #334155;">
+        <button class="btn" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Description Modal -->
 {% if project.description %}
 <div class="modal fade" id="descModal{{ project.id }}" tabindex="-1">
@@ -643,6 +715,65 @@ html += `</table>`;
             alert(`[${action.toUpperCase()}] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
         } catch (err) {
             alert(action.toUpperCase() + ' failed: ' + err);
+        }
+    }
+
+    // Try Licence Create Function
+    async function tryLicenceCreate(projectId) {
+        const el = document.getElementById('licence-create-endpoint-' + projectId);
+        if (!el) { alert('Endpoint not found: licence-create-endpoint-' + projectId); return; }
+        const endpoint = el.innerText.trim();
+
+        const corporateName = prompt('Corporate (Store) name:', '');
+        if (corporateName === null) return;
+        if (corporateName.trim() === '') { alert('corporate name cannot be empty'); return; }
+
+        const companyName = prompt('Company (Shop) name:', '');
+        if (companyName === null) return;
+        if (companyName.trim() === '') { alert('company name cannot be empty'); return; }
+
+        const companyEmail = prompt('Company email (auto becomes Client ID):', '');
+        if (companyEmail === null) return;
+        if (companyEmail.trim() === '') { alert('company email is required (client_id is set from it)'); return; }
+
+        const companyPlace = prompt('Company place (optional):', '') || '';
+const companyCountry = prompt('Company country (default India):', 'India') || 'India';
+
+        const payload = {
+            corporate: { name: corporateName.trim(), place: '' },
+            company: {
+                name: companyName.trim(),
+                place: companyPlace.trim(),
+                email: companyEmail.trim(),
+                contact_no: '',
+                country: companyCountry.trim()
+            }
+        };
+        const csrftoken = getCookie('csrftoken');
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || ''
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let bodyText;
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const json = await res.json();
+                bodyText = JSON.stringify(json, null, 2);
+            } else {
+                bodyText = await res.text();
+            }
+
+            alert(`[LICENCE CREATE] Status: ` + res.status + '\n\n' + bodyText.slice(0, 2000));
+        } catch (err) {
+            alert('Licence Create failed: ' + err);
         }
     }
 

@@ -267,7 +267,7 @@ def get_licenses_by_branch(request, branch_id):
             return JsonResponse([], safe=False)
     licenses = MobileControl.objects.filter(
         shop__branch_id=branch_id
-    ).select_related('shop', 'project').values(
+    ).exclude(licence_type='demo').select_related('shop', 'project').values(
         "id", "customer_name", "license_key", "project__project_name", "project__app_type", "shop__place"
     )
     data = [
@@ -286,11 +286,11 @@ def get_corporates_by_branch(request, branch_id):
         # Verify the requested branch is in the user's allowed list
         if not Branch.objects.filter(id=branch_id, name__in=user_branch_names).exists():
             return JsonResponse([], safe=False)
-    stores = Store.objects.filter(branch_id=branch_id).values("id", "name")
+    stores = Store.objects.filter(branch_id=branch_id).exclude(is_demo=True).values("id", "name")
     return JsonResponse(list(stores), safe=False)
 
 def get_shops_by_corporate(request, corporate_id):
     """Return Shops (Companies) for a given Store (Corporate)."""
     # Note: We return 'name' because the frontend will use the name as value
-    shops = Shop.objects.filter(store_id=corporate_id).values("id", "name")
+    shops = Shop.objects.filter(store_id=corporate_id).exclude(is_demo=True).values("id", "name")
     return JsonResponse(list(shops), safe=False)
