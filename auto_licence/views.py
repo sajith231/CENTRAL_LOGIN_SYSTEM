@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from MobileApp.models import MobileProject, MobileControl, MobileBillingHistory
+from ModuleAndPackage.models import Package
 from StoreShop.models import Store, Shop
 from branch.models import Branch, CURRENCY_CODES
 
@@ -33,14 +34,16 @@ def api_licence_create(request, endpoint):
             "contact_no": "Optional",
             "country": "India",
             "currency_code": "Optional"
-        }
+        },
+        "package": "Package Name"    // optional — must match a Package name EXACTLY (spelling & spaces)
     }
 
     Defaults applied automatically:
         - client_id   = company email
-        - users       = 50
-        - validity    = 30 days
-        - package     = None (no package selected)
+        - users       = 50 (or package.users_count when a valid package is selected)
+        - validity    = ALWAYS 30 days for the first licence & first billing (extra days are
+                        added manually later via the Billing section; package.days_limit is NOT used)
+        - package     = optional; if provided it must exist (exact name match), else the request fails
         - billing     = auto-created (Billed / Not Paid)
         - type        = MAIN (Corporate & Company appear immediately)
     """
@@ -108,6 +111,35 @@ def api_licence_create(request, endpoint):
             "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
         }, status=409)
 
+    # ---------------- PACKAGE (optional, exact name match) ----------------
+    package = None
+    package_name = str(payload.get("package") or "").strip()
+    if package_name:
+        package = Package.objects.filter(
+            project=project, package_name__iexact=package_name
+        ).first()
+        if package is None:
+            available = list(
+                Package.objects.filter(project=project)
+                .values_list("package_name", flat=True)
+                .order_by("package_name")
+            )
+            available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
+            return JsonResponse({
+                "success": False,
+                "error": (
+                    f"Package '{package_name}' not found for project '{project.project_name}'. "
+                    "Package name must match exactly (spelling & spaces). "
+                    f"Available packages: {available_msg}"
+                ),
+            }, status=400)
+
+    # User count comes automatically from the package when it enforces one.
+    # Validity is ALWAYS 30 days for the first licence & first billing
+    # (package.days_limit is not used here; extra days are added manually via Billing).
+    users_count = package.users_count if package and package.users_count and package.users_count > 0 else DEFAULT_USERS
+    expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
+
     # ---------------- CREATE CORPORATE (Store) ----------------
     store = Store.objects.create(
         name=corporate_name,
@@ -136,17 +168,15 @@ def api_licence_create(request, endpoint):
     )
 
     # ---------------- CREATE MAIN LICENCE (MobileControl) ----------------
-    expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
-
     control = MobileControl.objects.create(
         project=project,
         store=store,
         shop=shop,
         customer_name=company_name,
         client_id=shop.client_id,
-        login_limit=DEFAULT_USERS,
+        login_limit=users_count,
         licence_type="new",
-        package=None,
+        package=package,
         active_custom_package=None,
         branch=branch,
         status=True,
@@ -157,14 +187,14 @@ def api_licence_create(request, endpoint):
     # ---------------- AUTO BILLING ----------------
     MobileBillingHistory.objects.create(
         control=control,
-        package=None,
+        package=package,
         custom_package=None,
         extended_days=DEFAULT_VALIDITY_DAYS,
-        extended_login_limit=DEFAULT_USERS,
+        extended_login_limit=users_count,
         old_expiry_date=None,
         new_expiry_date=control.expiry_date,
         old_login_limit=0,
-        new_login_limit=DEFAULT_USERS,
+        new_login_limit=users_count,
         bill_status=True,
         payment_status="Not Paid",
         remark="Main licence auto-created via Licence Create API",
@@ -178,6 +208,8 @@ def api_licence_create(request, endpoint):
         "customer_name": control.customer_name,
         "client_id": control.client_id,
         "license_key": control.license_key,
+        "package": control.package.package_name if control.package else None,
+        "users_count": users_count,
         "login_limit": control.login_limit,
         "expiry_date": control.expiry_date.isoformat(),
         "branch": branch.name,
@@ -194,8 +226,9 @@ def api_licence_create(request, endpoint):
         "billing": {
             "bill_status": True,
             "payment_status": "Not Paid",
+            "package": control.package.package_name if control.package else None,
             "extended_days": DEFAULT_VALIDITY_DAYS,
             "new_expiry_date": control.expiry_date.isoformat(),
-            "new_login_limit": DEFAULT_USERS,
+            "new_login_limit": users_count,
         },
     }, status=201)
