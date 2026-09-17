@@ -950,8 +950,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import MobileControl, MobileBillingHistory, CustomPackage, CustomPackageModule
 
+def _is_licence_create_api(control):
+    """True for MAIN licences created via the Licence Create API."""
+    return bool(
+        (control.shop and control.shop.created_by_name == "Licence Create API") or
+        (control.store and control.store.created_by_name == "Licence Create API")
+    )
+
+
 def mobile_control_billing(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
+    is_api_licence = _is_licence_create_api(control)
 
     # ── AUTO-CUT CHECK ──
     branch = getattr(getattr(control, 'shop', None), 'branch', None)
@@ -967,11 +976,15 @@ def mobile_control_billing(request, pk):
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date
     
-    # ── ALLOW RENEW ONLY 3 DAYS BEFORE EXPIRY ──
+    # ── ALLOW RENEW ──
+    # Licence Create API licences: renew stays enabled for the WHOLE validity period.
+    # All other licences: renew only within the last 3 days before expiry.
     now = timezone.now()
     can_renew = False
     if expiry_date:
-        if now >= expiry_date - timedelta(days=3):
+        if is_api_licence:
+            can_renew = True
+        elif now >= expiry_date - timedelta(days=3):
             can_renew = True
 
     # Allow creating a new bill even if the latest record is unbilled.
@@ -1036,6 +1049,11 @@ def mobile_control_billing(request, pk):
             if not control.status:
                 control.status = True
 
+            # Licence Create API licences: users are driven by the package on renewal
+            if is_api_licence and control.package and control.package.users_count:
+                control.login_limit = control.package.users_count
+                extend_login = 0
+
         elif operation_type == 'validity':
             # Only Django superuser or Super User level can update validity
             is_super = request.user.is_superuser or request.session.get('custom_user_level') == 'Super User'
@@ -1090,6 +1108,10 @@ def mobile_control_billing(request, pk):
         if extend_days != 0:
             if operation_type == 'change_package':
                 # Start fresh from today when changing package
+                new_expiry = timezone.now() + timedelta(days=extend_days)
+            elif is_api_licence and operation_type == 'renew':
+                # Licence Create API licences renew fresh from the renewal day
+                # (package days are applied from today)
                 new_expiry = timezone.now() + timedelta(days=extend_days)
             elif control.expiry_date:
                 # Add to existing expiry for validity extension
@@ -1186,6 +1208,7 @@ def mobile_control_billing(request, pk):
         "has_unbilled_history": has_unbilled_history,
         "show_custom_package": control.project.customized_package,
         "can_renew": can_renew,
+        "is_api_licence": is_api_licence,
     })
 
 
