@@ -32,18 +32,18 @@ def api_licence_create(request, endpoint):
             "place": "Optional place",
             "email": "company@domain.com",     // required — client_id is set from this
             "contact_no": "Optional",
-            "country": "India",
-            "currency_code": "Optional"
+            "country": "India"
         },
-        "package": "Package Name"    // optional — must match a Package name EXACTLY (spelling & spaces)
+        "package": "Package Name"    // REQUIRED — must match a Package name EXACTLY (spelling & spaces)
     }
 
     Defaults applied automatically:
         - client_id   = company email
-        - users       = 50 (or package.users_count when a valid package is selected)
+        - users       = package.users_count (falls back to 50 if the package has no user limit)
+        - currency    = auto from country (no currency_code field accepted)
         - validity    = ALWAYS 30 days for the first licence & first billing (extra days are
                         added manually later via the Billing section; package.days_limit is NOT used)
-        - package     = optional; if provided it must exist (exact name match), else the request fails
+        - package     = REQUIRED; if the exact name doesn't match, the request fails
         - billing     = auto-created (Billed / Not Paid)
         - type        = MAIN (Corporate & Company appear immediately)
     """
@@ -72,7 +72,6 @@ def api_licence_create(request, endpoint):
     company_email = str(company.get("email") or "").strip()
     company_contact = str(company.get("contact_no") or "").strip()
     country = str(company.get("country") or "India").strip()
-    currency_code = str(company.get("currency_code") or "").strip()
     is_active = bool(company.get("is_active", True))
 
     if not corporate_name:
@@ -86,8 +85,8 @@ def api_licence_create(request, endpoint):
     if len(company_email) > 50:
         return JsonResponse({"success": False, "error": "company.email is too long to be used as client_id (max 50 chars)"}, status=400)
 
-    if not currency_code:
-        currency_code = CURRENCY_CODES.get(country, "INR")
+    # currency is always auto-derived from the country (no currency_code field accepted)
+    currency_code = CURRENCY_CODES.get(country, "INR")
 
     # ---------------- BRANCH (always "IMC Developments") ----------------
     branch = Branch.objects.filter(name__iexact="IMC Developments").first()
@@ -111,28 +110,32 @@ def api_licence_create(request, endpoint):
             "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
         }, status=409)
 
-    # ---------------- PACKAGE (optional, exact name match) ----------------
-    package = None
+    # ---------------- PACKAGE (REQUIRED, exact name match) ----------------
     package_name = str(payload.get("package") or "").strip()
-    if package_name:
-        package = Package.objects.filter(
-            project=project, package_name__iexact=package_name
-        ).first()
-        if package is None:
-            available = list(
-                Package.objects.filter(project=project)
-                .values_list("package_name", flat=True)
-                .order_by("package_name")
-            )
-            available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
-            return JsonResponse({
-                "success": False,
-                "error": (
-                    f"Package '{package_name}' not found for project '{project.project_name}'. "
-                    "Package name must match exactly (spelling & spaces). "
-                    f"Available packages: {available_msg}"
-                ),
-            }, status=400)
+    if not package_name:
+        return JsonResponse({
+            "success": False,
+            "error": "package is required. Provide the exact Package name (spelling & spaces).",
+        }, status=400)
+
+    package = Package.objects.filter(
+        project=project, package_name__iexact=package_name
+    ).first()
+    if package is None:
+        available = list(
+            Package.objects.filter(project=project)
+            .values_list("package_name", flat=True)
+            .order_by("package_name")
+        )
+        available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
+        return JsonResponse({
+            "success": False,
+            "error": (
+                f"Package '{package_name}' not found for project '{project.project_name}'. "
+                "Package name must match exactly (spelling & spaces). "
+                f"Available packages: {available_msg}"
+            ),
+        }, status=400)
 
     # User count comes automatically from the package when it enforces one.
     # Validity is ALWAYS 30 days for the first licence & first billing
