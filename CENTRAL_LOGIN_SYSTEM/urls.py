@@ -30,6 +30,7 @@ urlpatterns = [
     path('user-control/', include('user_controll.urls')),
     path("activity-log/", include("activity_log.urls")),
     path("upcoming-expiry/", include("upcoming_expiry.urls")),
+    path("unbilled-report/", include("unbilled_report.urls")),
     path("client-id-list/", include("client_id_list.urls")),
     path('corporate-clientid/', include('coporate_and_clientid.urls')),
     path("mobile-demo/", include("mobile_demo_licencing.urls")),

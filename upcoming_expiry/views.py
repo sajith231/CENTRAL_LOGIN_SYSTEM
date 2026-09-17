@@ -4,6 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render
 from django.utils import timezone
 
+from branch.models import Branch
 from MobileApp.models import MobileControl
 
 
@@ -14,6 +15,8 @@ def upcoming_expiry_view(request):
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()
+
+    branch = request.GET.get("branch", "").strip()
 
     # Upcoming expiries inside the next 30 days (NULL expiry dates are excluded by __gte)
     # Only New and Transfer licences — no Developer licences
@@ -28,6 +31,9 @@ def upcoming_expiry_view(request):
         .order_by("expiry_date")
     )
 
+    if branch:
+        controls = controls.filter(shop__branch_id=branch)
+
     for control in controls:
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
@@ -35,7 +41,11 @@ def upcoming_expiry_view(request):
         control.remaining_days = delta.days
         control.is_expired = delta.total_seconds() <= 0
 
+    branches = Branch.objects.all().order_by("name")
+
     return render(request, "upcoming_expiry.html", {
         "controls": controls,
         "total_count": controls.count(),
+        "branches": branches,
+        "selected_branch": branch,
     })

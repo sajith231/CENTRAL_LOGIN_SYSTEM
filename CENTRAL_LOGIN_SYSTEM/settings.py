@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "activity_log",
     "upcoming_expiry",
     "auto_licence",
+    "unbilled_report",
 ]
 
 # -------------------- Uploads -------------------
@@ -145,6 +146,14 @@ DATABASES = {
 
 
 LOGIN_URL = "/login/"
+
+# -------------------- Session --------------------
+# Keep sessions alive locally and in production: the session does not die on
+# browser close, stays valid for 7 days, and its expiry refreshes on every
+# request so an active user is never logged out mid-work.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60   # 7 days
+SESSION_SAVE_EVERY_REQUEST = True       # refresh expiry on each request
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

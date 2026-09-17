@@ -548,7 +548,19 @@
           </li>
           {% endif %}
 
-          {# 8) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {# 8) UNBILLED REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'unbilled_report' in am %}
+          <li>
+            <a href="{% url 'unbilled_report:unbilled_report' %}"
+               class="{% block active_unbilled_report %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-file-invoice-dollar" style="width:20px; text-align:center; font-size:16px; color:rgba(255,255,255,.7);"></i>
+              <span>Unbilled Report</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {# 9) UPCOMING EXPIRY – MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
@@ -605,6 +617,17 @@
       </div>
 
       <main>
+        {% if messages %}
+        <div style="margin-bottom:16px;">
+          {% for message in messages %}
+          <div style="padding:12px 14px; border-radius:10px; margin-bottom:8px; font-size:14px;
+                      {% if 'success' in message.tags %}background:#052e16; color:#86efac; border:1px solid #166534;
+                      {% else %}background:#450a0a; color:#fecaca; border:1px solid #991b1b;{% endif %}">
+            {{ message }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}
         <div class="card">
           <h1 style="margin:0 0 8px 0;">Welcome</h1>

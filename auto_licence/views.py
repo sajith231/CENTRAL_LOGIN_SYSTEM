@@ -1,13 +1,11 @@
 import json
 from datetime import timedelta
 
-from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_http_methods
 
 from MobileApp.models import MobileProject, MobileControl, MobileBillingHistory
 from StoreShop.models import Store, Shop
@@ -17,19 +15,11 @@ DEFAULT_USERS = 50
 DEFAULT_VALIDITY_DAYS = 30
 
 
-def _is_super_level_user(request):
-    if request.user.is_authenticated and request.user.is_superuser:
-        return True
-    if request.session.get("custom_user_level") == "Super User":
-        return True
-    return False
-
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_licence_create(request, endpoint):
     """
-    POST API: Creates a DEMO licence along with its Corporate (Store) and
+    POST API: Creates a MAIN licence along with its Corporate (Store) and
     Company (Shop) automatically — all in a single request.
 
     Body:
@@ -52,8 +42,7 @@ def api_licence_create(request, endpoint):
         - validity    = 30 days
         - package     = None (no package selected)
         - billing     = auto-created (Billed / Not Paid)
-        - type        = DEMO
-        - once per company per project (duplicates rejected)
+        - type        = MAIN (Corporate & Company appear immediately)
     """
     try:
         payload = json.loads(request.body)
@@ -124,7 +113,7 @@ def api_licence_create(request, endpoint):
         name=corporate_name,
         branch=branch,
         place=corporate_place,
-        is_demo=True,
+        is_demo=False,
         created_by=request.user if request.user.is_authenticated else None,
         created_by_name="Licence Create API",
     )
@@ -141,12 +130,12 @@ def api_licence_create(request, endpoint):
         currency_code=currency_code,
         client_id=company_email,
         is_active=is_active,
-        is_demo=True,
+        is_demo=False,
         created_by=request.user if request.user.is_authenticated else None,
         created_by_name="Licence Create API",
     )
 
-    # ---------------- CREATE DEMO LICENCE (MobileControl) ----------------
+    # ---------------- CREATE MAIN LICENCE (MobileControl) ----------------
     expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
 
     control = MobileControl.objects.create(
@@ -156,7 +145,7 @@ def api_licence_create(request, endpoint):
         customer_name=company_name,
         client_id=shop.client_id,
         login_limit=DEFAULT_USERS,
-        licence_type="demo",
+        licence_type="new",
         package=None,
         active_custom_package=None,
         branch=branch,
@@ -178,13 +167,13 @@ def api_licence_create(request, endpoint):
         new_login_limit=DEFAULT_USERS,
         bill_status=True,
         payment_status="Not Paid",
-        remark="Demo licence auto-created via Licence Create API",
+        remark="Main licence auto-created via Licence Create API",
         added_by="Licence Create API",
     )
 
     return JsonResponse({
         "success": True,
-        "message": "Demo licence created successfully",
+        "message": "Main licence created successfully",
         "licence_type": control.licence_type,
         "customer_name": control.customer_name,
         "client_id": control.client_id,
@@ -210,33 +199,3 @@ def api_licence_create(request, endpoint):
             "new_login_limit": DEFAULT_USERS,
         },
     }, status=201)
-
-
-@require_POST
-def convert_demo_to_main(request, pk):
-    """Super User only: converts a DEMO licence to a Main licence.
-    The linked Corporate (Store) and Company (Shop) become visible in the
-    Corporate / Company tables after conversion."""
-    if not _is_super_level_user(request):
-        messages.error(request, "Permission denied. Only Super Users can convert a Demo licence to Main.")
-        return redirect("MobileApp:mobile_control")
-
-    control = get_object_or_404(MobileControl, pk=pk)
-
-    if control.licence_type != "demo":
-        messages.error(request, f"Licence '{control.license_key}' is not a Demo licence.")
-        return redirect("MobileApp:mobile_control")
-
-    control.licence_type = "new"
-    control.save()
-
-    if control.shop and control.shop.is_demo:
-        control.shop.is_demo = False
-        control.shop.save()
-
-    if control.store and control.store.is_demo:
-        control.store.is_demo = False
-        control.store.save()
-
-    messages.success(request, f"Demo licence '{control.license_key}' converted to Main licence. Company now appears in Corporate/Company tables.")
-    return redirect("MobileApp:mobile_control")

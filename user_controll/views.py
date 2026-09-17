@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from app1.models import Users
 
 
@@ -76,6 +75,13 @@ def get_all_menus():
                 {"id": "upcoming_expiry", "name": "Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
             ],
         },
+        {
+            "name": "Reports",
+            "icon": "fa-solid fa-chart-simple",
+            "submenus": [
+                {"id": "unbilled_report", "name": "Unbilled Report", "icon": "fa-solid fa-file-invoice-dollar"},
+            ],
+        },
     ]
 
 
@@ -102,10 +108,15 @@ def user_menu_user_list(request):
 
 # ---------- 2) CONFIGURE ONE USER MENUS ----------
 
-@login_required
 def configure_user_menu(request, user_id):
     from MobileApp.models import MobileProject
-    
+
+    # Same guard as the list page: allow a Django superuser OR any logged custom user,
+    # so a logged-in custom user is NOT treated as "logged out" / sent back to login.
+    if not is_superuser_or_logged(request):
+        messages.error(request, "Please log in to access this page.")
+        return redirect("login")
+
     # only Django superuser can configure
     if not request.user.is_superuser:
         messages.error(request, "Only superuser can configure user menus.")

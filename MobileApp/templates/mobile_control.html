@@ -469,14 +469,6 @@
                     {% else %}
                     <button class="btn" disabled style="background:#6b7280; color:white;">Delete</button>
                     {% endif %}
-
-                    {% if c.licence_type == 'demo' and is_super %}
-                    <form method="POST" action="{% url 'auto_licence:convert_demo_to_main' c.id %}" style="display:inline;"
-                        onsubmit="return confirm('Convert this DEMO licence to a MAIN licence? The Company/Corporate will then appear in their tables.');">
-                        {% csrf_token %}
-                        <button class="btn" style="background:#f59e0b; color:black;">Convert to Main</button>
-                    </form>
-                    {% endif %}
                 </td>
 
 

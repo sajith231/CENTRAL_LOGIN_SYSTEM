@@ -63,6 +63,8 @@ class MenuPermissionMiddleware:
         "user_controll:configure_user_menu": "user_menu_control",
         # Upcoming Expiry
         "upcoming_expiry:upcoming_expiry": "upcoming_expiry",
+        # Unbilled Report
+        "unbilled_report:unbilled_report": "unbilled_report",
         # Billing (Upcoming Expiry Billing button)
         "MobileApp:mobile_control_billing": "mobile_billing",
     }
