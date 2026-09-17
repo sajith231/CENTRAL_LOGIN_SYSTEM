@@ -347,11 +347,16 @@ def delete_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     name = str(control)
 
-    # DEMO licences (created via the Licence Create API) get fully removed:
+    # DEMO licences get fully removed:
     # the linked Shop (Company) and Store (Corporate) are deleted too,
     # so the same email / client_id can be reused. MAIN licences keep the old behaviour.
     demo_shop = control.shop if control.licence_type == "demo" and control.shop and control.shop.is_demo else None
     demo_store = control.store if control.licence_type == "demo" and control.store and control.store.is_demo else None
+
+    # Licences created via the Licence Create API (MAIN type) also get fully removed:
+    # their linked Shop (Company) and Store (Corporate) are deleted together.
+    api_shop = control.shop if control.shop and control.shop.created_by_name == "Licence Create API" else None
+    api_store = control.store if control.store and control.store.created_by_name == "Licence Create API" else None
 
     control.delete()
 
@@ -359,6 +364,10 @@ def delete_mobile_control(request, pk):
         demo_shop.delete()
     if demo_store:
         demo_store.delete()
+    if api_shop:
+        api_shop.delete()
+    if api_store:
+        api_store.delete()
 
     messages.success(request, f'Mobile control "{name}" deleted.')
     return redirect('MobileApp:mobile_control')
