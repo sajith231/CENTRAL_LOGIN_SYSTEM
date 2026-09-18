@@ -73,6 +73,7 @@ def get_all_menus():
             "icon": "fa-solid fa-hourglass-half",
             "submenus": [
                 {"id": "upcoming_expiry", "name": "Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
+                {"id": "expired_key_report", "name": "Expired Key Report", "icon": "fa-solid fa-key"},
             ],
         },
         {

@@ -27,7 +27,7 @@ def is_super_level_user(request):
 
 def mobile_home(request):
     """Display list of all mobile projects"""
-    projects = MobileProject.objects.all()
+    projects = MobileProject.objects.prefetch_related("package_set")
 
     # 🔑 APP TYPE FILTERING
     if not is_super_level_user(request):

@@ -70,14 +70,6 @@
             <option value="demo">Demo Licence</option>
         </select>
 
-        <!-- Demo / Main Filter -->
-        <select id="licenceKindFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
-               background:#0f172a; color:white;">
-            <option value="">All (Demo + Main)</option>
-            <option value="demo">DEMO</option>
-            <option value="main">MAIN LICENSE</option>
-        </select>
-
         <!-- App Type Filter -->
         <select id="appTypeFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white;">
@@ -1040,7 +1032,6 @@
             project: document.getElementById("projectFilter").value,
             branch: document.getElementById("branchFilter").value,
             type: document.getElementById("typeFilter").value,
-            licenceKind: document.getElementById("licenceKindFilter").value,
             appType: document.getElementById("appTypeFilter").value,
             billStatus: document.getElementById("billStatusFilter").value,
             payment: document.getElementById("paymentFilter").value,
@@ -1063,7 +1054,6 @@
                 document.getElementById("projectFilter").value = state.project || "";
                 document.getElementById("branchFilter").value = state.branch || "";
                 document.getElementById("typeFilter").value = state.type || "";
-                document.getElementById("licenceKindFilter").value = state.licenceKind || "";
                 document.getElementById("appTypeFilter").value = state.appType || "";
                 document.getElementById("billStatusFilter").value = state.billStatus || "";
                 document.getElementById("paymentFilter").value = state.payment || "";
@@ -1089,7 +1079,6 @@
         const projectFilter = document.getElementById("projectFilter").value;
         const branchFilter = document.getElementById("branchFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
-        const licenceKindFilter = document.getElementById("licenceKindFilter").value;
         const appTypeFilter = document.getElementById("appTypeFilter").value;
         const billStatusFilter = document.getElementById("billStatusFilter").value;
         const paymentFilter = document.getElementById("paymentFilter").value;
@@ -1115,20 +1104,12 @@
             const afterFrom = !dateFrom || created >= dateFrom;
             const beforeTo = !dateTo || created <= dateTo;
 
-            // DEMO / MAIN licence kind filter
-            const isDemoRow = type === 'demo';
-            const matchesLicenceKind =
-                licenceKindFilter === "" ||
-                (licenceKindFilter === "demo" && isDemoRow) ||
-                (licenceKindFilter === "main" && !isDemoRow);
-
             return clientId.includes(clientFilter)
                 && companyName.includes(companyFilter)
                 && (statusFilter === "" || status === statusFilter)
                 && (projectFilter === "" || project === projectFilter)
                 && (branchFilter === "" || branch === branchFilter)
                 && (typeFilter === "" || type === typeFilter)
-                && matchesLicenceKind
                 && (appTypeFilter === "" || appType === appTypeFilter)
                 && (billStatusFilter === "" || billStatus === billStatusFilter)
                 && (paymentFilter === "" || payment === paymentFilter)
@@ -1185,7 +1166,6 @@
     document.getElementById("branchFilter").addEventListener("change", applyFilters);
     document.getElementById("typeFilter").addEventListener("change", applyFilters);
     document.getElementById("appTypeFilter").addEventListener("change", applyFilters);
-    document.getElementById("licenceKindFilter").addEventListener("change", applyFilters);
     document.getElementById("billStatusFilter").addEventListener("change", applyFilters);
     document.getElementById("dateFrom").addEventListener("change", applyFilters);
     document.getElementById("dateTo").addEventListener("change", applyFilters);

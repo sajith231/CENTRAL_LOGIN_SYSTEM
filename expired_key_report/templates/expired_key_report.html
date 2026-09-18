@@ -1,53 +1,53 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Upcoming Expiry{% endblock %}
-{% block header_title %}<strong>Upcoming Expiry</strong><span class="muted"> / licences expiring soon</span>{% endblock %}
-{% block active_upcoming_expiry %}active{% endblock %}
+{% block title %}Expired Key Report{% endblock %}
+{% block header_title %}<strong>Expired Key Report</strong><span class="muted"> / expired licences</span>{% endblock %}
+{% block active_expired_key_report %}active{% endblock %}
 
 {% block content %}
   <style>
-    .ue-table {
+    .ek-table {
       font-family: inherit;
       font-size: 16px;
     }
 
-    .ue-table thead th {
+    .ek-table thead th {
       font-size: 13px;
       font-weight: 600;
       color: white;
       letter-spacing: 0.2px;
-      border-bottom: 2px solid #3b82f6;
+      border-bottom: 2px solid #f87171;
     }
 
-    .ue-table tbody td {
+    .ek-table tbody td {
       font-size: 15px;
       color: #e2e8f0;
       vertical-align: middle;
     }
 
-    .ue-table tbody tr {
+    .ek-table tbody tr {
       background: #0f172a;
     }
 
-    .ue-table tbody tr td:first-child {
+    .ek-table tbody tr td:first-child {
       border-top-left-radius: 8px;
       border-bottom-left-radius: 8px;
     }
 
-    .ue-table tbody tr td:last-child {
+    .ek-table tbody tr td:last-child {
       border-top-right-radius: 8px;
       border-bottom-right-radius: 8px;
     }
 
-    .ue-customer-name {
+    .ek-customer-name {
       color: white;
       font-weight: 600;
       display: block;
       font-size: 16px;
     }
 
-    .ue-customer-id {
+    .ek-customer-id {
       color: #9ca3af;
       font-size: 14px;
       display: block;
@@ -56,14 +56,22 @@
       white-space: nowrap;
     }
 
-    .ue-sub-text {
+    .ek-license-key {
+      color: #64748b;
+      font-size: 13px;
+      display: block;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .ek-sub-text {
       color: #64748b;
       font-size: 12px;
       display: block;
       margin-top: 2px;
     }
 
-    .ue-badge {
+    .ek-badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -74,14 +82,14 @@
       white-space: nowrap;
     }
 
-    .ue-badge-project {
+    .ek-badge-project {
       background: rgba(139, 92, 246, 0.15);
       color: #a78bfa;
       border: 1px solid rgba(139, 92, 246, 0.3);
       font-size: 12px;
     }
 
-    .ue-pkg {
+    .ek-pkg {
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -90,7 +98,7 @@
       font-weight: 600;
     }
 
-    .ue-pkg-custom {
+    .ek-pkg-custom {
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -99,40 +107,30 @@
       font-weight: 600;
     }
 
-    .ue-day-danger {
+    .ek-days-past {
       color: #f87171;
       font-weight: 700;
     }
 
-    .ue-day-warn {
-      color: #fbbf24;
-      font-weight: 700;
-    }
-
-    .ue-day-ok {
-      color: #22c55e;
-      font-weight: 700;
-    }
-
-    .ue-badge-active {
+    .ek-badge-active {
       background: rgba(16, 185, 129, 0.15);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    .ue-badge-inactive {
+    .ek-badge-inactive {
       background: rgba(239, 68, 68, 0.15);
       color: #f87171;
       border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
-    .ue-badge-billed {
+    .ek-badge-billed {
       background: rgba(16, 185, 129, 0.15);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    .ue-badge-unbilled {
+    .ek-badge-unbilled {
       background: rgba(239, 68, 68, 0.15);
       color: #f87171;
       border: 1px solid rgba(239, 68, 68, 0.3);
@@ -141,8 +139,8 @@
 
   <div class="card" style="padding:0; margin-bottom:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06);">
-      <h2 style="margin:0; font-size:24px; font-weight:600; color:white;"><i class="fa-solid fa-hourglass-half" style="color:#fbbf24;"></i> Upcoming Expiry</h2>
-      <span class="muted" style="font-size:13px;">{{ total_count }} licence(s) expiring within 30 days</span>
+      <h2 style="margin:0; font-size:24px; font-weight:600; color:white;"><i class="fa-solid fa-key" style="color:#f87171;"></i> Expired Key Report</h2>
+      <span class="muted" style="font-size:13px;">{{ total_count }} expired licence(s)</span>
     </div>
 
     <form method="get" style="display:flex; align-items:center; gap:10px; padding:14px 20px 0;">
@@ -156,12 +154,12 @@
         <option value="{{ b.id }}" {% if selected_branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}{% if b.place %} - {{ b.place }}{% endif %}</option>
         {% endfor %}
       </select>
-      <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
+      <a href="{% url 'expired_key_report:expired_key_report' %}"
          style="font-size:13px; color:#94a3b8; text-decoration:none;{% if not selected_branch %} display:none;{% endif %}">✕ Clear</a>
     </form>
 
     <div style="padding:14px 20px 20px; overflow:auto;">
-      <table class="ue-table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+      <table class="ek-table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
         <thead>
           <tr>
             <th style="text-align:left; padding:10px;">Customer</th>
@@ -172,7 +170,7 @@
             <th style="text-align:left; padding:10px;">Expiry</th>
             <th style="text-align:center; padding:10px;">Login Limit</th>
             <th style="text-align:center; padding:10px;">Reg Limit</th>
-            <th style="text-align:center; padding:10px;">Day Left</th>
+            <th style="text-align:center; padding:10px;">Days Past</th>
             <th style="text-align:center; padding:10px;">Status</th>
             <th style="text-align:center; padding:10px;">Bill Status</th>
             {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
@@ -184,8 +182,9 @@
           {% for c in controls %}
             <tr>
               <td style="padding:10px; white-space:nowrap;">
-                <span class="ue-customer-name">{{ c.customer_name }}</span>
-                <span class="ue-customer-id">{{ c.client_id|default:"-" }}</span>
+                <span class="ek-customer-name">{{ c.customer_name }}</span>
+                <span class="ek-customer-id">{{ c.client_id|default:"-" }}</span>
+                <span class="ek-license-key"><i class="fa-solid fa-key" style="font-size:11px;"></i> {{ c.license_key|default:"-" }}</span>
               </td>
               <td style="padding:10px;">
                 <span style="color:#e2e8f0;">{{ c.shop.branch.place|default:"-" }}</span>
@@ -197,19 +196,19 @@
                 </span>
               </td>
               <td style="padding:10px; white-space:nowrap;">
-                <span class="ue-badge ue-badge-project">
+                <span class="ek-badge ek-badge-project">
                   <i class="fa-solid fa-mobile-screen-button"></i>
                   {{ c.project.project_name|default:"—" }}
                 </span>
               </td>
               <td style="padding:10px; white-space:nowrap;">
                 {% if c.active_custom_package %}
-                  <span class="ue-pkg-custom">
+                  <span class="ek-pkg-custom">
                     <i class="fa-solid fa-wand-magic-sparkles" style="font-size:11px;"></i>
                     {{ c.active_custom_package.package_name }}
                   </span>
                 {% elif c.package %}
-                  <span class="ue-pkg">
+                  <span class="ek-pkg">
                     <i class="fa-solid fa-box" style="font-size:11px;"></i>
                     {{ c.package.package_name }}
                   </span>
@@ -218,34 +217,28 @@
                 {% endif %}
               </td>
               <td style="padding:10px; white-space:nowrap;">
-                <strong style="color:white; font-size:15px; display:block;">{{ c.expiry_date|date:"d M Y" }}</strong>
-                <small class="ue-sub-text">{{ c.expiry_date|date:"H:i" }}</small>
+                <strong style="color:#f87171; font-size:15px; display:block;">{{ c.expiry_date|date:"d M Y" }}</strong>
+                <small class="ek-sub-text">{{ c.expiry_date|date:"H:i" }}</small>
               </td>
               <td style="padding:10px; text-align:center; font-weight:600;">{{ c.login_limit }}</td>
               <td style="padding:10px; text-align:center; font-weight:600;">
                 {{ c.registered_count }} / {{ c.balance_count }}
               </td>
               <td style="padding:10px; text-align:center;">
-                {% if c.remaining_days <= 3 %}
-                  <span class="ue-day-danger">{{ c.remaining_days }}d</span>
-                {% elif c.remaining_days <= 10 %}
-                  <span class="ue-day-warn">{{ c.remaining_days }}d</span>
-                {% else %}
-                  <span class="ue-day-ok">{{ c.remaining_days }}d</span>
-                {% endif %}
+                <span class="ek-days-past">{{ c.days_past }}d</span>
               </td>
               <td style="padding:10px; text-align:center;">
                 {% if c.status %}
-                  <span class="ue-badge ue-badge-active"><i class="fa-solid fa-circle-check" style="font-size:11px;"></i> Active</span>
+                  <span class="ek-badge ek-badge-active"><i class="fa-solid fa-circle-check" style="font-size:11px;"></i> Active</span>
                 {% else %}
-                  <span class="ue-badge ue-badge-inactive"><i class="fa-solid fa-circle-xmark" style="font-size:11px;"></i> Inactive</span>
+                  <span class="ek-badge ek-badge-inactive"><i class="fa-solid fa-circle-xmark" style="font-size:11px;"></i> Inactive</span>
                 {% endif %}
               </td>
               <td style="padding:10px; text-align:center;">
                 {% if c.bill_status %}
-                  <span class="ue-badge ue-badge-billed"><i class="fa-solid fa-circle-check" style="font-size:11px;"></i> Billed</span>
+                  <span class="ek-badge ek-badge-billed"><i class="fa-solid fa-circle-check" style="font-size:11px;"></i> Billed</span>
                 {% else %}
-                  <span class="ue-badge ue-badge-unbilled"><i class="fa-solid fa-circle-exclamation" style="font-size:11px;"></i> Not Billed</span>
+                  <span class="ek-badge ek-badge-unbilled"><i class="fa-solid fa-circle-exclamation" style="font-size:11px;"></i> Not Billed</span>
                 {% endif %}
               </td>
               {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
@@ -259,40 +252,11 @@
             </tr>
           {% empty %}
             <tr style="background:#0f172a;">
-              <td colspan="{% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}12{% else %}11{% endif %}" style="padding:12px;">No upcoming expiring licences found.</td>
+              <td colspan="{% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}12{% else %}11{% endif %}" style="padding:12px;">No expired new or transfer licences found.</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  function copyText(btn, text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => showCopied(btn)).catch(() => fallbackCopy(btn, text));
-    } else {
-      fallbackCopy(btn, text);
-    }
-  }
-
-  function fallbackCopy(btn, text) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showCopied(btn);
-  }
-
-  function showCopied(btn) {
-    const icon = btn.querySelector('i');
-    const old = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-    setTimeout(() => { btn.innerHTML = old; }, 1500);
-  }
-</script>
 {% endblock %}

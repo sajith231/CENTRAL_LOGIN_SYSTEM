@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
 from django.utils import timezone
@@ -9,10 +7,10 @@ from MobileApp.models import MobileControl
 from app1.helpers import get_user_branch_ids
 
 
-def upcoming_expiry_view(request):
+def expired_key_report_view(request):
     allowed = request.session.get("allowed_menus") or []
-    # Superuser, or a custom user granted the 'upcoming_expiry' menu
-    if not (request.user.is_authenticated and request.user.is_superuser) and "upcoming_expiry" not in allowed:
+    # Superuser, or a custom user granted the 'expired_key_report' menu
+    if not (request.user.is_authenticated and request.user.is_superuser) and "expired_key_report" not in allowed:
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()
@@ -22,17 +20,15 @@ def upcoming_expiry_view(request):
     # Custom (non-superuser) users only see their assigned branches
     branch_ids = get_user_branch_ids(request)
 
-    # Upcoming expiries inside the next 30 days (NULL expiry dates are excluded by __gte)
-    # Only New and Transfer licences — no Developer licences
+    # Fully expired licences only — New and Transfer types only
     controls = (
         MobileControl.objects
         .filter(
-            expiry_date__gte=now,
-            expiry_date__lte=now + timedelta(days=30),
+            expiry_date__lt=now,
             licence_type__in=["new", "transfer"],
         )
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
-        .order_by("expiry_date")
+        .order_by("-expiry_date")
     )
 
     if branch_ids is not None:
@@ -44,15 +40,14 @@ def upcoming_expiry_view(request):
     for control in controls:
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
-        delta = control.expiry_date - now
-        control.remaining_days = delta.days
-        control.is_expired = delta.total_seconds() <= 0
+        delta = now - control.expiry_date
+        control.days_past = delta.days
 
     branches = Branch.objects.all().order_by("name")
     if branch_ids is not None:
         branches = branches.filter(id__in=branch_ids)
 
-    return render(request, "upcoming_expiry.html", {
+    return render(request, "expired_key_report.html", {
         "controls": controls,
         "total_count": controls.count(),
         "branches": branches,

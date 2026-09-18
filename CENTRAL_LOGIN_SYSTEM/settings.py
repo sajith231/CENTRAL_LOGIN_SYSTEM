@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "upcoming_expiry",
     "auto_licence",
     "unbilled_report",
+    "expired_key_report",
 ]
 
 # -------------------- Uploads -------------------

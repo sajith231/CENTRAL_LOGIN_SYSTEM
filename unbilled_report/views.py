@@ -4,6 +4,7 @@ from django.shortcuts import render
 
 from branch.models import Branch
 from MobileApp.models import MobileBillingHistory, MobileControl
+from app1.helpers import get_user_branch_ids
 
 
 def unbilled_report(request):
@@ -17,6 +18,9 @@ def unbilled_report(request):
         bill_status=False,
     ).order_by('-created_at').values('payment_status')[:1]
 
+    # Custom (non-superuser) users only see their assigned branches
+    branch_ids = get_user_branch_ids(request)
+
     controls = (
         MobileControl.objects
         .filter(bill_status=False, licence_type__in=['new', 'transfer'])
@@ -25,7 +29,12 @@ def unbilled_report(request):
         .order_by('created_date')
     )
 
+    if branch_ids is not None:
+        controls = controls.filter(shop__branch_id__in=branch_ids)
+
     branches = Branch.objects.all().order_by('name')
+    if branch_ids is not None:
+        branches = branches.filter(id__in=branch_ids)
 
     licence_types = [
         {'value': 'new', 'label': 'New'},

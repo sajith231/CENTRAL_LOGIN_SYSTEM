@@ -572,6 +572,18 @@
           </li>
           {% endif %}
 
+          {# 10) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'expired_key_report' in am %}
+          <li>
+            <a href="{% url 'expired_key_report:expired_key_report' %}"
+               class="{% block active_expired_key_report %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-key" style="width:20px; text-align:center; font-size:16px; color:#f87171;"></i>
+              <span>Expired Key Report</span>
+            </a>
+          </li>
+          {% endif %}
+
           {% endwith %}
         </ul>
       </div>

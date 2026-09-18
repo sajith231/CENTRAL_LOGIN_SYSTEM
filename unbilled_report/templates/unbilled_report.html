@@ -133,7 +133,7 @@
   .unbilled-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .unbilled-table thead {
@@ -177,24 +177,22 @@
     color: white;
     font-weight: 600;
     display: block;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .customer-id {
     color: #9ca3af;
-    font-size: 12px;
+    font-size: 14px;
     display: block;
     margin-top: 2px;
-    font-family: 'Courier New', monospace;
     font-weight: 700;
   }
 
   .license-key {
     color: #64748b;
-    font-size: 11px;
+    font-size: 13px;
     display: block;
     margin-top: 2px;
-    font-family: 'Courier New', monospace;
   }
 
   .badge {
@@ -203,7 +201,7 @@
     gap: 5px;
     padding: 4px 10px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -212,8 +210,7 @@
     background: rgba(139, 92, 246, 0.15);
     color: #a78bfa;
     border: 1px solid rgba(139, 92, 246, 0.3);
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
+    font-size: 12px;
   }
 
   .badge-new {
@@ -244,7 +241,7 @@
     align-items: center;
     gap: 5px;
     color: #34d399;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
   }
 
@@ -253,7 +250,7 @@
     align-items: center;
     gap: 5px;
     color: #c4b5fd;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
   }
 
@@ -442,7 +439,7 @@
                 {{ c.project.project_name|default:"—" }}
               </span>
               {% if c.project.app_type %}
-              <small style="color:#64748b; font-size:11px; padding-left:4px;">
+              <small style="color:#64748b; font-size:12px; padding-left:4px;">
                 <i class="fa-solid fa-diagram-project" style="font-size:10px;"></i>
                 App: {{ c.project.app_type }}
               </small>
@@ -453,7 +450,7 @@
           <td style="white-space:nowrap;">
             <div style="display:flex; flex-direction:column; gap:2px;">
               {% if c.shop and c.shop.branch %}
-              <span style="color:#e2e8f0; font-size:13px;">
+              <span style="color:#e2e8f0; font-size:15px;">
                 <i class="fa-solid fa-code-branch" style="color:#3b82f6; font-size:11px;"></i>
                 {{ c.shop.branch.name }} ({{ c.shop.branch.place|default:"—" }})
               </span>
@@ -512,13 +509,13 @@
           </td>
 
           <td style="white-space:nowrap;">
-            <strong style="color:white; font-size:13px; display:block;">{{ c.created_date|date:"d M Y" }}</strong>
+            <strong style="color:white; font-size:15px; display:block;">{{ c.created_date|date:"d M Y" }}</strong>
             <small style="color:#fbbf24; font-weight:600;">Age: <span class="age-val">{{ c.created_date|date:"Y-m-d" }}</span> days</small>
           </td>
 
           <td style="white-space:nowrap;">
             {% if c.expiry_date %}
-            <strong style="color:white; font-size:13px; display:block;">{{ c.expiry_date|date:"d M Y" }}</strong>
+            <strong style="color:white; font-size:15px; display:block;">{{ c.expiry_date|date:"d M Y" }}</strong>
             {% else %}
             <span style="color:#64748b;">—</span>
             {% endif %}
