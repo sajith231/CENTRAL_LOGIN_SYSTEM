@@ -87,7 +87,6 @@
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Register API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">License Remove API</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Licence Create Auto</th>
-                    <th style="padding:12px; text-align:left;white-space: nowrap;">Packages</th>
                     <th style="padding:12px; text-align:center;white-space: nowrap;">Description</th>
                     <th style="padding:12px; text-align:center; white-space:nowrap;">Customized Pkg</th>
                     <th style="padding:12px; text-align:left;white-space: nowrap;">Actions</th>
@@ -141,22 +140,7 @@
                         </button>
                     </td>
 
-                    <td style="padding:12px;">
-                        {% if project.package_set.all %}
-                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                            {% for pkg in project.package_set.all %}
-                            <span style="background:#1e293b; color:#34d399; border:1px solid rgba(52,211,153,0.3); padding:4px 10px; border-radius:20px; font-size:12px; white-space:nowrap;">
-                                <i class="fa-solid fa-box" style="font-size:10px;"></i> {{ pkg.package_name }}
-                            </span>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <span style="color:#64748b;">—</span>
-                        {% endif %}
-                    </td>
-
-
-                    <td style="padding:12px; text-align:center;">
+<td style="padding:12px; text-align:center;">
                         {% if project.description %}
                         <button class="btn" data-bs-toggle="modal" data-bs-target="#descModal{{ project.id }}">
                             <i class="fa-solid fa-file-lines"></i>

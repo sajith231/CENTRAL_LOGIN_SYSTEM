@@ -871,6 +871,7 @@ def api_get_project_data(request, endpoint):
         response = JsonResponse({
             "success": True,
             "project_name": project.project_name,
+            "packages": list(project.package_set.values_list('package_name', flat=True)),
             "demo_licenses": demo_keys,
             "customers": customers_data
         })
