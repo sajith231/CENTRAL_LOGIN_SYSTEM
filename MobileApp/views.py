@@ -1282,10 +1282,11 @@ def edit_billing_history(request, pk):
         return redirect("MobileApp:mobile_control_billing", pk=control.id)
 
     if request.method == "POST":
-        # Rollback old values on control before re-applying
-        # (Always rollback so we calculate new values from the baseline state)
+        # Rollback expiry on control so we compute new expiry from the baseline state.
+        # NOTE: login_limit is NOT rolled back — the current user count is preserved so
+        # that extending only days never resets the user count to the old baseline (which
+        # is often 0 for package-driven records).
         control.expiry_date = history_obj.old_expiry_date
-        control.login_limit = history_obj.old_login_limit
 
         extend_login = int(request.POST.get("extend_login") or 0)
         remark = request.POST.get("remark", "").strip()
