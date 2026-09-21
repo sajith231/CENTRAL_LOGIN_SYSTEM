@@ -868,10 +868,19 @@ def api_get_project_data(request, endpoint):
                 "status": "Active" if control.status else "Inactive",
             })
 
+        packages_qs = project.package_set.all().order_by('package_name')
+
         response = JsonResponse({
             "success": True,
             "project_name": project.project_name,
-            "packages": list(project.package_set.values_list('package_name', flat=True)),
+            "packages": [
+                {
+                    "package_name": p.package_name,
+                    "days_limit": p.days_limit,
+                    "users_count": p.users_count or 0,
+                }
+                for p in packages_qs
+            ],
             "demo_licenses": demo_keys,
             "customers": customers_data
         })
