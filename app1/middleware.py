@@ -67,6 +67,10 @@ class MenuPermissionMiddleware:
         "expired_key_report:expired_key_report": "expired_key_report",
         # Unbilled Report
         "unbilled_report:unbilled_report": "unbilled_report",
+        # Task MST Report
+        "task_mst_report:task_mst_report": "task_mst_report",
+        # Trellisco Hub Report
+        "trellisco_hub_report:trellisco_hub_report": "trellisco_hub_report",
         # Billing (Upcoming Expiry Billing button)
         "MobileApp:mobile_control_billing": "mobile_billing",
     }

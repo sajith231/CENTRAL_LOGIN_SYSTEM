@@ -1045,6 +1045,9 @@ def mobile_control_billing(request, pk):
                     control.login_limit = package.users_count
                 
         elif operation_type == 'renew':
+            if not is_super_level_user(request):
+                messages.error(request, "Permission denied. Only Super Users can renew a package.")
+                return redirect("MobileApp:mobile_control_billing", pk=pk)
             if control.active_custom_package:
                 extend_days = control.active_custom_package.days_limit
             elif control.package:
@@ -1219,6 +1222,7 @@ def mobile_control_billing(request, pk):
         "show_custom_package": control.project.customized_package,
         "can_renew": can_renew,
         "is_api_licence": is_api_licence,
+        "is_super_user": is_super_level_user(request),
     })
 
 

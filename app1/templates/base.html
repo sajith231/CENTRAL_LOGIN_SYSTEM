@@ -560,7 +560,31 @@
           </li>
           {% endif %}
 
-          {# 9) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {# 9) TASK MST REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'task_mst_report' in am %}
+          <li>
+            <a href="{% url 'task_mst_report:task_mst_report' %}"
+               class="{% block active_task_mst_report %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-table-list" style="width:20px; text-align:center; font-size:16px;"></i>
+              <span>Task MST Report</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {# 10) TRELLISCO HUB REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'trellisco_hub_report' in am %}
+          <li>
+            <a href="{% url 'trellisco_hub_report:trellisco_hub_report' %}"
+               class="{% block active_trellisco_hub_report %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-network-wired" style="width:20px; text-align:center; font-size:16px;"></i>
+              <span>Trellisco Hub Report</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {# 11) UPCOMING EXPIRY – MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
@@ -572,7 +596,7 @@
           </li>
           {% endif %}
 
-          {# 10) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {# 12) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'expired_key_report' in am %}
           <li>
             <a href="{% url 'expired_key_report:expired_key_report' %}"

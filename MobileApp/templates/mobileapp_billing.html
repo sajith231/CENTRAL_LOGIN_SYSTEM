@@ -202,6 +202,7 @@
             <i class="fas fa-arrow-left me-1"></i> Back to Control
         </a>
         
+        {% if is_super_user %}
         {% if control.package or control.active_custom_package or is_api_licence %}
         <form method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to renew this package? The renewal applies the package days &amp; users from today.');">
             {% csrf_token %}
@@ -216,6 +217,7 @@
             </button>
             {% endif %}
         </form>
+        {% endif %}
         {% endif %}
     </div>
 

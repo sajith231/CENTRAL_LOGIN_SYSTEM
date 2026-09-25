@@ -81,6 +81,8 @@ def get_all_menus():
             "icon": "fa-solid fa-chart-simple",
             "submenus": [
                 {"id": "unbilled_report", "name": "Unbilled Report", "icon": "fa-solid fa-file-invoice-dollar"},
+                {"id": "task_mst_report", "name": "Task MST Report", "icon": "fa-solid fa-table-list"},
+                {"id": "trellisco_hub_report", "name": "Trellisco Hub Report", "icon": "fa-solid fa-network-wired"},
             ],
         },
     ]

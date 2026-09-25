@@ -32,6 +32,8 @@ urlpatterns = [
     path("upcoming-expiry/", include("upcoming_expiry.urls")),
     path("expired-key-report/", include("expired_key_report.urls")),
     path("unbilled-report/", include("unbilled_report.urls")),
+    path("task-mst-report/", include("task_mst_report.urls")),
+    path("trellisco-hub-report/", include("trellisco_hub_report.urls")),
     path("client-id-list/", include("client_id_list.urls")),
     path('corporate-clientid/', include('coporate_and_clientid.urls')),
     path("mobile-demo/", include("mobile_demo_licencing.urls")),
