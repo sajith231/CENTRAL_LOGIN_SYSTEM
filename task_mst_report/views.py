@@ -110,7 +110,8 @@ def task_mst_report_view(request):
         controls = controls.filter(id__in=matched_ids)
 
     # -------------------- SORTING --------------------
-    controls = controls.order_by("expiry_date")
+    # Newest created licences first, matching the "Created" column ordering.
+    controls = controls.order_by("-created_date")
 
     # -------------------- BUILD ROW DATA --------------------
     rows = []

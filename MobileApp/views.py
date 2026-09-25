@@ -1197,7 +1197,7 @@ def mobile_control_billing(request, pk):
             new_expiry_date=control.expiry_date,
             package=control.package,
             custom_package=control.active_custom_package,
-            old_login_limit=old_login_limit,
+            old_login_limit=old_login_limit if not (operation_type == 'both' and force_first_billing) else 0,
             new_login_limit=control.login_limit,
             bill_status=bill_status,
             payment_status=payment_status,
@@ -1215,6 +1215,15 @@ def mobile_control_billing(request, pk):
 
         # ✅ IMPORTANT: FULL SAVE (updates updated_date correctly)
         control.save()
+
+        # ── TASK MST first-billing: truncate devices registered during the expired period ──
+        # For TASK MST project only, when an expired licence is re-billed via the
+        # first-billing form, all of its previously registered devices are cleared.
+        if force_first_billing:
+            truncated = control.active_devices.count()
+            if truncated:
+                control.active_devices.all().delete()
+                messages.info(request, f"Expired licence re-billed — {truncated} registered device(s) removed.")
 
         messages.success(request, "Billing updated successfully")
         return redirect("MobileApp:mobile_control_billing", pk=pk)
