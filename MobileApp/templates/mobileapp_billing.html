@@ -202,7 +202,7 @@
             <i class="fas fa-arrow-left me-1"></i> Back to Control
         </a>
         
-        {% if is_super_user %}
+        {% if is_super_user and not force_first_billing %}
         {% if control.package or control.active_custom_package or is_api_licence %}
         <form method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to renew this package? The renewal applies the package days &amp; users from today.');">
             {% csrf_token %}
@@ -799,9 +799,9 @@
                     <form method="POST" id="billingForm">
                         {% csrf_token %}
                         <input type="hidden" name="operation_type" id="operation_type"
-                            value="{% if not history %}both{% elif request.user.is_superuser or request.session.custom_user_level == 'Super User' %}validity{% else %}users{% endif %}">
+                            value="{% if not history or force_first_billing %}both{% elif request.user.is_superuser or request.session.custom_user_level == 'Super User' %}validity{% else %}users{% endif %}">
 
-                        {% if not history %}
+                        {% if not history or force_first_billing %}
                         {# ===== FIRST BILLING: combined validity + users in one form ===== #}
                         <div
                             style="background:#1e293b; border:1px solid #3b82f6; border-radius:10px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px;">

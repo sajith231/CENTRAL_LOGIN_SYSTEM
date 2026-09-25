@@ -985,7 +985,19 @@ def mobile_control_billing(request, pk):
 
     # ---------- CURRENT EXPIRY ----------
     expiry_date = control.expiry_date
-    
+
+    # ── FORCE FIRST BILLING (TASK MST EXPIRED ONLY) ──
+    # TASK MST project only: when a licence has expired, route the billing page
+    # back to the first-billing form (fresh validity + user count from today),
+    # exactly like a new billing. Old billing history is preserved.
+    is_task_mst = bool(
+        control.project
+        and control.project.project_name
+        and control.project.project_name.strip().upper() == "TASK MST"
+    )
+    is_expired_billing = bool(expiry_date and expiry_date <= timezone.now())
+    force_first_billing = is_task_mst and is_expired_billing
+
     # ── ALLOW RENEW ──
     # Licence Create API licences: renew stays enabled for the WHOLE validity period.
     # All other licences: renew only within the last 3 days before expiry.
@@ -1111,7 +1123,12 @@ def mobile_control_billing(request, pk):
             control.login_limit = enforced_users
             extend_login = 0   # ignore any manual (or stale read-only) user input
         elif extend_login != 0:
-            new_login_limit = control.login_limit + extend_login
+            if force_first_billing:
+                # First-billing behaviour (TASK MST expired only): the field is an
+                # "Initial User Count" — it sets the login limit, not an increment.
+                new_login_limit = extend_login
+            else:
+                new_login_limit = control.login_limit + extend_login
             if new_login_limit < 1:
                 messages.error(request, "Login limit cannot be less than 1")
                 return redirect("MobileApp:mobile_control_billing", pk=pk)
@@ -1119,7 +1136,11 @@ def mobile_control_billing(request, pk):
 
         # ---------- EXPIRY DATE (+ / -) ----------
         if extend_days != 0:
-            if operation_type == 'change_package':
+            if force_first_billing:
+                # First-billing behaviour (TASK MST expired only): validity restarts
+                # from today, exactly like a brand-new billing.
+                new_expiry = timezone.now() + timedelta(days=extend_days)
+            elif operation_type == 'change_package':
                 # Start fresh from today when changing package
                 new_expiry = timezone.now() + timedelta(days=extend_days)
             elif is_api_licence and operation_type == 'renew':
@@ -1223,6 +1244,7 @@ def mobile_control_billing(request, pk):
         "can_renew": can_renew,
         "is_api_licence": is_api_licence,
         "is_super_user": is_super_level_user(request),
+        "force_first_billing": force_first_billing,
     })
 
 

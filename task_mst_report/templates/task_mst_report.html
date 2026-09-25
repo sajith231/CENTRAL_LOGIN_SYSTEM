@@ -258,6 +258,56 @@
         color: #64748b;
         font-size: 14px;
     }
+
+    .tm-pagination-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .tm-pagination-info {
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    .tm-page-btn {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: white;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+    .tm-page-btn:hover:not(:disabled) {
+        border-color: #3b82f6;
+        background: #334155;
+        color: white;
+    }
+
+    .tm-page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .tm-page-btn-active {
+        border-color: #3b82f6;
+        background: #3b82f6;
+        color: white;
+    }
+
+    .tm-page-ellipsis {
+        color: #64748b;
+        padding: 0 4px;
+    }
 </style>
 
 <div class="card" style="padding:0; margin-bottom:16px;">
@@ -349,9 +399,18 @@
                 <option value="billed" {% if sel.bill_status == 'billed' %}selected{% endif %}>Billed</option>
                 <option value="unbilled" {% if sel.bill_status == 'unbilled' %}selected{% endif %}>Not Billed</option>
             </select>
-</div>
+        </div>
+        <div class="tm-field">
+            <label><i class="fa-solid fa-table-list" style="color:#3b82f6;"></i> Rows</label>
+            <select name="rows" onchange="this.form.submit()">
+                <option value="10" {% if sel_rows == '10' %}selected{% endif %}>10</option>
+                <option value="25" {% if sel_rows == '25' %}selected{% endif %}>25</option>
+                <option value="50" {% if sel_rows == '50' %}selected{% endif %}>50</option>
+                <option value="100" {% if sel_rows == '100' %}selected{% endif %}>100</option>
+                <option value="all" {% if sel_rows == 'all' %}selected{% endif %}>All</option>
+            </select>
+        </div>
         <div class="tm-field" style="flex-direction:row; align-items:flex-end; gap:8px;">
-            <button type="submit" class="tm-btn tm-btn-primary"><i class="fa-solid fa-filter"></i> Apply</button>
             <a href="{% url 'task_mst_report:task_mst_report' %}" class="tm-btn tm-btn-ghost"><i class="fa-solid fa-xmark"></i> Clear</a>
         </div>
     </form>
@@ -380,7 +439,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for r in rows %}
+                {% for r in page_obj %}
                 {% with c=r.control %}
                 <tr>
                     <td style="white-space:nowrap;">
@@ -514,6 +573,40 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="tm-pagination-bar" style="padding:0 20px 20px;">
+        <div class="tm-pagination-info">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} licence(s)</div>
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            {% if page_obj.has_other_pages %}
+            {% if page_obj.has_previous %}
+            <a class="tm-page-btn" href="?{{ base_query.urlencode }}{% if base_query.urlencode %}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Prev</a>
+            {% else %}
+            <button class="tm-page-btn" disabled>‹ Prev</button>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="tm-page-btn tm-page-btn-active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a class="tm-page-btn" href="?{{ base_query.urlencode }}{% if base_query.urlencode %}&{% endif %}page={{ num }}">{{ num }}</a>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+            <a class="tm-page-btn" href="?{{ base_query.urlencode }}{% if base_query.urlencode %}&{% endif %}page={{ num }}">{{ num }}</a>
+            {% else %}
+            {% if num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+            <span class="tm-page-ellipsis">...</span>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a class="tm-page-btn" href="?{{ base_query.urlencode }}{% if base_query.urlencode %}&{% endif %}page={{ page_obj.next_page_number }}">Next ›</a>
+            {% else %}
+            <button class="tm-page-btn" disabled>Next ›</button>
+            {% endif %}
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

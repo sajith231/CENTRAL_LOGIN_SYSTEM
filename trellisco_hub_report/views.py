@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
@@ -16,6 +17,9 @@ PROJECT_NAMES = [
     "Melone Lite",
     "Cluadius",
 ]
+
+ROWS_PER_PAGE_OPTIONS = ["10", "25", "50", "100", "all"]
+DEFAULT_ROWS_PER_PAGE = "25"
 
 
 def trellisco_hub_report_view(request):
@@ -95,7 +99,7 @@ def trellisco_hub_report_view(request):
                 latest_bills[bh.control_id] = bh
 
     # -------------------- SORTING --------------------
-    controls = controls.order_by("project__project_name", "customer_name")
+    controls = controls.order_by("expiry_date", "project__project_name")
 
     # -------------------- BUILD ROW DATA --------------------
     rows = []
@@ -183,9 +187,26 @@ def trellisco_hub_report_view(request):
         "balance": total_balance,
     }
 
+    # -------------------- PAGINATION --------------------
+    per_page = request.GET.get("rows", "").strip() or DEFAULT_ROWS_PER_PAGE
+    if per_page not in ROWS_PER_PAGE_OPTIONS:
+        per_page = DEFAULT_ROWS_PER_PAGE
+
+    if per_page == "all":
+        paginator = Paginator(rows, max(1, len(rows)))
+    else:
+        paginator = Paginator(rows, int(per_page))
+
+    page_obj = paginator.get_page(request.GET.get("page", "1"))
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+
     return render(request, "trellisco_hub_report.html", {
         "projects": projects,
-        "rows": rows,
+        "page_obj": page_obj,
+        "base_query": base_query,
+        "sel_rows": per_page,
         "stats": stats,
         "branches": branches,
         "stores": stores,

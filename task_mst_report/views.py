@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
@@ -10,6 +11,9 @@ from app1.helpers import get_user_branch_ids
 PROJECT_NAME = "TASK MST"
 
 PAYMENT_STATUS_CHOICES = [choice[0] for choice in MobileBillingHistory.PAYMENT_STATUS_CHOICES]
+
+ROWS_PER_PAGE_OPTIONS = ["10", "25", "50", "100", "all"]
+DEFAULT_ROWS_PER_PAGE = "25"
 
 
 def task_mst_report_view(request):
@@ -106,17 +110,7 @@ def task_mst_report_view(request):
         controls = controls.filter(id__in=matched_ids)
 
     # -------------------- SORTING --------------------
-    sort_map = {
-        "customer": "customer_name",
-        "client": "client_id",
-        "expiry_asc": "expiry_date",
-        "expiry_desc": "-expiry_date",
-        "created_desc": "-created_date",
-    }
-    if sort in sort_map:
-        controls = controls.order_by(sort_map[sort])
-    else:
-        controls = controls.order_by("customer_name")
+    controls = controls.order_by("expiry_date")
 
     # -------------------- BUILD ROW DATA --------------------
     rows = []
@@ -191,9 +185,26 @@ def task_mst_report_view(request):
         "balance": total_balance,
     }
 
+    # -------------------- PAGINATION --------------------
+    per_page = request.GET.get("rows", "").strip() or DEFAULT_ROWS_PER_PAGE
+    if per_page not in ROWS_PER_PAGE_OPTIONS:
+        per_page = DEFAULT_ROWS_PER_PAGE
+
+    if per_page == "all":
+        paginator = Paginator(rows, max(1, len(rows)))
+    else:
+        paginator = Paginator(rows, int(per_page))
+
+    page_obj = paginator.get_page(request.GET.get("page", "1"))
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+
     return render(request, "task_mst_report.html", {
         "project": project,
-        "rows": rows,
+        "page_obj": page_obj,
+        "base_query": base_query,
+        "sel_rows": per_page,
         "stats": stats,
         "branches": branches,
         "stores": stores,
