@@ -137,6 +137,50 @@
       color: #f87171;
       border: 1px solid rgba(239, 68, 68, 0.3);
     }
+
+    .intimation-eye-btn {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+    }
+
+    .intimation-eye-btn:hover {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .intimation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 9px 14px;
+      margin-bottom: 8px;
+    }
+
+    .intimation-row-label {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .intimation-row-value {
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+    }
   </style>
 
   <div class="card" style="padding:0; margin-bottom:16px;">
@@ -174,6 +218,7 @@
             <th style="text-align:center; padding:10px;">Reg Limit</th>
             <th style="text-align:center; padding:10px;">Day Left</th>
             <th style="text-align:center; padding:10px;">Status</th>
+            <th style="text-align:center; padding:10px;">Key Expiry Intimation</th>
             <th style="text-align:center; padding:10px;">Bill Status</th>
             {% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}
             <th style="text-align:center; padding:10px;">Billing</th>
@@ -242,6 +287,20 @@
                 {% endif %}
               </td>
               <td style="padding:10px; text-align:center;">
+                <button type="button" class="intimation-eye-btn" title="Key Expiry Intimation"
+                        onclick="openIntimationModal(this)"
+                        data-id="{{ c.id }}"
+                        data-customer="{{ c.customer_name|default:"-" }}"
+                        data-place="{{ c.shop.branch.place|default:"-" }}"
+                        data-branch="{{ c.shop.branch.name|default:"-" }}"
+                        data-product="{{ c.project.project_name|default:"-" }}"
+                        data-package="{% if c.active_custom_package %}{{ c.active_custom_package.package_name }}{% elif c.package %}{{ c.package.package_name }}{% else %}-{% endif %}"
+                        data-expiry="{{ c.expiry_date|date:"d M Y, h:i A" }}"
+                        data-days="{{ c.remaining_days }}">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+              <td style="padding:10px; text-align:center;">
                 {% if c.bill_status %}
                   <span class="ue-badge ue-badge-billed"><i class="fa-solid fa-circle-check" style="font-size:11px;"></i> Billed</span>
                 {% else %}
@@ -259,11 +318,75 @@
             </tr>
           {% empty %}
             <tr style="background:#0f172a;">
-              <td colspan="{% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}12{% else %}11{% endif %}" style="padding:12px;">No upcoming expiring licences found.</td>
+              <td colspan="{% if request.user.is_superuser or 'mobile_billing' in request.session.allowed_menus %}13{% else %}12{% endif %}" style="padding:12px;">No upcoming expiring licences found.</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Key Expiry Intimation Popup -->
+  <div id="intimationModal"
+       style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow:auto;">
+    <div style="background:#0f172a; border:1px solid #334155; border-radius:14px; padding:24px; width:460px; max-width:95vw; position:relative;">
+      <button type="button" onclick="closeIntimationModal()" title="Close"
+              style="position:absolute; top:10px; right:14px; background:transparent; border:none; color:#94a3b8; font-size:1.3rem; cursor:pointer; line-height:1;">
+        &times;
+      </button>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <div style="background:#1e293b; border-radius:8px; padding:9px 11px;">
+          <i class="fa-solid fa-bell" style="color:#fbbf24;"></i>
+        </div>
+        <div>
+          <p style="color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin:0;">
+            Key Expiry Intimation
+          </p>
+          <p id="im_title" style="color:white; font-size:15px; font-weight:600; margin:0;"></p>
+        </div>
+      </div>
+
+      <div class="intimation-row">
+        <span class="intimation-row-label">Customer</span>
+        <span class="intimation-row-value" id="im_customer"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Place</span>
+        <span class="intimation-row-value" id="im_place"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Branch</span>
+        <span class="intimation-row-value" id="im_branch"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Product</span>
+        <span class="intimation-row-value" id="im_product"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Package</span>
+        <span class="intimation-row-value" id="im_package"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Expiry Date</span>
+        <span class="intimation-row-value" id="im_expiry" style="color:white;"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Day Left</span>
+        <span class="intimation-row-value" id="im_days"></span>
+      </div>
+      <div class="intimation-row">
+        <span class="intimation-row-label">Copied On</span>
+        <span class="intimation-row-value" id="im_copied_on" style="color:#94a3b8;">Not copied yet</span>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+        <button type="button" id="im_copy_btn" onclick="copyIntimation()"
+                style="background:#3b82f6; color:white; border:none; border-radius:8px; padding:9px 18px;
+                       font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
     </div>
   </div>
 {% endblock %}
@@ -294,5 +417,131 @@
     btn.innerHTML = '<i class="fa-solid fa-check"></i>';
     setTimeout(() => { btn.innerHTML = old; }, 1500);
   }
+
+  // ── KEY EXPIRY INTIMATION POPUP ──
+  const imCurrent = { payload: null };
+
+  function imStorageKey(id) {
+    return 'imitationCopiedAt_' + id;
+  }
+
+  function imFormatDate(date) {
+    return date.toLocaleString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+  }
+
+  function imGetCopiedOn(id) {
+    try {
+      const stored = localStorage.getItem(imStorageKey(id));
+      return stored ? imFormatDate(new Date(stored)) : 'Not copied yet';
+    } catch (e) {
+      return 'Not copied yet';
+    }
+  }
+
+  function openIntimationModal(btn) {
+    const d = btn.dataset;
+    imCurrent.id = d.id;
+    imCurrent.payload = {
+      customer: d.customer,
+      place: d.place,
+      branch: d.branch,
+      product: d.product,
+      package: d.package,
+      expiry: d.expiry,
+      days: d.days
+    };
+
+    document.getElementById('im_title').innerText = d.customer;
+    document.getElementById('im_customer').innerText = d.customer;
+    document.getElementById('im_place').innerText = d.place;
+    document.getElementById('im_branch').innerText = d.branch;
+    document.getElementById('im_product').innerText = d.product;
+    document.getElementById('im_package').innerText = d.package;
+    document.getElementById('im_expiry').innerText = d.expiry;
+
+    const daysLeft = document.getElementById('im_days');
+    daysLeft.innerText = d.days + 'd';
+    daysLeft.className = 'intimation-row-value ' + (d.days <= 3 ? 'ue-day-danger' : (d.days <= 10 ? 'ue-day-warn' : 'ue-day-ok'));
+
+    document.getElementById('im_copied_on').innerText = imGetCopiedOn(d.id);
+
+    const copyBtn = document.getElementById('im_copy_btn');
+    copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+    copyBtn.style.background = '#3b82f6';
+
+    document.getElementById('intimationModal').style.display = 'flex';
+  }
+
+  function closeIntimationModal() {
+    document.getElementById('intimationModal').style.display = 'none';
+    imCurrent.payload = null;
+  }
+
+  function imBuildText(data, copiedOn) {
+    const pad = (label, value) => (label + ' '.repeat(Math.max(0, 16 - label.length))) + ': ' + value;
+    return [
+      'KEY EXPIRY INTIMATION',
+      '====================',
+      pad('Customer', data.customer),
+      pad('Place', data.place),
+      pad('Branch', data.branch),
+      pad('Product', data.product),
+      pad('Package', data.package),
+      pad('Expiry Date', data.expiry),
+      pad('Day Left', data.days + 'd'),
+      pad('Copied On', copiedOn)
+    ].join('\n');
+  }
+
+  function imFallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  function copyIntimation() {
+    const data = imCurrent.payload;
+    if (!data) return;
+
+    const now = new Date();
+    const copiedOn = imFormatDate(now);
+    const text = imBuildText(data, copiedOn);
+
+    const onCopied = () => {
+      const copyBtn = document.getElementById('im_copy_btn');
+      copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      copyBtn.style.background = '#16a34a';
+      setTimeout(() => {
+        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        copyBtn.style.background = '#3b82f6';
+      }, 2000);
+
+      try { localStorage.setItem(imStorageKey(imCurrent.id), now.toISOString()); } catch (e) {}
+      document.getElementById('im_copied_on').innerText = copiedOn;
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onCopied).catch(() => { imFallbackCopy(text); onCopied(); });
+    } else {
+      imFallbackCopy(text);
+      onCopied();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('intimationModal');
+    modal.addEventListener('click', function (e) {
+      if (e.target === this) closeIntimationModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.style.display === 'flex') closeIntimationModal();
+    });
+  });
 </script>
 {% endblock %}

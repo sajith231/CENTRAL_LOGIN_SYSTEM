@@ -5,8 +5,11 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from branch.models import Branch
-from MobileApp.models import MobileControl
+from MobileApp.models import MobileControl, MobileProject
 from app1.helpers import get_user_branch_ids
+
+# Projects that have their own dedicated report menu and must not appear here
+EXCLUDED_PROJECT_NAMES = ["TASK MST"]
 
 
 def upcoming_expiry_view(request):
@@ -34,6 +37,13 @@ def upcoming_expiry_view(request):
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
         .order_by("expiry_date")
     )
+
+    # Projects with their own dedicated report (e.g. TASK MST) are not listed here
+    excluded_project_ids = list(
+        MobileProject.objects.filter(project_name__in=EXCLUDED_PROJECT_NAMES).values_list("id", flat=True)
+    )
+    if excluded_project_ids:
+        controls = controls.exclude(project_id__in=excluded_project_ids)
 
     if branch_ids is not None:
         controls = controls.filter(shop__branch_id__in=branch_ids)
