@@ -71,6 +71,8 @@ class MenuPermissionMiddleware:
         "task_mst_report:task_mst_report": "task_mst_report",
         # Trellisco Hub Report
         "trellisco_hub_report:trellisco_hub_report": "trellisco_hub_report",
+        # New Licence Report
+        "new_licence_report:new_licence_report": "new_licence_report",
         # Billing (Upcoming Expiry Billing button)
         "MobileApp:mobile_control_billing": "mobile_billing",
     }

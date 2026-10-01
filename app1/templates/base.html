@@ -584,7 +584,19 @@
           </li>
           {% endif %}
 
-          {# 11) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {# 11) NEW LICENCE REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {% if request.user.is_superuser or 'new_licence_report' in am %}
+          <li>
+            <a href="{% url 'new_licence_report:new_licence_report' %}"
+               class="{% block active_new_licence_report %}{% endblock %}"
+               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-certificate" style="width:20px; text-align:center; font-size:16px;"></i>
+              <span>New Licence Report</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {# 12) UPCOMING EXPIRY – MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
@@ -596,7 +608,7 @@
           </li>
           {% endif %}
 
-          {# 12) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {# 13) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'expired_key_report' in am %}
           <li>
             <a href="{% url 'expired_key_report:expired_key_report' %}"

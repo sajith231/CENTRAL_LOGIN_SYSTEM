@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "expired_key_report",
     "task_mst_report",
     "trellisco_hub_report",
+    "new_licence_report",
 ]
 
 # -------------------- Uploads -------------------
