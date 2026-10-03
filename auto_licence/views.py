@@ -23,6 +23,13 @@ def api_licence_create(request, endpoint):
     POST API: Creates a MAIN licence along with its Corporate (Store) and
     Company (Shop) automatically — all in a single request.
 
+    If the company email is ALREADY registered (in this or any other project),
+    the existing company (Shop) and its corporate (Store) are REUSED as-is —
+    same branch, same details, same client_id — nothing existing is changed.
+    Only a new MAIN licence for THIS project is created and attached to that
+    existing company. The submitted corporate/company form data is ignored
+    in that case.
+
     Body:
     {
         "branch": "<optional: branch id or name>",   // else project.branch, else first branch
@@ -94,9 +101,8 @@ def api_licence_create(request, endpoint):
         return JsonResponse({"success": False, "error": "Default branch 'IMC Developments' not found."}, status=400)
 
     # ---------------- DUPLICATE CHECKS ----------------
-    if company_email and Shop.objects.filter(email=company_email).exists():
-        return JsonResponse({"success": False, "error": f"The email '{company_email}' is already used by another company"}, status=400)
-
+    # A company can hold only ONE licence per project. If it already has a
+    # licence under THIS project (matched by name or client_id), reject.
     already_exists = MobileControl.objects.filter(
         project=project
     ).filter(
@@ -109,6 +115,13 @@ def api_licence_create(request, endpoint):
             "success": False,
             "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
         }, status=409)
+
+    # If the email is already registered (any project), the existing company
+    # (Shop) and its corporate (Store) are reused as-is — their branch,
+    # details and client_id are NOT changed. Only a new licence for this
+    # project is created.
+    existing_shop = Shop.objects.filter(email=company_email).select_related("store").first()
+    reuse_company = existing_shop is not None
 
     # ---------------- PACKAGE (REQUIRED, exact name match) ----------------
     package_name = str(payload.get("package") or "").strip()
@@ -143,39 +156,47 @@ def api_licence_create(request, endpoint):
     users_count = package.users_count if package and package.users_count and package.users_count > 0 else DEFAULT_USERS
     expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
 
-    # ---------------- CREATE CORPORATE (Store) ----------------
-    store = Store.objects.create(
-        name=corporate_name,
-        branch=branch,
-        place=corporate_place,
-        is_demo=False,
-        created_by=request.user if request.user.is_authenticated else None,
-        created_by_name="Licence Create API",
-    )
+    # ---------------- CORPORATE (Store) & COMPANY (Shop) ----------------
+    if reuse_company:
+        # Company already registered: reuse the SAME corporate (Store) and
+        # company (Shop) — do not change any existing data (branch, details,
+        # client_id stay exactly as they are). Only the new licence is created.
+        store = existing_shop.store
+        shop = existing_shop
+    else:
+        # ---------------- CREATE CORPORATE (Store) ----------------
+        store = Store.objects.create(
+            name=corporate_name,
+            branch=branch,
+            place=corporate_place,
+            is_demo=False,
+            created_by=request.user if request.user.is_authenticated else None,
+            created_by_name="Licence Create API",
+        )
 
-    # ---------------- CREATE COMPANY (Shop) ----------------
-    shop = Shop.objects.create(
-        store=store,
-        branch=branch,
-        name=company_name,
-        place=company_place,
-        email=company_email,
-        contact_no=company_contact,
-        country=country,
-        currency_code=currency_code,
-        client_id=company_email,
-        is_active=is_active,
-        is_demo=False,
-        created_by=request.user if request.user.is_authenticated else None,
-        created_by_name="Licence Create API",
-    )
+        # ---------------- CREATE COMPANY (Shop) ----------------
+        shop = Shop.objects.create(
+            store=store,
+            branch=branch,
+            name=company_name,
+            place=company_place,
+            email=company_email,
+            contact_no=company_contact,
+            country=country,
+            currency_code=currency_code,
+            client_id=company_email,
+            is_active=is_active,
+            is_demo=False,
+            created_by=request.user if request.user.is_authenticated else None,
+            created_by_name="Licence Create API",
+        )
 
     # ---------------- CREATE MAIN LICENCE (MobileControl) ----------------
     control = MobileControl.objects.create(
         project=project,
         store=store,
         shop=shop,
-        customer_name=company_name,
+        customer_name=shop.name,
         client_id=shop.client_id,
         login_limit=users_count,
         licence_type="new",
@@ -206,7 +227,12 @@ def api_licence_create(request, endpoint):
 
     return JsonResponse({
         "success": True,
-        "message": "Main licence created successfully",
+        "message": (
+            "Licence created for existing company (existing corporate & client_id reused)"
+            if reuse_company else
+            "Main licence created successfully"
+        ),
+        "reused_existing_company": reuse_company,
         "licence_type": control.licence_type,
         "customer_name": control.customer_name,
         "client_id": control.client_id,
