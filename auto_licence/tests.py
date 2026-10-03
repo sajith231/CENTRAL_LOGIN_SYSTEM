@@ -118,6 +118,36 @@ class LicenceCreateApiTests(TestCase):
         self.assertEqual(data["company"]["contact_no"], "9999999999")
         self.assertEqual(data["company"]["client_id"], "sajiththomas231@gmail.com")
 
+    def test_existing_company_with_non_email_client_id_still_one_licence_per_project(self):
+        # Manually registered shop whose client_id is NOT the email
+        store = Store.objects.create(name="MANUAL CORPORATE", branch=self.branch)
+        shop = Shop.objects.create(
+            store=store,
+            branch=self.branch,
+            name="MANUAL COMPANY",
+            email="sajiththomas231@gmail.com",
+            client_id="ABC123XYZ789",  # random client_id, not the email
+        )
+
+        resp = self.client.post(
+            self._url(self.project_b),
+            data=json.dumps(self._payload()),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201)
+        self.assertTrue(resp.json()["reused_existing_company"])
+        self.assertEqual(MobileControl.objects.count(), 1)
+
+        # Second attempt for the SAME project must be rejected — the
+        # existing company already holds a licence under this project.
+        resp = self.client.post(
+            self._url(self.project_b),
+            data=json.dumps(self._payload()),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 409)
+        self.assertEqual(MobileControl.objects.count(), 1)
+
     def test_same_company_cannot_get_two_licences_in_same_project(self):
         self.client.post(
             self._url(self.project_b),

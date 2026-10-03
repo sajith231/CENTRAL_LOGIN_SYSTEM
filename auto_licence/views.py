@@ -101,27 +101,32 @@ def api_licence_create(request, endpoint):
         return JsonResponse({"success": False, "error": "Default branch 'IMC Developments' not found."}, status=400)
 
     # ---------------- DUPLICATE CHECKS ----------------
-    # A company can hold only ONE licence per project. If it already has a
-    # licence under THIS project (matched by name or client_id), reject.
-    already_exists = MobileControl.objects.filter(
-        project=project
-    ).filter(
-        Q(customer_name__iexact=company_name) |
-        Q(client_id=company_email)
-    ).exists()
-
-    if already_exists:
-        return JsonResponse({
-            "success": False,
-            "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
-        }, status=409)
-
+    # A company can hold only ONE licence per project.
     # If the email is already registered (any project), the existing company
     # (Shop) and its corporate (Store) are reused as-is — their branch,
     # details and client_id are NOT changed. Only a new licence for this
     # project is created.
     existing_shop = Shop.objects.filter(email=company_email).select_related("store").first()
     reuse_company = existing_shop is not None
+
+    already_exists = MobileControl.objects.filter(
+        project=project
+    ).filter(
+        Q(customer_name__iexact=company_name) |
+        Q(client_id=company_email)
+    )
+    if existing_shop is not None:
+        # The resolved company must not already hold ANY licence under
+        # this project — no matter how its client_id is stored.
+        already_exists = already_exists | MobileControl.objects.filter(
+            project=project, shop=existing_shop
+        )
+
+    if already_exists.exists():
+        return JsonResponse({
+            "success": False,
+            "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
+        }, status=409)
 
     # ---------------- PACKAGE (REQUIRED, exact name match) ----------------
     package_name = str(payload.get("package") or "").strip()
