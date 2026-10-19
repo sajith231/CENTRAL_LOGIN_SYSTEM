@@ -11,9 +11,9 @@
     <a href="{% url 'add_shop' %}" class="btn btn-success">Add New</a>
   </div>
 
-  <!-- 🔍 Shop Name Search -->
+  <!-- Company search -->
   <div style="padding:12px 20px;">
-    <input type="text" id="shopSearch" placeholder="Search shop..." style="padding:8px 12px; width:250px; border-radius:6px;
+    <input type="text" id="shopSearch" placeholder="Search company, email or client ID..." style="padding:8px 12px; width:250px; border-radius:6px;
                     border:1px solid #334155; background:#0f1b31; color:white;">
     <select id="branchFilter"
       style="padding:8px 12px; margin-left:10px; border-radius:6px; border:1px solid #334155; background:#0f1b31; color:white;">
@@ -137,7 +137,7 @@
   }
 
   function renderTable() {
-    const keyword = document.getElementById("shopSearch").value.toLowerCase();
+    const keyword = document.getElementById("shopSearch").value.trim().toLowerCase();
     const selectedBranch = document.getElementById("branchFilter").value.toLowerCase();
     const rowsPerPage = getRowsPerPage();
 
@@ -188,7 +188,7 @@
     renderTable();
   }
 
-  document.getElementById("shopSearch").addEventListener("keyup", applyFilters);
+  document.getElementById("shopSearch").addEventListener("input", applyFilters);
   document.getElementById("branchFilter").addEventListener("change", applyFilters);
   document.getElementById("rowsPerPage").addEventListener("change", applyFilters);
 
