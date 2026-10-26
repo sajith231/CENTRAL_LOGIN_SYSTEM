@@ -596,7 +596,17 @@
           </li>
           {% endif %}
 
-          {# 12) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {# 12) FINANCIAL YEAR SETUP – DJANGO SUPERUSER ONLY #}
+          {% if request.user.is_superuser %}
+          <li>
+            <a href="{% url 'financial_year_setup:setup' %}" class="{% block active_financial_year_setup %}{% endblock %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
+              <i class="fa-solid fa-calendar-days" style="width:20px; text-align:center; font-size:16px;"></i>
+              <span>Financial year Setup</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {# 13) UPCOMING EXPIRY – MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
@@ -608,7 +618,7 @@
           </li>
           {% endif %}
 
-          {# 13) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {# 14) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'expired_key_report' in am %}
           <li>
             <a href="{% url 'expired_key_report:expired_key_report' %}"
@@ -616,16 +626,6 @@
                style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
               <i class="fa-solid fa-key" style="width:20px; text-align:center; font-size:16px; color:#f87171;"></i>
               <span>Expired Key Report</span>
-            </a>
-          </li>
-          {% endif %}
-
-          {# 14) FINANCIAL YEAR SETUP – DJANGO SUPERUSER ONLY #}
-          {% if request.user.is_superuser %}
-          <li>
-            <a href="{% url 'financial_year_setup:setup' %}" class="{% block active_financial_year_setup %}{% endblock %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
-              <i class="fa-solid fa-calendar-days" style="width:20px; text-align:center; font-size:16px;"></i>
-              <span>Financial year Setup</span>
             </a>
           </li>
           {% endif %}
