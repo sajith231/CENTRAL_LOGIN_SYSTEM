@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "task_mst_report",
     "trellisco_hub_report",
     "new_licence_report",
+    "financial_year_setup",
 ]
 
 # -------------------- Uploads -------------------
