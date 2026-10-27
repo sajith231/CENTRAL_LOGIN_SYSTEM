@@ -47,6 +47,23 @@ def _api_request(method="GET", url=FINANCIAL_YEAR_API_URL, payload=None):
         raise RuntimeError(str(exc)) from exc
 
 
+def _api_error_message(data):
+    """Turn DRF detail and field-validation responses into a useful message."""
+    if isinstance(data, dict):
+        detail = data.get("detail") or data.get("message")
+        if detail:
+            return str(detail)
+        errors = []
+        for field, value in data.items():
+            values = value if isinstance(value, list) else [value]
+            errors.extend(f"{field}: {item}" for item in values)
+        if errors:
+            return "; ".join(errors)
+    elif isinstance(data, list):
+        return "; ".join(str(item) for item in data)
+    return "The financial year service rejected the request."
+
+
 def _form_payload(request):
     return {
         "country_name": request.POST.get("country_name", "").strip(),
@@ -70,7 +87,7 @@ def financial_year_setup(request):
         if isinstance(records, dict):
             records = [records]
         if status_code >= 400:
-            messages.error(request, data.get("detail", "Unable to load financial years."))
+            messages.error(request, _api_error_message(data))
             records = []
     except RuntimeError as exc:
         messages.error(request, f"Financial year service is unavailable: {exc}")
@@ -89,7 +106,7 @@ def _save_financial_year(request, method, url, success_message):
     try:
         status_code, data = _api_request(method, url, payload)
         if status_code >= 400:
-            messages.error(request, data.get("detail", data.get("message", "The financial year service rejected the request.")))
+            messages.error(request, _api_error_message(data))
         else:
             messages.success(request, success_message)
     except RuntimeError as exc:
@@ -120,7 +137,7 @@ def update_financial_year(request, financial_year_id):
             # its detail endpoint accepts PATCH but rejects GET.
             status_code, data = _api_request("GET", FINANCIAL_YEAR_API_URL)
             if status_code >= 400:
-                messages.error(request, data.get("detail", "Unable to load the financial year."))
+                messages.error(request, _api_error_message(data))
                 return redirect("financial_year_setup:setup")
             records = data if isinstance(data, list) else data.get("results", data.get("data", []))
             if isinstance(records, dict):
