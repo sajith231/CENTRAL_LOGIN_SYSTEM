@@ -51,6 +51,7 @@ def _form_payload(request):
     return {
         "country_name": request.POST.get("country_name", "").strip(),
         "country_code": request.POST.get("country_code", "").strip().upper(),
+        "currency_code": request.POST.get("currency_code", "").strip().upper(),
         "fy_from_month": request.POST.get("fy_from_month", "").strip().upper(),
         "fy_to_month": request.POST.get("fy_to_month", "").strip().upper(),
         "remark": request.POST.get("remark", "").strip(),

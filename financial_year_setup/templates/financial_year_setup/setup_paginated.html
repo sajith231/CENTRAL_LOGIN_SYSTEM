@@ -23,7 +23,32 @@
 <div class="fy-filters"><label>Search country<input id="country-filter" type="search" placeholder="Country name..."></label><label>Country code<input id="code-filter" type="search" placeholder="IN"></label><label>Starts<select id="from-filter"><option value="">All months</option>{% for month in months %}<option value="{{ month }}">{{ month }}</option>{% endfor %}</select></label><label>Ends<select id="to-filter"><option value="">All months</option>{% for month in months %}<option value="{{ month }}">{{ month }}</option>{% endfor %}</select></label><button type="button" class="fy-btn fy-clear" id="clear-filters"><i class="fa-solid fa-rotate-left"></i> Clear</button></div>
 {% if records %}<div class="fy-meta"><span id="row-count"></span><label>Rows per page <select id="page-size" style="background:#f8fafc;color:#0f172a;border:1px solid #64748b;border-radius:6px;padding:5px 8px"><option value="5">5</option><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></label></div><div class="fy-table-wrap"><table class="fy-table" id="financial-year-table"><thead><tr><th class="fy-number">#</th><th>Country</th><th>Code</th><th>Financial year</th><th>Remark</th><th>Action</th></tr></thead><tbody>{% for record in records %}<tr data-country="{{ record.country_name|default:''|lower }}" data-code="{{ record.country_code|default:''|lower }}" data-from="{{ record.fy_from_month|default:'' }}" data-to="{{ record.fy_to_month|default:'' }}"><td class="fy-number row-number"></td><td><strong>{{ record.country_name|default:'-' }}</strong></td><td class="fy-code">{{ record.country_code|default:'-' }}</td><td>{{ record.fy_from_month|default:'-' }} <span class="fy-muted">to</span> {{ record.fy_to_month|default:'-' }}</td><td class="fy-muted">{{ record.remark|default:'-' }}</td><td><a class="fy-btn fy-edit" href="{% url 'financial_year_setup:update' record.id %}"><i class="fa-solid fa-pen"></i> Edit</a></td></tr>{% endfor %}</tbody></table></div><div class="fy-pagination"><button id="prev-page" type="button"><i class="fa-solid fa-chevron-left"></i> Previous</button><span id="page-info" class="fy-page-info"></span><button id="next-page" type="button">Next <i class="fa-solid fa-chevron-right"></i></button></div>{% else %}<div class="fy-empty"><i class="fa-regular fa-calendar-xmark"></i>No financial years returned by the central service.</div>{% endif %}
 </section></div>
+<div id="financial-year-currency-data" hidden>{% for record in records %}<span data-id="{{ record.id }}" data-currency="{{ record.currency_code|default:'' }}"></span>{% endfor %}</div>
 <script>
 (function(){const rows=[...document.querySelectorAll('#financial-year-table tbody tr')],country=document.getElementById('country-filter'),code=document.getElementById('code-filter'),from=document.getElementById('from-filter'),to=document.getElementById('to-filter'),size=document.getElementById('page-size'),count=document.getElementById('row-count'),info=document.getElementById('page-info'),prev=document.getElementById('prev-page'),next=document.getElementById('next-page');let page=1;function render(){const filtered=rows.filter(r=>(!country.value||r.dataset.country.includes(country.value.toLowerCase()))&&(!code.value||r.dataset.code.includes(code.value.toLowerCase()))&&(!from.value||r.dataset.from===from.value)&&(!to.value||r.dataset.to===to.value));const pages=Math.max(1,Math.ceil(filtered.length/Number(size.value)));page=Math.min(page,pages);const start=(page-1)*Number(size.value);rows.forEach(r=>r.style.display='none');filtered.slice(start,start+Number(size.value)).forEach((r,i)=>{r.style.display='';r.querySelector('.row-number').textContent=(start+i+1)+'.'});count.textContent=`Showing ${filtered.length?start+1:0}-${Math.min(start+Number(size.value),filtered.length)} of ${filtered.length} filtered records (${rows.length} total)`;info.textContent=`Page ${page} of ${pages}`;prev.disabled=page<=1;next.disabled=page>=pages} [country,code,from,to].forEach(x=>x&&x.addEventListener('input',()=>{page=1;render()}));size&&size.addEventListener('change',()=>{page=1;render()});prev&&prev.addEventListener('click',()=>{page--;render()});next&&next.addEventListener('click',()=>{page++;render()});document.getElementById('clear-filters')?.addEventListener('click',()=>{country.value='';code.value='';from.value='';to.value='';page=1;render()});render()})();
+</script>
+<script>
+  (function () {
+    const table = document.getElementById('financial-year-table');
+    const currencyData = new Map([...document.querySelectorAll('#financial-year-currency-data [data-id]')].map((item) => [item.dataset.id, item.dataset.currency]));
+    if (!table) return;
+    const header = table.querySelector('thead tr');
+    const rows = table.querySelectorAll('tbody tr');
+    if (header && !header.querySelector('[data-currency-header]')) {
+      const th = document.createElement('th');
+      th.dataset.currencyHeader = 'true';
+      th.textContent = 'Currency';
+      header.insertBefore(th, header.children[3]);
+    }
+    rows.forEach((row) => {
+      if (row.querySelector('[data-currency-cell]')) return;
+      const currency = document.createElement('td');
+      currency.dataset.currencyCell = 'true';
+      const editLink = row.querySelector('a[href*="/update/"]');
+      const id = editLink?.getAttribute('href')?.match(/(\d+)\/update\/$/)?.[1];
+      currency.textContent = currencyData.get(id) || '-';
+      row.insertBefore(currency, row.children[3]);
+    });
+  }());
 </script>
 {% endblock %}
