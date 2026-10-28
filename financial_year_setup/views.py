@@ -8,6 +8,8 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
+from .models import FinancialYearLock
+
 
 FINANCIAL_YEAR_API_URL = "https://centralmastermanagement.imcbs.com/api/financial-year/country-wise/"
 MONTHS = ("JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER")
@@ -77,6 +79,11 @@ def _form_payload(request):
 
 def _record_is_locked(record, request=None):
     """Return whether the central service has locked this country."""
+    try:
+        if FinancialYearLock.objects.filter(financial_year_id=int(record.get("id"))).exists():
+            return True
+    except (TypeError, ValueError):
+        pass
     if request is not None:
         locked_ids = {str(item) for item in request.session.get("financial_year_locked_ids", [])}
         if str(record.get("id", "")) in locked_ids:
@@ -124,6 +131,13 @@ def _lock_financial_year(request, financial_year_id):
             if status_code >= 400:
                 messages.error(request, _api_error_message(data))
             else:
+                FinancialYearLock.objects.update_or_create(
+                    financial_year_id=financial_year_id,
+                    defaults={
+                        "country_name": record.get("country_name", ""),
+                        "country_code": record.get("country_code", ""),
+                    },
+                )
                 locked_ids = set(request.session.get("financial_year_locked_ids", []))
                 locked_ids.add(str(financial_year_id))
                 request.session["financial_year_locked_ids"] = list(locked_ids)
@@ -144,7 +158,21 @@ def financial_year_setup(request):
         records = data if isinstance(data, list) else data.get("results", data.get("data", []))
         if isinstance(records, dict):
             records = [records]
-        records = [dict(record, is_locked=_record_is_locked(record, request)) for record in records]
+        lock_map = {
+            lock.financial_year_id: lock.locked_at
+            for lock in FinancialYearLock.objects.filter(
+                financial_year_id__in=[record.get("id") for record in records]
+            )
+        }
+        records = [
+            dict(
+                record,
+                is_locked=(record.get("id") in lock_map)
+                or _record_is_locked(record, request),
+                locked_at=lock_map.get(record.get("id")),
+            )
+            for record in records
+        ]
         if status_code >= 400:
             messages.error(request, _api_error_message(data))
             records = []
