@@ -21,7 +21,7 @@
 <div class="fy-page"><div class="fy-head"><div><h1>Financial year Setup</h1><p>Manage country-wise financial years from the central master management service.</p></div><a class="fy-btn fy-new" href="{% url 'financial_year_setup:create' %}"><i class="fa-solid fa-plus"></i> New financial year</a></div>
 <section class="fy-card"><div class="fy-toolbar"><div><h2>Configured financial years</h2><p>Existing configurations returned by the central service.</p></div></div>
 <div class="fy-filters"><label>Search country<input id="country-filter" type="search" placeholder="Country name..."></label><label>Country code<input id="code-filter" type="search" placeholder="IN"></label><label>Starts<select id="from-filter"><option value="">All months</option>{% for month in months %}<option value="{{ month }}">{{ month }}</option>{% endfor %}</select></label><label>Ends<select id="to-filter"><option value="">All months</option>{% for month in months %}<option value="{{ month }}">{{ month }}</option>{% endfor %}</select></label><button type="button" class="fy-btn fy-clear" id="clear-filters"><i class="fa-solid fa-rotate-left"></i> Clear</button></div>
-{% if records %}<div class="fy-meta"><span id="row-count"></span><label>Rows per page <select id="page-size" style="background:#f8fafc;color:#0f172a;border:1px solid #64748b;border-radius:6px;padding:5px 8px"><option value="5">5</option><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></label></div><div class="fy-table-wrap"><table class="fy-table" id="financial-year-table"><thead><tr><th class="fy-number">#</th><th>Country</th><th>Code</th><th>Financial year</th><th>Remark</th><th>Action</th></tr></thead><tbody>{% for record in records %}<tr data-country="{{ record.country_name|default:''|lower }}" data-code="{{ record.country_code|default:''|lower }}" data-from="{{ record.fy_from_month|default:'' }}" data-to="{{ record.fy_to_month|default:'' }}"><td class="fy-number row-number"></td><td><strong>{{ record.country_name|default:'-' }}</strong></td><td class="fy-code">{{ record.country_code|default:'-' }}</td><td>{{ record.fy_from_month|default:'-' }} <span class="fy-muted">to</span> {{ record.fy_to_month|default:'-' }}</td><td class="fy-muted">{{ record.remark|default:'-' }}</td><td><a class="fy-btn fy-edit" href="{% url 'financial_year_setup:update' record.id %}"><i class="fa-solid fa-pen"></i> Edit</a></td></tr>{% endfor %}</tbody></table></div><div class="fy-pagination"><button id="prev-page" type="button"><i class="fa-solid fa-chevron-left"></i> Previous</button><span id="page-info" class="fy-page-info"></span><button id="next-page" type="button">Next <i class="fa-solid fa-chevron-right"></i></button></div>{% else %}<div class="fy-empty"><i class="fa-regular fa-calendar-xmark"></i>No financial years returned by the central service.</div>{% endif %}
+		{% if records %}<div class="fy-meta"><span id="row-count"></span><label>Rows per page <select id="page-size" style="background:#f8fafc;color:#0f172a;border:1px solid #64748b;border-radius:6px;padding:5px 8px"><option value="5">5</option><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></label></div><div class="fy-table-wrap"><table class="fy-table" id="financial-year-table"><thead><tr><th class="fy-number">#</th><th>Country</th><th>Code</th><th>Financial year</th><th>Remark</th><th>LOCK</th><th>Action</th></tr></thead><tbody>{% for record in records %}<tr data-country="{{ record.country_name|default:''|lower }}" data-code="{{ record.country_code|default:''|lower }}" data-from="{{ record.fy_from_month|default:'' }}" data-to="{{ record.fy_to_month|default:'' }}"><td class="fy-number row-number"></td><td><strong>{{ record.country_name|default:'-' }}</strong></td><td class="fy-code">{{ record.country_code|default:'-' }}</td><td>{{ record.fy_from_month|default:'-' }} <span class="fy-muted">to</span> {{ record.fy_to_month|default:'-' }}</td><td class="fy-muted">{{ record.remark|default:'-' }}</td><td>{% if record.is_locked %}<span class="status-badge">LOCKED</span>{% else %}<form method="post" action="{% url 'financial_year_setup:lock' record.id %}" onsubmit="return confirm('Lock this country financial year? It cannot be unlocked later.');">{% csrf_token %}<button type="submit" class="fy-btn">LOCK</button></form>{% endif %}</td><td>{% if record.is_locked %}<span aria-label="Editing disabled for locked country">-</span>{% else %}<a class="fy-btn fy-edit" href="{% url 'financial_year_setup:update' record.id %}"><i class="fa-solid fa-pen"></i> Edit</a>{% endif %}</td></tr>{% endfor %}</tbody></table></div><div class="fy-pagination"><button id="prev-page" type="button"><i class="fa-solid fa-chevron-left"></i> Previous</button><span id="page-info" class="fy-page-info"></span><button id="next-page" type="button">Next <i class="fa-solid fa-chevron-right"></i></button></div>{% else %}<div class="fy-empty"><i class="fa-regular fa-calendar-xmark"></i>No financial years returned by the central service.</div>{% endif %}
 </section></div>
 <div id="financial-year-currency-data" hidden>{% for record in records %}<span data-id="{{ record.id }}" data-currency="{{ record.currency_code|default:'' }}"></span>{% endfor %}</div>
 <script>
@@ -51,4 +51,75 @@
     });
   }());
 </script>
-{% endblock %}
+	<style>
+	  .fy-lock-form { margin: 0; }
+	  form[action*="/lock/"] { margin: 0; }
+	  form[action*="/lock/"] button {
+	    min-width: 82px;
+	    justify-content: center;
+	    color: #fff !important;
+	    background: #b91c1c !important;
+	    border: 1px solid #ef4444 !important;
+	    box-shadow: 0 2px 6px rgba(185, 28, 28, .25);
+	    letter-spacing: .04em;
+	    white-space: nowrap;
+	  }
+	  form[action*="/lock/"] button:hover { background: #dc2626 !important; }
+	  .status-badge {
+	    display: inline-flex;
+	    min-width: 82px;
+	    justify-content: center;
+	    box-sizing: border-box;
+	    padding: 8px 12px;
+	    border-radius: 9px;
+	    color: #fecaca;
+	    background: #450a0a;
+	    border: 1px solid #991b1b;
+	    font-size: 12px;
+	    font-weight: 800;
+	    letter-spacing: .04em;
+	  }
+	  [aria-label="Editing disabled for locked country"] {
+	    display: inline-flex;
+	    min-width: 82px;
+	    justify-content: center;
+	    box-sizing: border-box;
+	    padding: 8px 12px;
+	    border-radius: 9px;
+	    color: #94a3b8;
+	    background: #1e293b;
+	    border: 1px solid #475569;
+	    font-size: 12px;
+	    font-weight: 700;
+	    cursor: not-allowed;
+	  }
+	  [aria-label="Editing disabled for locked country"]::after {
+	    content: "LOCKED";
+	    font-size: 12px;
+	  }
+	  .fy-lock-btn {
+	    min-width: 82px;
+	    justify-content: center;
+	    color: #fff;
+	    background: #b91c1c;
+	    border: 1px solid #ef4444;
+	    box-shadow: 0 2px 6px rgba(185, 28, 28, .25);
+	    letter-spacing: .04em;
+	  }
+	  .fy-lock-btn:hover { background: #dc2626; }
+	  .fy-locked-label {
+	    display: inline-flex;
+	    min-width: 82px;
+	    justify-content: center;
+	    box-sizing: border-box;
+	    padding: 8px 12px;
+	    border-radius: 9px;
+	    color: #fecaca;
+	    background: #450a0a;
+	    border: 1px solid #991b1b;
+	    font-size: 12px;
+	    font-weight: 800;
+	    letter-spacing: .04em;
+	  }
+	</style>
+	{% endblock %}
