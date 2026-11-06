@@ -53,6 +53,7 @@ def mobileproject_create(request):
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
         app_type = request.POST.get('app_type', 'mobile_app')
+        t_erp = request.POST.get('t_erp') == 'on'
         customized_package = request.POST.get('customized_package') == 'yes'
         branch_id = request.POST.get('branch') or None
         branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None
@@ -62,6 +63,7 @@ def mobileproject_create(request):
                 project_name=project_name,
                 description=description if description else None,
                 app_type=app_type,
+                t_erp=t_erp,
                 customized_package=customized_package,
                 branch=branch,
             )
@@ -81,6 +83,7 @@ def mobileproject_edit(request, pk):
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
         customized_package = request.POST.get('customized_package') == 'yes'
+        t_erp = request.POST.get('t_erp') == 'on'
         branch_id = request.POST.get('branch') or None
         branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None
         
@@ -88,6 +91,7 @@ def mobileproject_edit(request, pk):
             project.project_name = project_name
             project.description = description if description else None
             project.customized_package = customized_package
+            project.t_erp = t_erp
             project.branch = branch
             project.save()  # API endpoint will auto-update
             messages.success(request, 'Mobile project updated successfully!')

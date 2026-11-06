@@ -19,6 +19,10 @@ class MobileProject(models.Model):
         default='mobile_app'
     )
     customized_package = models.BooleanField(default=False)  # ← ADD THIS
+    t_erp = models.BooleanField(
+        default=False,
+        help_text='Allow this project to be used by the T-ERP licence create API.',
+    )
     # Default branch used when creating a licence via the auto Licence Create API
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name='mobile_projects')
     created_date = models.DateTimeField(auto_now_add=True)

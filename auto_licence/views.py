@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
@@ -14,63 +15,93 @@ from branch.models import Branch, CURRENCY_CODES
 
 DEFAULT_USERS = 50
 DEFAULT_VALIDITY_DAYS = 30
+DEFAULT_BRANCH_NAME = "IMC Developments"
+
+
+def _error(message, status=400):
+    return JsonResponse({"success": False, "error": message}, status=status)
+
+
+def _resolve_project(name):
+    """Resolve a project by its exact name.
+
+    Returns (project, error_response). The project name must be an exact
+    spelling, spacing, and capitalization match. If more than one project
+    shares the name the request is rejected as ambiguous.
+    """
+    matches = list(MobileProject.objects.filter(project_name=name)[:2])
+    if not matches:
+        return None, _error(
+            f"Project '{name}' not found. Project name must match exactly "
+            "(spelling, spaces & capitalization)."
+        )
+    if len(matches) > 1:
+        return None, _error(
+            f"Project name '{name}' is ambiguous — more than one project uses "
+            "this name. Please make project names unique."
+        )
+    return matches[0], None
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def api_licence_create(request, endpoint):
+def api_licence_create(request, t_erp_only=False):
     """
-    POST API: Creates a MAIN licence along with its Corporate (Store) and
-    Company (Shop) automatically — all in a single request.
+    POST API: Creates licences for MULTIPLE projects in one request for the
+    SAME company email.
 
-    If the company email is ALREADY registered (in this or any other project),
-    the existing company (Shop) and its corporate (Store) are REUSED as-is —
-    same branch, same details, same client_id — nothing existing is changed.
-    Only a new MAIN licence for THIS project is created and attached to that
-    existing company. The submitted corporate/company form data is ignored
-    in that case.
+    If the company email is ALREADY registered, the existing company (Shop)
+    and its corporate (Store) are REUSED as-is — same branch, same details,
+    same client_id — nothing existing is changed. The email decides which
+    existing company is reused; the submitted company name is ignored in
+    that case.
+
+    For every selected project one licence is created. If the resolved
+    company already holds a licence under a selected project, that project
+    is skipped (reported as "skipped_existing") and the remaining projects
+    are still created.
 
     Body:
     {
-        "branch": "<optional: branch id or name>",   // else project.branch, else first branch
         "corporate": { "name": "Corporate Name", "place": "Optional place" },
         "company": {
             "name": "Company Name",
             "place": "Optional place",
             "email": "company@domain.com",     // required — client_id is set from this
             "contact_no": "Optional",
-            "country": "India"
+            "country": "India",
+            "is_active": true
         },
-        "package": "Package Name"    // REQUIRED — must match a Package name EXACTLY (spelling & spaces)
+        "projects": [
+            { "project": "Exact Project Name", "package": "Exact Package Name" },
+            { "project": "Another Project", "package": "Another Package" }
+        ]
     }
 
-    Defaults applied automatically:
-        - client_id   = company email
-        - users       = package.users_count (falls back to 50 if the package has no user limit)
-        - currency    = auto from country (no currency_code field accepted)
-        - validity    = ALWAYS 30 days for the first licence & first billing (extra days are
-                        added manually later via the Billing section; package.days_limit is NOT used)
-        - package     = REQUIRED; if the exact name doesn't match, the request fails
-        - billing     = auto-created (Billed / Not Paid)
-        - type        = MAIN (Corporate & Company appear immediately)
+    Rules:
+        - Each project name must match exactly (spelling, spaces & capitalization).
+        - Each package name must match exactly and must belong to that project.
+        - One project = one package. The same project cannot be listed twice.
+        - Users         = package.users_count (falls back to 50 when unlimited)
+        - Validity      = ALWAYS 30 days for the first licence & first billing
+        - Billing       = auto-created (Billed / Not Paid)
+        - Licence type  = new
     """
     try:
         payload = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON body"}, status=400)
+        return _error("Invalid JSON body")
 
     if not isinstance(payload, dict):
-        return JsonResponse({"success": False, "error": "Invalid JSON body"}, status=400)
-
-    # ---------------- PROJECT ----------------
-    try:
-        project = MobileProject.objects.get(api_endpoint=endpoint)
-    except MobileProject.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Project not found"}, status=404)
+        return _error("Invalid JSON body")
 
     # ---------------- CORPORATE / COMPANY ----------------
     corporate = payload.get("corporate") or {}
     company = payload.get("company") or {}
+    if not isinstance(corporate, dict):
+        corporate = {}
+    if not isinstance(company, dict):
+        company = {}
 
     corporate_name = str(corporate.get("name") or "").strip()
     corporate_place = str(corporate.get("place") or "").strip()
@@ -82,173 +113,216 @@ def api_licence_create(request, endpoint):
     is_active = bool(company.get("is_active", True))
 
     if not corporate_name:
-        return JsonResponse({"success": False, "error": "corporate.name is required"}, status=400)
+        return _error("corporate.name is required")
     if not company_name:
-        return JsonResponse({"success": False, "error": "company.name is required"}, status=400)
-
-    # client_id is automatically set from the company email (this API only)
+        return _error("company.name is required")
     if not company_email:
-        return JsonResponse({"success": False, "error": "company.email is required (client_id is set from it)"}, status=400)
+        return _error("company.email is required (client_id is set from it)")
     if len(company_email) > 50:
-        return JsonResponse({"success": False, "error": "company.email is too long to be used as client_id (max 50 chars)"}, status=400)
+        return _error("company.email is too long to be used as client_id (max 50 chars)")
 
     # currency is always auto-derived from the country (no currency_code field accepted)
     currency_code = CURRENCY_CODES.get(country, "INR")
 
-    # ---------------- BRANCH (always "IMC Developments") ----------------
-    branch = Branch.objects.filter(name__iexact="IMC Developments").first()
-    if branch is None:
-        return JsonResponse({"success": False, "error": "Default branch 'IMC Developments' not found."}, status=400)
+    # ---------------- PROJECTS + PACKAGES (validate everything first) ----------------
+    entries = payload.get("projects")
+    if not isinstance(entries, list) or not entries:
+        return _error(
+            "projects is required and must be a non-empty list of "
+            '{ "project": "<name>", "package": "<name>" } objects.'
+        )
 
-    # ---------------- DUPLICATE CHECKS ----------------
-    # A company can hold only ONE licence per project.
-    # If the email is already registered (any project), the existing company
-    # (Shop) and its corporate (Store) are reused as-is — their branch,
-    # details and client_id are NOT changed. Only a new licence for this
-    # project is created.
+    resolved = []
+    seen_projects = set()
+    for index, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            return _error(f"projects[{index}] must be an object with 'project' and 'package'.")
+
+        # Keep the submitted names unchanged for exact matching. Only use
+        # strip() to decide whether a required value is blank; leading or
+        # trailing spaces are part of the name and must not be normalized.
+        project_name = str(entry.get("project") or "")
+        package_name = str(entry.get("package") or "")
+
+        if not project_name.strip():
+            return _error(f"projects[{index}].project is required")
+        if not package_name.strip():
+            return _error(
+                f"projects[{index}].package is required. One package per project."
+            )
+
+        project_key = project_name
+        if project_key in seen_projects:
+            return _error(
+                f"Project '{project_name}' is listed more than once. "
+                "One project can only have one package per request."
+            )
+        seen_projects.add(project_key)
+
+        project, project_error = _resolve_project(project_name)
+        if project_error:
+            return project_error
+
+        if t_erp_only and not project.t_erp:
+            return _error(
+                f"Project '{project.project_name}' is not enabled for the T-ERP "
+                "licence create API. Enable the T-ERP option in the project settings."
+            )
+
+        package = Package.objects.filter(
+            project=project, package_name=package_name
+        ).first()
+        if package is None:
+            available = list(
+                Package.objects.filter(project=project)
+                .values_list("package_name", flat=True)
+                .order_by("package_name")
+            )
+            available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
+            return _error(
+                f"Package '{package_name}' not found for project "
+                f"'{project.project_name}'. Package name must match exactly "
+                "(spelling, spaces & capitalization). "
+                f"Available packages: {available_msg}"
+            )
+
+        resolved.append({"project": project, "package": package})
+
+    # ---------------- BRANCH ----------------
+    default_branch = Branch.objects.filter(name__iexact=DEFAULT_BRANCH_NAME).first()
+    for item in resolved:
+        if (item["project"].branch or default_branch) is None:
+            return _error(
+                f"No branch configured for project '{item['project'].project_name}' "
+                f"and default branch '{DEFAULT_BRANCH_NAME}' not found."
+            )
+
+    # Branch used when a NEW corporate/company has to be created.
+    company_branch = resolved[0]["project"].branch or default_branch
+
+    # ---------------- EXISTING COMPANY (matched by EMAIL) ----------------
+    # The email decides which company is reused. The submitted company name
+    # is ignored when the email already exists.
     existing_shop = Shop.objects.filter(email=company_email).select_related("store").first()
     reuse_company = existing_shop is not None
 
-    already_exists = MobileControl.objects.filter(
-        project=project
-    ).filter(
-        Q(customer_name__iexact=company_name) |
-        Q(client_id=company_email)
+    def licence_exists(project):
+        """A licence already exists for the resolved company under this project."""
+        qs = MobileControl.objects.filter(project=project)
+        if existing_shop is not None:
+            return qs.filter(
+                Q(shop=existing_shop)
+                | Q(client_id=existing_shop.client_id)
+                | Q(client_id=company_email)
+            ).exists()
+        return qs.filter(client_id=company_email).exists()
+
+    # ---------------- CREATE (single transaction) ----------------
+    store = existing_shop.store if reuse_company else None
+    shop = existing_shop
+    results = []
+    created_count = 0
+    skipped_count = 0
+
+    with transaction.atomic():
+        for item in resolved:
+            project = item["project"]
+            package = item["package"]
+
+            if licence_exists(project):
+                skipped_count += 1
+                results.append({
+                    "project": project.project_name,
+                    "package": package.package_name,
+                    "status": "skipped_existing",
+                    "message": "A licence already exists for this company under this project.",
+                })
+                continue
+
+            # Create the corporate/company once, when the email is new.
+            if shop is None:
+                store = Store.objects.create(
+                    name=corporate_name,
+                    branch=company_branch,
+                    place=corporate_place,
+                    is_demo=False,
+                    created_by=request.user if request.user.is_authenticated else None,
+                    created_by_name="Licence Create API",
+                )
+                shop = Shop.objects.create(
+                    store=store,
+                    branch=company_branch,
+                    name=company_name,
+                    place=company_place,
+                    email=company_email,
+                    contact_no=company_contact,
+                    country=country,
+                    currency_code=currency_code,
+                    client_id=company_email,
+                    is_active=is_active,
+                    is_demo=False,
+                    created_by=request.user if request.user.is_authenticated else None,
+                    created_by_name="Licence Create API",
+                )
+
+            branch = project.branch or default_branch
+            users_count = (
+                package.users_count
+                if package.users_count and package.users_count > 0
+                else DEFAULT_USERS
+            )
+            expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
+
+            control = MobileControl.objects.create(
+                project=project,
+                store=store,
+                shop=shop,
+                customer_name=shop.name,
+                client_id=shop.client_id,
+                login_limit=users_count,
+                licence_type="new",
+                package=package,
+                active_custom_package=None,
+                branch=branch,
+                status=True,
+                bill_status=True,
+                expiry_date=expiry_date,
+            )
+
+            MobileBillingHistory.objects.create(
+                control=control,
+                package=package,
+                custom_package=None,
+                extended_days=DEFAULT_VALIDITY_DAYS,
+                extended_login_limit=users_count,
+                old_expiry_date=None,
+                new_expiry_date=control.expiry_date,
+                old_login_limit=0,
+                new_login_limit=users_count,
+                bill_status=True,
+                payment_status="Not Paid",
+                remark="Licence auto-created via Licence Create API",
+                added_by="Licence Create API",
+            )
+
+            created_count += 1
+            results.append({
+                "project": project.project_name,
+                "package": package.package_name,
+                "status": "created",
+                "license_key": control.license_key,
+                "users_count": users_count,
+                "login_limit": control.login_limit,
+                "expiry_date": control.expiry_date.isoformat(),
+            })
+
+    corporate_response = (
+        {"name": store.name, "place": store.place, "store_id": store.store_id}
+        if store else
+        {"name": corporate_name, "place": corporate_place, "store_id": None}
     )
-    if existing_shop is not None:
-        # The resolved company must not already hold ANY licence under
-        # this project — no matter how its client_id is stored.
-        already_exists = already_exists | MobileControl.objects.filter(
-            project=project, shop=existing_shop
-        )
-
-    if already_exists.exists():
-        return JsonResponse({
-            "success": False,
-            "error": f"A licence already exists for the company '{company_name}' under the project '{project.project_name}'"
-        }, status=409)
-
-    # ---------------- PACKAGE (REQUIRED, exact name match) ----------------
-    package_name = str(payload.get("package") or "").strip()
-    if not package_name:
-        return JsonResponse({
-            "success": False,
-            "error": "package is required. Provide the exact Package name (spelling & spaces).",
-        }, status=400)
-
-    package = Package.objects.filter(
-        project=project, package_name__iexact=package_name
-    ).first()
-    if package is None:
-        available = list(
-            Package.objects.filter(project=project)
-            .values_list("package_name", flat=True)
-            .order_by("package_name")
-        )
-        available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
-        return JsonResponse({
-            "success": False,
-            "error": (
-                f"Package '{package_name}' not found for project '{project.project_name}'. "
-                "Package name must match exactly (spelling & spaces). "
-                f"Available packages: {available_msg}"
-            ),
-        }, status=400)
-
-    # User count comes automatically from the package when it enforces one.
-    # Validity is ALWAYS 30 days for the first licence & first billing
-    # (package.days_limit is not used here; extra days are added manually via Billing).
-    users_count = package.users_count if package and package.users_count and package.users_count > 0 else DEFAULT_USERS
-    expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
-
-    # ---------------- CORPORATE (Store) & COMPANY (Shop) ----------------
-    if reuse_company:
-        # Company already registered: reuse the SAME corporate (Store) and
-        # company (Shop) — do not change any existing data (branch, details,
-        # client_id stay exactly as they are). Only the new licence is created.
-        store = existing_shop.store
-        shop = existing_shop
-    else:
-        # ---------------- CREATE CORPORATE (Store) ----------------
-        store = Store.objects.create(
-            name=corporate_name,
-            branch=branch,
-            place=corporate_place,
-            is_demo=False,
-            created_by=request.user if request.user.is_authenticated else None,
-            created_by_name="Licence Create API",
-        )
-
-        # ---------------- CREATE COMPANY (Shop) ----------------
-        shop = Shop.objects.create(
-            store=store,
-            branch=branch,
-            name=company_name,
-            place=company_place,
-            email=company_email,
-            contact_no=company_contact,
-            country=country,
-            currency_code=currency_code,
-            client_id=company_email,
-            is_active=is_active,
-            is_demo=False,
-            created_by=request.user if request.user.is_authenticated else None,
-            created_by_name="Licence Create API",
-        )
-
-    # ---------------- CREATE MAIN LICENCE (MobileControl) ----------------
-    control = MobileControl.objects.create(
-        project=project,
-        store=store,
-        shop=shop,
-        customer_name=shop.name,
-        client_id=shop.client_id,
-        login_limit=users_count,
-        licence_type="new",
-        package=package,
-        active_custom_package=None,
-        branch=branch,
-        status=True,
-        bill_status=True,
-        expiry_date=expiry_date,
-    )
-
-    # ---------------- AUTO BILLING ----------------
-    MobileBillingHistory.objects.create(
-        control=control,
-        package=package,
-        custom_package=None,
-        extended_days=DEFAULT_VALIDITY_DAYS,
-        extended_login_limit=users_count,
-        old_expiry_date=None,
-        new_expiry_date=control.expiry_date,
-        old_login_limit=0,
-        new_login_limit=users_count,
-        bill_status=True,
-        payment_status="Not Paid",
-        remark="Main licence auto-created via Licence Create API",
-        added_by="Licence Create API",
-    )
-
-    return JsonResponse({
-        "success": True,
-        "message": (
-            "Licence created for existing company (existing corporate & client_id reused)"
-            if reuse_company else
-            "Main licence created successfully"
-        ),
-        "reused_existing_company": reuse_company,
-        "licence_type": control.licence_type,
-        "customer_name": control.customer_name,
-        "client_id": control.client_id,
-        "license_key": control.license_key,
-        "package": control.package.package_name if control.package else None,
-        "users_count": users_count,
-        "login_limit": control.login_limit,
-        "expiry_date": control.expiry_date.isoformat(),
-        "branch": branch.name,
-        "corporate": {"name": store.name, "place": store.place, "store_id": store.store_id},
-        "company": {
+    company_response = (
+        {
             "name": shop.name,
             "place": shop.place,
             "email": shop.email,
@@ -256,13 +330,29 @@ def api_licence_create(request, endpoint):
             "country": shop.country,
             "currency_code": shop.currency_code,
             "client_id": shop.client_id,
-        },
-        "billing": {
-            "bill_status": True,
-            "payment_status": "Not Paid",
-            "package": control.package.package_name if control.package else None,
-            "extended_days": DEFAULT_VALIDITY_DAYS,
-            "new_expiry_date": control.expiry_date.isoformat(),
-            "new_login_limit": users_count,
-        },
-    }, status=201)
+        }
+        if shop else
+        {
+            "name": company_name,
+            "place": company_place,
+            "email": company_email,
+            "contact_no": company_contact,
+            "country": country,
+            "currency_code": currency_code,
+            "client_id": company_email,
+        }
+    )
+
+    return JsonResponse({
+        "success": True,
+        "message": (
+            f"{created_count} licence(s) created, {skipped_count} skipped "
+            "(a licence already exists for this company under the project)."
+        ),
+        "reused_existing_company": reuse_company,
+        "created_count": created_count,
+        "skipped_count": skipped_count,
+        "corporate": corporate_response,
+        "company": company_response,
+        "results": results,
+    }, status=201 if created_count else 200)
