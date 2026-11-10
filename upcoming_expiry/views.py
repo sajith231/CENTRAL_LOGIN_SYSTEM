@@ -21,6 +21,7 @@ def upcoming_expiry_view(request):
     now = timezone.now()
 
     branch = request.GET.get("branch", "").strip()
+    project = request.GET.get("project", "").strip()
 
     # Custom (non-superuser) users only see their assigned branches
     branch_ids = get_user_branch_ids(request)
@@ -51,6 +52,13 @@ def upcoming_expiry_view(request):
     if branch:
         controls = controls.filter(shop__branch_id=branch)
 
+    projects = MobileProject.objects.filter(
+        controls__in=controls,
+    ).distinct().order_by("project_name")
+
+    if project:
+        controls = controls.filter(project_id=project)
+
     for control in controls:
         control.registered_count = control.active_devices.count()
         control.balance_count = control.login_limit - control.registered_count
@@ -67,4 +75,6 @@ def upcoming_expiry_view(request):
         "total_count": controls.count(),
         "branches": branches,
         "selected_branch": branch,
+        "projects": projects,
+        "selected_project": project,
     })

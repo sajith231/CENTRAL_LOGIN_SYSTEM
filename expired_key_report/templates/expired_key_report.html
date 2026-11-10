@@ -154,8 +154,18 @@
         <option value="{{ b.id }}" {% if selected_branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}{% if b.place %} - {{ b.place }}{% endif %}</option>
         {% endfor %}
       </select>
+      <label style="color:#94a3b8; font-size:13px; font-weight:600;">
+        <i class="fa-solid fa-diagram-project" style="color:#8b5cf6;"></i> Project:
+      </label>
+      <select name="project" id="projectFilter" onchange="this.form.submit()"
+              style="padding:9px 14px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:white; font-size:14px; min-width:220px;">
+        <option value="">All Projects</option>
+        {% for project in projects %}
+        <option value="{{ project.id }}" {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>{{ project.project_name }}</option>
+        {% endfor %}
+      </select>
       <a href="{% url 'expired_key_report:expired_key_report' %}"
-         style="font-size:13px; color:#94a3b8; text-decoration:none;{% if not selected_branch %} display:none;{% endif %}">✕ Clear</a>
+         style="font-size:13px; color:#94a3b8; text-decoration:none;{% if not selected_branch and not selected_project %} display:none;{% endif %}">✕ Clear</a>
     </form>
 
     <div style="padding:14px 20px 20px; overflow:auto;">

@@ -3,7 +3,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render
 
 from branch.models import Branch
-from MobileApp.models import MobileBillingHistory, MobileControl
+from MobileApp.models import MobileBillingHistory, MobileControl, MobileProject
 from app1.helpers import get_user_branch_ids
 
 
@@ -36,6 +36,10 @@ def unbilled_report(request):
     if branch_ids is not None:
         branches = branches.filter(id__in=branch_ids)
 
+    projects = MobileProject.objects.filter(
+        controls__in=controls,
+    ).distinct().order_by('project_name')
+
     licence_types = [
         {'value': 'new', 'label': 'New'},
         {'value': 'transfer', 'label': 'Transfer'},
@@ -44,5 +48,6 @@ def unbilled_report(request):
     return render(request, "unbilled_report.html", {
         "controls": controls,
         "branches": branches,
+        "projects": projects,
         "licence_types": licence_types,
     })

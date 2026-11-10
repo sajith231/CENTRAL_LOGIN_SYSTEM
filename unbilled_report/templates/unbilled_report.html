@@ -369,6 +369,13 @@
       {% endfor %}
     </select>
 
+    <select id="projectFilter" class="filter-select" onchange="applyFilters()">
+      <option value="">All Projects</option>
+      {% for project in projects %}
+      <option value="{{ project.id }}">{{ project.project_name }}</option>
+      {% endfor %}
+    </select>
+
     <select id="licenceTypeFilter" class="filter-select" onchange="applyFilters()">
       <option value="">All Licence Types</option>
       {% for lt in licence_types %}
@@ -419,6 +426,7 @@
             data-id="{{ c.id }}"
             data-licence-type="{{ c.licence_type }}"
             data-branch="{{ c.shop.branch.id|default:'' }}"
+            data-project="{{ c.project_id }}"
             data-payment="{{ c.latest_payment_status|default:'' }}"
             data-created="{{ c.created_date|date:'Y-m-d' }}"
             data-expiry="{{ c.expiry_date|date:'Y-m-d' }}"
@@ -580,12 +588,14 @@
   function applyFilters() {
     const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
     const branch = document.getElementById('branchFilter').value;
+    const project = document.getElementById('projectFilter').value;
     const licenceType = document.getElementById('licenceTypeFilter').value;
     const payment = document.getElementById('paymentFilter').value;
     const rowsPerPage = document.getElementById('rowsPerPage').value;
 
     filteredRows = rows.filter(function (row) {
       if (branch && row.dataset.branch !== branch) return false;
+      if (project && row.dataset.project !== project) return false;
       if (licenceType && row.dataset.licenceType !== licenceType) return false;
       if (payment && row.dataset.payment !== payment) return false;
       if (search && !(row.dataset.search || '').toLowerCase().includes(search)) return false;
