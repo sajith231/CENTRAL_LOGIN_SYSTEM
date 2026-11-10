@@ -77,6 +77,8 @@
             </div>
 
             <div class="mb-3 form-check">
+              <!-- Keep unchecked submissions explicit for deployments with older create code. -->
+              <input type="hidden" name="t_erp" value="false">
               <input class="form-check-input" type="checkbox" name="t_erp" id="t_erp">
               <label class="form-check-label" for="t_erp">T-ERP</label>
               <div class="form-text">Allow this project in the T-ERP licence create API.</div>

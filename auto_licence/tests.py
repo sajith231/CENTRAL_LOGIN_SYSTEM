@@ -1,7 +1,9 @@
 import json
+from datetime import timedelta
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from MobileApp.models import MobileProject, MobileControl, MobileBillingHistory
 from ModuleAndPackage.models import Package
@@ -73,6 +75,32 @@ class LicenceCreateApiTests(TestCase):
         self.assertEqual(resp.status_code, 201)
         self.assertEqual(MobileControl.objects.count(), 1)
         self.assertEqual(MobileControl.objects.get().project, self.project_b)
+
+        control = MobileControl.objects.get()
+        self.assertAlmostEqual(
+            (control.expiry_date - timezone.now()).total_seconds(),
+            timedelta(days=14).total_seconds(),
+            delta=5,
+        )
+        self.assertEqual(
+            MobileBillingHistory.objects.get(control=control).extended_days,
+            14,
+        )
+
+    def test_regular_endpoint_still_creates_thirty_day_licence(self):
+        resp = self._post(self._payload())
+        self.assertEqual(resp.status_code, 201)
+
+        control = MobileControl.objects.get()
+        self.assertAlmostEqual(
+            (control.expiry_date - timezone.now()).total_seconds(),
+            timedelta(days=30).total_seconds(),
+            delta=5,
+        )
+        self.assertEqual(
+            MobileBillingHistory.objects.get(control=control).extended_days,
+            30,
+        )
 
     def test_bulk_creates_licences_for_multiple_projects(self):
         resp = self._post(self._payload(projects=[

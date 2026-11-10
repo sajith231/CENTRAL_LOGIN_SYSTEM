@@ -53,7 +53,7 @@ def mobileproject_create(request):
         project_name = request.POST.get('project_name', '').strip()
         description = request.POST.get('description', '').strip()
         app_type = request.POST.get('app_type', 'mobile_app')
-        t_erp = request.POST.get('t_erp') == 'on'
+        t_erp = request.POST.getlist('t_erp')[-1:] == ['on']
         customized_package = request.POST.get('customized_package') == 'yes'
         branch_id = request.POST.get('branch') or None
         branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None

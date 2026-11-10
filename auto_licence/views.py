@@ -15,6 +15,7 @@ from branch.models import Branch, CURRENCY_CODES
 
 DEFAULT_USERS = 50
 DEFAULT_VALIDITY_DAYS = 30
+T_ERP_VALIDITY_DAYS = 14
 DEFAULT_BRANCH_NAME = "IMC Developments"
 
 
@@ -83,7 +84,7 @@ def api_licence_create(request, t_erp_only=False):
         - Each package name must match exactly and must belong to that project.
         - One project = one package. The same project cannot be listed twice.
         - Users         = package.users_count (falls back to 50 when unlimited)
-        - Validity      = ALWAYS 30 days for the first licence & first billing
+        - Validity      = 14 days for T-ERP requests, otherwise 30 days
         - Billing       = auto-created (Billed / Not Paid)
         - Licence type  = new
     """
@@ -271,7 +272,8 @@ def api_licence_create(request, t_erp_only=False):
                 if package.users_count and package.users_count > 0
                 else DEFAULT_USERS
             )
-            expiry_date = timezone.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)
+            validity_days = T_ERP_VALIDITY_DAYS if t_erp_only else DEFAULT_VALIDITY_DAYS
+            expiry_date = timezone.now() + timedelta(days=validity_days)
 
             control = MobileControl.objects.create(
                 project=project,
@@ -293,7 +295,7 @@ def api_licence_create(request, t_erp_only=False):
                 control=control,
                 package=package,
                 custom_package=None,
-                extended_days=DEFAULT_VALIDITY_DAYS,
+                extended_days=validity_days,
                 extended_login_limit=users_count,
                 old_expiry_date=None,
                 new_expiry_date=control.expiry_date,
