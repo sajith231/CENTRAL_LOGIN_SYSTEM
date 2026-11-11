@@ -4,6 +4,13 @@ from . import views
 app_name = "auto_licence"
 
 urlpatterns = [
+    # T-ERP GET API: Retrieve the current T-ERP project/package catalogue
+    path(
+        "t-erp/mobileapp/api/projects/",
+        views.api_t_erp_projects,
+        name="t_erp_api_projects",
+    ),
+
     # T-ERP POST API: Create licences for one or more projects in one request
     path(
         "t-erp/mobileapp/api/license/create/",

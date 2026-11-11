@@ -45,6 +45,52 @@ def _resolve_project(name):
 
 
 @csrf_exempt
+@require_http_methods(["GET", "OPTIONS"])
+def api_t_erp_projects(request):
+    """Return the current T-ERP projects and their packages.
+
+    This endpoint intentionally reads the project/package records on every
+    request. Changes made in the project or package screens are therefore
+    reflected immediately without maintaining a second API-specific list.
+    """
+    if request.method == "OPTIONS":
+        response = JsonResponse({"status": "ok"})
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Accept"
+        return response
+
+    projects = (
+        MobileProject.objects.filter(t_erp=True)
+        .prefetch_related("package_set")
+        .order_by("project_name")
+    )
+
+    response = JsonResponse({
+        "success": True,
+        "projects": [
+            {
+                "project": project.project_name,
+                "api_endpoint": project.api_endpoint,
+                "packages": [
+                    {
+                        "package": package.package_name,
+                        "days_limit": package.days_limit,
+                        "users_count": package.users_count or 0,
+                    }
+                    for package in project.package_set.all().order_by("package_name")
+                ],
+            }
+            for project in projects
+        ],
+    })
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Accept"
+    return response
+
+
+@csrf_exempt
 @require_http_methods(["POST"])
 def api_licence_create(request, t_erp_only=False):
     """

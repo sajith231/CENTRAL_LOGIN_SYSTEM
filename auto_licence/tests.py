@@ -32,6 +32,9 @@ class LicenceCreateApiTests(TestCase):
     def _t_erp_url(self):
         return reverse("auto_licence:t_erp_api_licence_create")
 
+    def _t_erp_projects_url(self):
+        return reverse("auto_licence:t_erp_api_projects")
+
     def _payload(self, projects=None, email="sajiththomas231@gmail.com", company_name="SAJITH TEST"):
         if projects is None:
             projects = [{"project": "Trellisco Beta", "package": "Prime"}]
@@ -66,6 +69,35 @@ class LicenceCreateApiTests(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn("not enabled for the T-ERP", resp.json()["error"])
         self.assertEqual(MobileControl.objects.count(), 0)
+
+    def test_t_erp_project_list_returns_current_packages_only_for_enabled_projects(self):
+        self.project_b.t_erp = True
+        self.project_b.save(update_fields=["t_erp"])
+
+        response = self.client.get(self._t_erp_projects_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            "success": True,
+            "projects": [{
+                "project": "Trellisco Beta",
+                "api_endpoint": "trelliscobeta",
+                "packages": [
+                    {"package": "Basic", "days_limit": 0, "users_count": 5},
+                    {"package": "Prime", "days_limit": 0, "users_count": 10},
+                ],
+            }],
+        })
+
+        Package.objects.filter(project=self.project_b, package_name="Prime").update(
+            package_name="Updated Prime"
+        )
+        refreshed = self.client.get(self._t_erp_projects_url()).json()
+        package_names = [
+            item["package"] for item in refreshed["projects"][0]["packages"]
+        ]
+        self.assertIn("Updated Prime", package_names)
+        self.assertNotIn("Prime", package_names)
 
     def test_t_erp_endpoint_allows_only_enabled_projects(self):
         self.project_b.t_erp = True
