@@ -27,6 +27,7 @@ def get_all_menus():
             "icon": "fa-solid fa-mobile-screen-button",
             "submenus": [
                 {"id": "mobile_control", "name": "Licensing", "icon": "fa-solid fa-sliders"},
+                {"id": "terp_license", "name": "TERP Licensing", "icon": "fa-solid fa-cubes"},
                 {"id": "mobile_control_status","name": "Mobile Status Control","icon": "fa-solid fa-toggle-on"},
                 {"id": "mobile_billing","name": "Mobile Billing","icon": "fa-solid fa-file-invoice-dollar"},
                 {"id": "mobile_payment_status", "name": "Mobile Payment Status", "icon": "fa-solid fa-money-check-dollar"},

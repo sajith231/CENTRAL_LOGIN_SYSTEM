@@ -398,7 +398,7 @@
           {% endif %}
 
           {# 2) APP CONTROL #}
-          {% if request.user.is_superuser or 'mobile_control' in am or 'mobile_demo' in am %}
+          {% if request.user.is_superuser or 'mobile_control' in am or 'terp_license' in am or 'mobile_demo' in am %}
 
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
@@ -408,8 +408,16 @@
             </button>
             <div id="submenu-mobile" class="submenu">
               {% if request.user.is_superuser or 'mobile_control' in am %}
-              <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');">
+              <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');"
+                class="{% block active_mobile_control %}{% endblock %}">
                 <i class="fa-solid fa-sliders"></i> Licensing
+              </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'terp_license' in am %}
+              <a href="{% url 'MobileApp:terp_license' %}" onclick="sessionStorage.removeItem('terpControlFilters');"
+                class="{% block active_terp_license %}{% endblock %}">
+                <i class="fa-solid fa-cubes"></i> TERP Licensing
               </a>
               {% endif %}
 

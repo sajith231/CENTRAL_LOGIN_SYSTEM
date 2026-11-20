@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="card" style="padding:20px;">
-    <h2 style="color:white;">Add Mobile Control</h2>
+    <h2 style="color:white;">{% if terp_mode %}Add TERP Licensing{% else %}Add Mobile Control{% endif %}</h2>
 
     {% if messages %}
         {% for message in messages %}
@@ -14,6 +14,9 @@
 
     <form method="POST">
         {% csrf_token %}
+        {% if terp_mode %}
+        <input type="hidden" name="terp" value="1">
+        {% endif %}
 
         <!-- 🔹 Branch -->
         <div class="mb-3">
@@ -73,10 +76,15 @@
             <label>Type</label>
             <select name="licence_type" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% if terp_mode %}
+                {# TERP licences are always Developer licences – other types are hidden in the UI only #}
+                <option value="developer" selected>Developer Licence</option>
+                {% else %}
                 <option value="new">New Licence</option>
                 {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                 <option value="transfer">Transfer Licence</option>
                 <option value="developer">Developer Licence</option>
+                {% endif %}
                 {% endif %}
             </select>
         </div>
@@ -96,8 +104,13 @@
         </div> -->
 
         <button type="submit" class="btn btn-success">Save</button>
+        {% if terp_mode %}
+        <a href="{% url 'MobileApp:terp_license' %}" class="btn btn-secondary"
+            style="background:#64748b; border:none; margin-left:10px;">Back</a>
+        {% else %}
         <a href="{% url 'MobileApp:mobile_control' %}" class="btn btn-secondary"
             style="background:#64748b; border:none; margin-left:10px;">Back</a>
+        {% endif %}
     </form>
 </div>
 

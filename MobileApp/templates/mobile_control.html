@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block active_mobile_control %}active{% endblock %}
-{% block header_title %}<strong>App Licensing</strong>{% endblock %}
+{% block active_mobile_control %}{% if not terp_mode %}active{% endif %}{% endblock %}
+{% block active_terp_license %}{% if terp_mode %}active{% endif %}{% endblock %}
+{% block header_title %}<strong>{% if terp_mode %}TERP Licensing{% else %}App Licensing{% endif %}</strong>{% endblock %}
 
 {% block content %}
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0; font-size:20px; color:white;">Add Licensing</h2>
-        <a href="{% url 'MobileApp:add_mobile_control' %}" class="btn"
+        <h2 style="margin:0; font-size:20px; color:white;">
+            {% if terp_mode %}TERP Licensing{% else %}Add Licensing{% endif %}
+        </h2>
+        <a href="{% url 'MobileApp:add_mobile_control' %}{% if terp_mode %}?terp=1{% endif %}" class="btn"
             style="background:#16a34a; color:white; padding:8px 16px; border-radius:6px;">
             <i class="fa-solid fa-sliders"></i> Add Licensing
         </a>
@@ -24,6 +27,12 @@
 
         <input type="text" id="companyFilter" placeholder="Search Company" style="padding:8px 12px; border-radius:6px; border:1px solid #334155;
                background:#0f172a; color:white; width:220px;">
+
+        {% if terp_mode %}
+        <span style="color:#f59e0b; font-size:12px; font-weight:600; white-space:nowrap;">
+            <i class="fa-solid fa-filter"></i> T-ERP projects only
+        </span>
+        {% endif %}
 
         <select id="projectFilter"
             style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white;">
@@ -493,7 +502,7 @@
 
 {% else %}
 <div style="padding:40px; text-align:center; color:#9ca3af;">
-    <h3>No controls found</h3>
+    <h3>{% if terp_mode %}No TERP licences found{% else %}No controls found{% endif %}</h3>
 </div>
 {% endif %}
 </div>
@@ -1017,6 +1026,9 @@
     }
 </script>
 <script>
+    // Each page keeps its own filter state (App Licensing vs TERP Licensing)
+    const FILTER_STORAGE_KEY = "{{ filter_storage_key|default:'mobileControlFilters' }}";
+
     let currentPage = 1;
     let totalPages = 1; // always reflects the filtered total
 
@@ -1040,11 +1052,11 @@
             rowsPerPage: document.getElementById("rowsPerPage").value,
             currentPage: currentPage
         };
-        sessionStorage.setItem("mobileControlFilters", JSON.stringify(state));
+        sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
     }
 
     function loadFilterState() {
-        const saved = sessionStorage.getItem("mobileControlFilters");
+        const saved = sessionStorage.getItem(FILTER_STORAGE_KEY);
         if (saved) {
             try {
                 const state = JSON.parse(saved);

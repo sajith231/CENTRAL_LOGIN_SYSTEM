@@ -116,6 +116,16 @@ from django.utils import timezone
 from datetime import timedelta
 
 def mobile_control_list(request):
+    """App Licensing – every licence (all projects)."""
+    return render_control_list(request, terp_only=False)
+
+
+def terp_license_list(request):
+    """TERP Licensing – same page/UI, limited to T-ERP enabled projects."""
+    return render_control_list(request, terp_only=True)
+
+
+def render_control_list(request, terp_only=False):
     from django.db.models import OuterRef, Subquery
     from .models import MobileBillingHistory
 
@@ -132,6 +142,14 @@ def mobile_control_list(request):
         .prefetch_related('active_devices')
         .order_by('-updated_date')
     )
+
+    # ---------------- TERP SCOPE FILTER ----------------
+    # TERP Licensing shows only licences of T-ERP enabled projects,
+    # while App Licensing shows only the non T-ERP licences
+    if terp_only:
+        controls = controls.filter(project__t_erp=True)
+    else:
+        controls = controls.filter(project__t_erp=False)
 
     # ---------------- BRANCH BASED FILTER ----------------
     # Apply restriction ONLY if NOT Django superuser AND NOT custom Super User
@@ -206,6 +224,8 @@ def mobile_control_list(request):
         "branch_names": branch_names,
         "any_mobile_app": any_mobile_app,
         "is_super": is_super_level_user(request),
+        "terp_mode": terp_only,
+        "filter_storage_key": "terpControlFilters" if terp_only else "mobileControlFilters",
     })
 
 
@@ -217,8 +237,16 @@ from StoreShop.models import Store
 from branch.models import Branch  # 👈 add this
 
 def add_mobile_control(request):
+    from django.urls import reverse
+
+    # When opened from the TERP Licensing menu only T-ERP projects are offered
+    terp_mode = request.GET.get('terp') == '1' or request.POST.get('terp') == '1'
+
     projects = MobileProject.objects.all()
     packages = Package.objects.all()
+
+    if terp_mode:
+        projects = projects.filter(t_erp=True)
 
     # 🔑 APP TYPE FILTERING
     if not is_super_level_user(request):
@@ -246,7 +274,8 @@ def add_mobile_control(request):
 
         if not project_id or not shop_id or not store_id:
             messages.error(request, 'All fields are required.')
-            return redirect("MobileApp:add_mobile_control")
+            suffix = '?terp=1' if terp_mode else ''
+            return redirect(f"{reverse('MobileApp:add_mobile_control')}{suffix}")
 
         project = get_object_or_404(MobileProject, pk=project_id)
         shop = get_object_or_404(Shop, pk=shop_id)
@@ -255,7 +284,8 @@ def add_mobile_control(request):
         # Prevent duplicate licence for the same project and company
         if MobileControl.objects.filter(project=project, shop=shop).exists():
             messages.error(request, f'A licence already exists for the company "{shop.name}" under the project "{project.project_name}".')
-            return redirect("MobileApp:add_mobile_control")
+            suffix = '?terp=1' if terp_mode else ''
+            return redirect(f"{reverse('MobileApp:add_mobile_control')}{suffix}")
 
         # For transfer or developer licences, set default bill status to False (same as others)
         is_billed = False
@@ -275,16 +305,23 @@ def add_mobile_control(request):
         )
 
         messages.success(request, 'Mobile control saved successfully!')
-        # Append parameter to show prompt on the mobile_control page
-        from django.urls import reverse
-        return redirect(f"{reverse('MobileApp:mobile_control')}?new_license_id={control.id}&new_license_name={control.customer_name}")
+        # Append parameter to show prompt on the created licence's own menu
+        # (T-ERP project licences live in TERP Licensing, the rest in App Licensing)
+        if terp_mode:
+            list_name = 'MobileApp:terp_license'
+        elif project.t_erp:
+            list_name = 'MobileApp:terp_license'
+        else:
+            list_name = 'MobileApp:mobile_control'
+        return redirect(f"{reverse(list_name)}?new_license_id={control.id}&new_license_name={control.customer_name}")
 
     return render(request, "add_mobile_control.html", {
         'projects': projects,
         'shops': shops,
         'stores': stores,
         'branches': branches,
-        'packages': packages
+        'packages': packages,
+        'terp_mode': terp_mode,
     })
 
 
@@ -331,6 +368,9 @@ def edit_mobile_control(request, pk):
         control.save()
 
         messages.success(request, 'Mobile control updated successfully!')
+        # Send the user back to the menu the licence belongs to
+        if control.project and control.project.t_erp:
+            return redirect('MobileApp:terp_license')
         return redirect('MobileApp:mobile_control')
 
     return render(request, "edit_mobile_control.html", {
@@ -350,6 +390,8 @@ def delete_mobile_control(request, pk):
     """Delete mobile control"""
     control = get_object_or_404(MobileControl, pk=pk)
     name = str(control)
+    # Remember which menu this licence was listed in (T-ERP or App Licensing)
+    is_terp_licence = bool(control.project and control.project.t_erp)
 
     # DEMO licences get fully removed:
     # the linked Shop (Company) and Store (Corporate) are deleted too,
@@ -374,6 +416,8 @@ def delete_mobile_control(request, pk):
         api_store.delete()
 
     messages.success(request, f'Mobile control "{name}" deleted.')
+    if is_terp_licence:
+        return redirect('MobileApp:terp_license')
     return redirect('MobileApp:mobile_control')
 
 

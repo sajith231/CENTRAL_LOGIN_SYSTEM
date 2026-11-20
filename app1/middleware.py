@@ -20,9 +20,10 @@ class MenuPermissionMiddleware:
         "WebApp:webproject_delete": "webapp_list",
         # MobileApp licensing
         "MobileApp:mobile_control": "mobile_control",
-        "MobileApp:add_mobile_control": "mobile_control",
-        "MobileApp:edit_mobile_control": "mobile_control",
-        "MobileApp:delete_mobile_control": "mobile_control",
+        "MobileApp:terp_license": "terp_license",
+        "MobileApp:add_mobile_control": ("mobile_control", "terp_license"),
+        "MobileApp:edit_mobile_control": ("mobile_control", "terp_license"),
+        "MobileApp:delete_mobile_control": ("mobile_control", "terp_license"),
         "MobileApp:mobileapp_list": "mobileapp_list",
         "MobileApp:mobileproject_create": "mobileapp_list",
         "MobileApp:mobileproject_edit": "mobileapp_list",
@@ -94,6 +95,9 @@ class MenuPermissionMiddleware:
         if not required_menu:
             return None
 
+        # A view may be reachable from more than one menu (e.g. TERP Licensing)
+        required_menus = required_menu if isinstance(required_menu, (list, tuple)) else (required_menu,)
+
         # Superusers can access everything
         if request.user.is_authenticated and request.user.is_superuser:
             return None
@@ -106,7 +110,7 @@ class MenuPermissionMiddleware:
             messages.error(request, "Please log in to access this page.")
             return redirect("login")
 
-        if required_menu not in allowed_menus:
+        if not any(menu in allowed_menus for menu in required_menus):
             messages.error(request, "You do not have permission to access that page.")
             return redirect("admin_dashboard")
 
