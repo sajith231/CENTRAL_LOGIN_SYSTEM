@@ -245,8 +245,12 @@ def add_mobile_control(request):
     projects = MobileProject.objects.all()
     packages = Package.objects.all()
 
+    # Project dropdown stays scoped to the menu it was opened from:
+    # TERP Licensing offers only T-ERP projects, App Licensing offers only non T-ERP projects
     if terp_mode:
         projects = projects.filter(t_erp=True)
+    else:
+        projects = projects.filter(t_erp=False)
 
     # 🔑 APP TYPE FILTERING
     if not is_super_level_user(request):
@@ -280,6 +284,16 @@ def add_mobile_control(request):
         project = get_object_or_404(MobileProject, pk=project_id)
         shop = get_object_or_404(Shop, pk=shop_id)
         store = get_object_or_404(Store, pk=store_id)
+
+        # Keep the menus separated even if a stale/tampered POST slips through
+        if bool(project.t_erp) != terp_mode:
+            messages.error(
+                request,
+                'The selected project does not belong to this licensing menu. '
+                'T-ERP projects can only be licensed from TERP Licensing.'
+            )
+            suffix = '?terp=1' if terp_mode else ''
+            return redirect(f"{reverse('MobileApp:add_mobile_control')}{suffix}")
 
         # Prevent duplicate licence for the same project and company
         if MobileControl.objects.filter(project=project, shop=shop).exists():
@@ -331,6 +345,12 @@ def edit_mobile_control(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     projects = MobileProject.objects.all()
     packages = Package.objects.all()
+
+    # Project dropdown follows the menu this licence belongs to
+    if control.project and control.project.t_erp:
+        projects = projects.filter(t_erp=True)
+    else:
+        projects = projects.filter(t_erp=False)
 
     # 🔑 APP TYPE FILTERING
     if not is_super_level_user(request):

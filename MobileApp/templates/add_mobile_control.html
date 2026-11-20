@@ -69,6 +69,9 @@
                 <option value="{{ project.id }}">{{ project.project_name }} ({{ project.get_app_type_display }})</option>
                 {% endfor %}
             </select>
+            <small style="color:#9ca3af; font-size:12px;">
+                {% if terp_mode %}T-ERP projects only{% else %}Non T-ERP projects only — T-ERP projects are licensed from TERP Licensing{% endif %}
+            </small>
         </div>
 
         <!-- Type -->
