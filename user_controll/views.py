@@ -70,6 +70,13 @@ def get_all_menus():
             ],
         },
         {
+            "name": "Agents",
+            "icon": "fa-solid fa-user-tie",
+            "submenus": [
+                {"id": "agents", "name": "Agents", "icon": "fa-solid fa-user-tie"},
+            ],
+        },
+        {
             "name": "Upcoming Expiry",
             "icon": "fa-solid fa-hourglass-half",
             "submenus": [

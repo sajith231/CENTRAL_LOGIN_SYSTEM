@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "activity_log",
+    "agents",
     "upcoming_expiry",
     "auto_licence",
     "unbilled_report",

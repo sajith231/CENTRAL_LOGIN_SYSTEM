@@ -29,6 +29,7 @@ urlpatterns = [
     path('module-package/', include('ModuleAndPackage.urls')),
     path('user-control/', include('user_controll.urls')),
     path("activity-log/", include("activity_log.urls")),
+    path("agents/", include("agents.urls")),
     path("upcoming-expiry/", include("upcoming_expiry.urls")),
     path("expired-key-report/", include("expired_key_report.urls")),
     path("unbilled-report/", include("unbilled_report.urls")),
