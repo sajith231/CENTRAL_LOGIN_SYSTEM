@@ -27,13 +27,13 @@ def upcoming_expiry_view(request):
     branch_ids = get_user_branch_ids(request)
 
     # Upcoming expiries inside the next 30 days (NULL expiry dates are excluded by __gte)
-    # Only New and Transfer licences — no Developer licences
+    # Only New, Trial and Transfer licences — no Developer licences
     controls = (
         MobileControl.objects
         .filter(
             expiry_date__gte=now,
             expiry_date__lte=now + timedelta(days=30),
-            licence_type__in=["new", "transfer"],
+            licence_type__in=["new", "trial", "transfer"],
         )
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
         .order_by("expiry_date")

@@ -44,7 +44,7 @@ def trellisco_hub_report_view(request):
         MobileControl.objects
         .filter(
             project__project_name__in=PROJECT_NAMES,
-            licence_type__in=["new", "transfer"],
+            licence_type__in=["new", "trial", "transfer"],
         )
         .select_related(
             "project",
@@ -146,7 +146,7 @@ def trellisco_hub_report_view(request):
         MobileControl.objects
         .filter(
             project__project_name__in=PROJECT_NAMES,
-            licence_type__in=["new", "transfer"],
+            licence_type__in=["new", "trial", "transfer"],
             store__isnull=False,
         )
         .order_by("store__name")
@@ -160,7 +160,7 @@ def trellisco_hub_report_view(request):
         MobileControl.objects
         .filter(
             project__project_name__in=PROJECT_NAMES,
-            licence_type__in=["new", "transfer"],
+            licence_type__in=["new", "trial", "transfer"],
         )
         .prefetch_related("package", "active_custom_package")
     )
@@ -174,6 +174,7 @@ def trellisco_hub_report_view(request):
 
     licence_types = [
         {"value": "new", "label": "New Licence"},
+        {"value": "trial", "label": "Trial Licence"},
         {"value": "transfer", "label": "Transfer Licence"},
     ]
 

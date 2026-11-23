@@ -21,12 +21,12 @@ def expired_key_report_view(request):
     # Custom (non-superuser) users only see their assigned branches
     branch_ids = get_user_branch_ids(request)
 
-    # Fully expired licences only — New and Transfer types only
+    # Fully expired licences only — New, Trial and Transfer types only
     controls = (
         MobileControl.objects
         .filter(
             expiry_date__lt=now,
-            licence_type__in=["new", "transfer"],
+            licence_type__in=["new", "trial", "transfer"],
         )
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
         .order_by("-expiry_date")

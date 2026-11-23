@@ -23,27 +23,6 @@ def _error(message, status=400):
     return JsonResponse({"success": False, "error": message}, status=status)
 
 
-def _resolve_project(name):
-    """Resolve a project by its exact name.
-
-    Returns (project, error_response). The project name must be an exact
-    spelling, spacing, and capitalization match. If more than one project
-    shares the name the request is rejected as ambiguous.
-    """
-    matches = list(MobileProject.objects.filter(project_name=name)[:2])
-    if not matches:
-        return None, _error(
-            f"Project '{name}' not found. Project name must match exactly "
-            "(spelling, spaces & capitalization)."
-        )
-    if len(matches) > 1:
-        return None, _error(
-            f"Project name '{name}' is ambiguous — more than one project uses "
-            "this name. Please make project names unique."
-        )
-    return matches[0], None
-
-
 @csrf_exempt
 @require_http_methods(["GET", "OPTIONS"])
 def api_t_erp_projects(request):
@@ -132,7 +111,8 @@ def api_licence_create(request, t_erp_only=False):
         - Users         = package.users_count (falls back to 50 when unlimited)
         - Validity      = 14 days for T-ERP requests, otherwise 30 days
         - Billing       = auto-created (Billed / Not Paid)
-        - Licence type  = new
+        - Licence type  = trial for T-ERP requests (promoted to new on the
+                          first billing), otherwise new
     """
     try:
         payload = json.loads(request.body)
@@ -180,7 +160,7 @@ def api_licence_create(request, t_erp_only=False):
         )
 
     resolved = []
-    seen_projects = set()
+    requested = []
     for index, entry in enumerate(entries, start=1):
         if not isinstance(entry, dict):
             return _error(f"projects[{index}] must be an object with 'project' and 'package'.")
@@ -198,33 +178,57 @@ def api_licence_create(request, t_erp_only=False):
                 f"projects[{index}].package is required. One package per project."
             )
 
-        project_key = project_name
-        if project_key in seen_projects:
+        requested.append((project_name, package_name))
+
+    # Resolve all project names with one query and all packages with a second
+    # query, instead of two lookups per project.
+    matches_by_name = {}
+    for project in (
+        MobileProject.objects.filter(project_name__in=list({p for p, _ in requested}))
+        .select_related("branch")
+    ):
+        matches_by_name.setdefault(project.project_name, []).append(project)
+
+    project_ids = [p.id for matches in matches_by_name.values() for p in matches]
+    packages_by_key = {}
+    package_names_by_project = {}
+    for package in Package.objects.filter(project_id__in=project_ids):
+        packages_by_key[(package.project_id, package.package_name)] = package
+        package_names_by_project.setdefault(package.project_id, []).append(
+            package.package_name
+        )
+
+    seen_projects = set()
+    for project_name, package_name in requested:
+        if project_name in seen_projects:
             return _error(
                 f"Project '{project_name}' is listed more than once. "
                 "One project can only have one package per request."
             )
-        seen_projects.add(project_key)
+        seen_projects.add(project_name)
 
-        project, project_error = _resolve_project(project_name)
-        if project_error:
-            return project_error
+        matches = matches_by_name.get(project_name) or []
+        if not matches:
+            return _error(
+                f"Project '{project_name}' not found. Project name must match exactly "
+                "(spelling, spaces & capitalization)."
+            )
+        if len(matches) > 1:
+            return _error(
+                f"Project name '{project_name}' is ambiguous — more than one project "
+                "uses this name. Please make project names unique."
+            )
 
+        project = matches[0]
         if t_erp_only and not project.t_erp:
             return _error(
                 f"Project '{project.project_name}' is not enabled for the T-ERP "
                 "licence create API. Enable the T-ERP option in the project settings."
             )
 
-        package = Package.objects.filter(
-            project=project, package_name=package_name
-        ).first()
+        package = packages_by_key.get((project.id, package_name))
         if package is None:
-            available = list(
-                Package.objects.filter(project=project)
-                .values_list("package_name", flat=True)
-                .order_by("package_name")
-            )
+            available = sorted(package_names_by_project.get(project.id, []))
             available_msg = ", ".join(f"'{p}'" for p in available) if available else "none"
             return _error(
                 f"Package '{package_name}' not found for project "
@@ -253,16 +257,19 @@ def api_licence_create(request, t_erp_only=False):
     existing_shop = Shop.objects.filter(email=company_email).select_related("store").first()
     reuse_company = existing_shop is not None
 
-    def licence_exists(project):
-        """A licence already exists for the resolved company under this project."""
-        qs = MobileControl.objects.filter(project=project)
-        if existing_shop is not None:
-            return qs.filter(
-                Q(shop=existing_shop)
-                | Q(client_id=existing_shop.client_id)
-                | Q(client_id=company_email)
-            ).exists()
-        return qs.filter(client_id=company_email).exists()
+    # One query for every selected project instead of one query per project.
+    licence_qs = MobileControl.objects.filter(
+        project_id__in=[item["project"].id for item in resolved]
+    )
+    if existing_shop is not None:
+        licence_qs = licence_qs.filter(
+            Q(shop=existing_shop)
+            | Q(client_id=existing_shop.client_id)
+            | Q(client_id=company_email)
+        )
+    else:
+        licence_qs = licence_qs.filter(client_id=company_email)
+    licensed_project_ids = set(licence_qs.values_list("project_id", flat=True))
 
     # ---------------- CREATE (single transaction) ----------------
     store = existing_shop.store if reuse_company else None
@@ -276,7 +283,7 @@ def api_licence_create(request, t_erp_only=False):
             project = item["project"]
             package = item["package"]
 
-            if licence_exists(project):
+            if project.id in licensed_project_ids:
                 skipped_count += 1
                 results.append({
                     "project": project.project_name,
@@ -321,6 +328,11 @@ def api_licence_create(request, t_erp_only=False):
             validity_days = T_ERP_VALIDITY_DAYS if t_erp_only else DEFAULT_VALIDITY_DAYS
             expiry_date = timezone.now() + timedelta(days=validity_days)
 
+            # T-ERP licences start as a Trial Licence and are promoted to a
+            # New Licence on the first billing. Every other endpoint creates a
+            # New Licence directly.
+            licence_type = "trial" if t_erp_only else "new"
+
             control = MobileControl.objects.create(
                 project=project,
                 store=store,
@@ -328,7 +340,7 @@ def api_licence_create(request, t_erp_only=False):
                 customer_name=shop.name,
                 client_id=shop.client_id,
                 login_limit=users_count,
-                licence_type="new",
+                licence_type=licence_type,
                 package=package,
                 active_custom_package=None,
                 branch=branch,

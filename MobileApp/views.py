@@ -1281,6 +1281,13 @@ def mobile_control_billing(request, pk):
         if not control.status:
             control.status = True
 
+        # ---------- TRIAL → NEW ON FIRST BILLING ----------
+        # T-ERP licences are created as a Trial Licence by the Licence Create
+        # API. The first billing submitted here promotes the licence to a New
+        # Licence. This is one-way: a New Licence never reverts to Trial.
+        if control.licence_type == 'trial':
+            control.licence_type = 'new'
+
         # ✅ IMPORTANT: FULL SAVE (updates updated_date correctly)
         control.save()
 

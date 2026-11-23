@@ -43,7 +43,7 @@ def task_mst_report_view(request):
 
     controls = (
         MobileControl.objects
-        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "transfer"])
+        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "trial", "transfer"])
         .select_related(
             "project",
             "store",
@@ -150,7 +150,7 @@ def task_mst_report_view(request):
 
     stores = (
         MobileControl.objects
-        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "transfer"], store__isnull=False)
+        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "trial", "transfer"], store__isnull=False)
         .order_by("store__name")
         .values("store_id", "store__name")
         .distinct()
@@ -160,7 +160,7 @@ def task_mst_report_view(request):
 
     package_rows = (
         MobileControl.objects
-        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "transfer"])
+        .filter(project__project_name__iexact=PROJECT_NAME, licence_type__in=["new", "trial", "transfer"])
         .prefetch_related("package", "active_custom_package")
     )
     package_options = {}
@@ -173,6 +173,7 @@ def task_mst_report_view(request):
 
     licence_types = [
         {"value": "new", "label": "New Licence"},
+        {"value": "trial", "label": "Trial Licence"},
         {"value": "transfer", "label": "Transfer Licence"},
     ]
 

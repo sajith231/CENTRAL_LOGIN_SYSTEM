@@ -80,6 +80,7 @@ class MobileControl(models.Model):
 
     LICENCE_TYPE_CHOICES = [
         ('new', 'New Licence'),
+        ('trial', 'Trial Licence'),
         ('transfer', 'Transfer Licence'),
         ('developer', 'Developer Licence'),
         ('demo', 'Demo Licence'),

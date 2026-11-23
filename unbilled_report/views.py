@@ -23,7 +23,7 @@ def unbilled_report(request):
 
     controls = (
         MobileControl.objects
-        .filter(bill_status=False, licence_type__in=['new', 'transfer'])
+        .filter(bill_status=False, licence_type__in=['new', 'trial', 'transfer'])
         .annotate(latest_payment_status=Subquery(latest_payment_sub))
         .select_related('project', 'package', 'active_custom_package', 'shop__branch', 'store')
         .order_by('created_date')
@@ -42,6 +42,7 @@ def unbilled_report(request):
 
     licence_types = [
         {'value': 'new', 'label': 'New'},
+        {'value': 'trial', 'label': 'Trial'},
         {'value': 'transfer', 'label': 'Transfer'},
     ]
 

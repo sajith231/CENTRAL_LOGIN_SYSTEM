@@ -76,6 +76,10 @@
             <label>Type</label>
             <select name="licence_type" class="form-control" required
                 style="background:#0f1b31; color:white; border:1px solid #334155;">
+                {% if control.licence_type == 'trial' %}
+                {# Trial licences cannot be set manually — only shown to preserve the current type #}
+                <option value="trial" selected>Trial Licence</option>
+                {% endif %}
                 <option value="new"       {% if control.licence_type == 'new' %}selected{% endif %}>New Licence</option>
                 {% if request.user.is_superuser or request.session.custom_user_level == 'Super User' %}
                 <option value="transfer"  {% if control.licence_type == 'transfer' %}selected{% endif %}>Transfer Licence</option>

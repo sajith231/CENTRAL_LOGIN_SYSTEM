@@ -74,6 +74,7 @@
                background:#0f172a; color:white;">
             <option value="">All Types</option>
             <option value="new">New Licence</option>
+            <option value="trial">Trial Licence</option>
             <option value="transfer">Transfer Licence</option>
             <option value="developer">Developer Licence</option>
             <option value="demo">Demo Licence</option>
@@ -320,6 +321,10 @@
                     {% if c.licence_type == 'new' %}
                     <span
                         style="background:#1d4ed8; color:#bfdbfe; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">New
+                        Licence</span>
+                    {% elif c.licence_type == 'trial' %}
+                    <span
+                        style="background:#0f766e; color:#ccfbf1; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; border:1px solid #14b8a6;">Trial
                         Licence</span>
                     {% elif c.licence_type == 'transfer' %}
                     <span

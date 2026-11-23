@@ -109,6 +109,8 @@ class LicenceCreateApiTests(TestCase):
         self.assertEqual(MobileControl.objects.get().project, self.project_b)
 
         control = MobileControl.objects.get()
+        # T-ERP licences start as a Trial Licence
+        self.assertEqual(control.licence_type, "trial")
         self.assertAlmostEqual(
             (control.expiry_date - timezone.now()).total_seconds(),
             timedelta(days=14).total_seconds(),
@@ -124,6 +126,7 @@ class LicenceCreateApiTests(TestCase):
         self.assertEqual(resp.status_code, 201)
 
         control = MobileControl.objects.get()
+        self.assertEqual(control.licence_type, "new")
         self.assertAlmostEqual(
             (control.expiry_date - timezone.now()).total_seconds(),
             timedelta(days=30).total_seconds(),
@@ -133,6 +136,39 @@ class LicenceCreateApiTests(TestCase):
             MobileBillingHistory.objects.get(control=control).extended_days,
             30,
         )
+
+    def test_t_erp_trial_licence_becomes_new_on_first_billing(self):
+        from django.contrib.auth.models import User
+
+        self.project_b.t_erp = True
+        self.project_b.save(update_fields=["t_erp"])
+
+        resp = self._post_t_erp(self._payload())
+        self.assertEqual(resp.status_code, 201)
+
+        control = MobileControl.objects.get()
+        self.assertEqual(control.licence_type, "trial")
+
+        # The billing page is behind the login middleware
+        user = User.objects.create_superuser("billing-tester", "tester@example.com", "secret")
+        self.client.force_login(user)
+
+        billing_url = reverse("MobileApp:mobile_control_billing", args=[control.id])
+        billing_payload = {
+            "operation_type": "both",
+            "package": control.package_id,
+            "bill_status": "1",
+        }
+
+        billing_resp = self.client.post(billing_url, billing_payload)
+        self.assertEqual(billing_resp.status_code, 302)
+        control.refresh_from_db()
+        self.assertEqual(control.licence_type, "new")
+
+        # A later billing must never revert a New Licence back to Trial
+        self.client.post(billing_url, billing_payload)
+        control.refresh_from_db()
+        self.assertEqual(control.licence_type, "new")
 
     def test_bulk_creates_licences_for_multiple_projects(self):
         resp = self._post(self._payload(projects=[
