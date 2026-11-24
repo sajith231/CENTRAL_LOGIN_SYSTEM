@@ -8,9 +8,20 @@ from app1.helpers import get_user_branch_ids
 
 
 def expired_key_report_view(request):
+    """Expired Key Report – expired licences of non T-ERP projects."""
+    return render_expired_report(request, terp_only=False)
+
+
+def terp_expired_key_report_view(request):
+    """TERP Expired Key Report – expired licences of T-ERP enabled projects."""
+    return render_expired_report(request, terp_only=True)
+
+
+def render_expired_report(request, terp_only=False):
+    menu_id = "terp_expired_key_report" if terp_only else "expired_key_report"
     allowed = request.session.get("allowed_menus") or []
-    # Superuser, or a custom user granted the 'expired_key_report' menu
-    if not (request.user.is_authenticated and request.user.is_superuser) and "expired_key_report" not in allowed:
+    # Superuser, or a custom user granted the matching report menu
+    if not (request.user.is_authenticated and request.user.is_superuser) and menu_id not in allowed:
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()
@@ -21,12 +32,16 @@ def expired_key_report_view(request):
     # Custom (non-superuser) users only see their assigned branches
     branch_ids = get_user_branch_ids(request)
 
-    # Fully expired licences only — New, Trial and Transfer types only
+    # Fully expired licences only, scoped to the menu they belong to:
+    # the TERP report shows T-ERP projects (Developer/Trial licences),
+    # the main report shows only non T-ERP projects
+    licence_types = ["new", "trial", "transfer", "developer"] if terp_only else ["new", "trial", "transfer"]
     controls = (
         MobileControl.objects
         .filter(
             expiry_date__lt=now,
-            licence_type__in=["new", "trial", "transfer"],
+            licence_type__in=licence_types,
+            project__t_erp=terp_only,
         )
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
         .order_by("-expiry_date")
@@ -62,4 +77,5 @@ def expired_key_report_view(request):
         "selected_branch": branch,
         "projects": projects,
         "selected_project": project,
+        "terp_mode": terp_only,
     })

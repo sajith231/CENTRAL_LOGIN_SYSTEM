@@ -911,6 +911,11 @@
                                 style="color:#fbbf24; font-size:0.75rem; display:none; margin-bottom:14px;">
                                 <i class="fas fa-lock me-1"></i>User count is set by the package. To change it, edit the package in the Package section.
                             </small>
+                            {% if allow_manual_users %}
+                            <small style="color:#34d399; font-size:0.75rem; display:block; margin-bottom:14px;">
+                                <i class="fas fa-unlock me-1"></i>Manual user count editing is enabled for your account — the package users limit will not override this value.
+                            </small>
+                            {% endif %}
                             <small style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:14px;">
                                 <i class="fas fa-info-circle me-1"></i>Set the starting number of users for this licence
                             </small>
@@ -1006,6 +1011,11 @@
                                         style="color:#fbbf24; font-size:0.75rem; display:none; margin-bottom:8px;">
                                         <i class="fas fa-lock me-1"></i>User count is set by the package. To change it, edit the package in the Package section.
                                     </small>
+                                    {% if allow_manual_users %}
+                                    <small style="color:#34d399; font-size:0.75rem; display:block; margin-bottom:8px;">
+                                        <i class="fas fa-unlock me-1"></i>Manual user count editing is enabled for your account — the package users limit will not override it.
+                                    </small>
+                                    {% endif %}
                                     <small style="color:#64748b; font-size:0.75rem; display:block;">
                                         <i class="fas fa-info-circle me-1"></i>Use positive values to add, negative to
                                         remove
@@ -2020,6 +2030,8 @@
 <script>
     // ── Package selection handlers — routes standard vs custom selections ──
     const CONTROL_PK = {{ control.pk }};
+    // User Control tick: this user may type the licence user count manually
+    const ALLOW_MANUAL_USERS = {{ allow_manual_users|yesno:"true,false" }};
     const CUSTOMER_NAME = '{{ control.customer_name|escapejs }}';
     const SAVE_CUSTOM_URL = `/mobileapp/mobile_control/${CONTROL_PK}/custom-package/save/`;
 
@@ -2059,11 +2071,14 @@
     }
 
     // Apply users-count lock to ALL user limit inputs in the form
-    function applyPackageUsersLock(locked, userCount) {
+    // fill = false keeps the typed value untouched (Update Users is a + / - field)
+    function applyPackageUsersLock(locked, userCount, fill) {
+        // Manual user editing permission wins over the package users limit
+        if (ALLOW_MANUAL_USERS) { locked = false; userCount = null; }
         var inputs = document.querySelectorAll('#billingForm input[name="extend_login"]');
         inputs.forEach(function (input) {
             if (locked && userCount) {
-                input.value = userCount;
+                if (fill !== false) input.value = userCount;
                 input.readOnly = true;
                 input.style.opacity = '0.7';
             } else {
@@ -2074,6 +2089,29 @@
         var lockNote = document.getElementById('pkgUsersLockNote');
         if (lockNote) lockNote.style.display = locked && userCount ? 'block' : 'none';
     }
+
+    // On load: if the licence's package already enforces a user count, show the
+    // same note without waiting for the package dropdown to be changed
+    document.addEventListener('DOMContentLoaded', function () {
+        var lockNote = document.getElementById('pkgUsersLockNote');
+        if (!lockNote) return; // user-count section not rendered (non mobile app)
+
+        var currentUsers = parseInt("{{ control.package.users_count|default:0 }}", 10) || 0;
+        if ({{ control.active_custom_package|yesno:"true,false" }}) currentUsers = 0;
+
+        var firstSel = document.getElementById('packageSelectFirst');
+        var selectedUsers = 0;
+        if (firstSel && firstSel.selectedIndex > -1) {
+            var attr = firstSel.options[firstSel.selectedIndex].getAttribute('data-users');
+            selectedUsers = parseInt(attr, 10) || 0;
+        }
+
+        var enforced = selectedUsers || currentUsers;
+        if (enforced > 0) {
+            // First billing pre-fills the initial count; Update Users only gets locked
+            applyPackageUsersLock(true, enforced, !!firstSel);
+        }
+    });
 
     function handlePackageChangeFirst(sel) {
         _handlePkgChange(sel, 'package', 'customPkgInputFirst', 'helperText');

@@ -175,6 +175,15 @@ def render_control_list(request, terp_only=False):
 
     for control in controls:
         control.registered_count = control.active_devices.count()
+
+        # ── TERP USER LIMIT ──
+        # TERP mobile-app licences are user-limited by their package, so the TERP
+        # Licensing page shows the package's users limit for them only (web app
+        # rows keep the old behaviour: no T.Lic/Reg.Dev/Bal.Lic details)
+        if (terp_only and control.project and control.project.app_type == 'mobile_app'
+                and control.package and control.package.users_count):
+            control.login_limit = control.package.users_count
+
         control.balance_count = control.login_limit - control.registered_count
 
         if control.expiry_date:
@@ -1036,9 +1045,39 @@ def _is_licence_create_api(control):
     )
 
 
+def _can_edit_manual_users(request, control):
+    """
+    The package normally drives the licence user count. The User Control tick
+    (Users.can_edit_manual_users) re-opens manual user editing for that custom
+    user, but only for licences of the branches (companies) assigned to them.
+    """
+    if request.user.is_authenticated and request.user.is_superuser:
+        return True
+
+    custom_user_id = request.session.get("custom_user_id")
+    if not custom_user_id:
+        return False
+
+    allowed = models.Users.objects.filter(
+        pk=custom_user_id, is_active=True
+    ).values_list("can_edit_manual_users", flat=True).first()
+    if not allowed:
+        return False
+
+    user_branches = request.session.get("custom_user_branches") or []
+    if not user_branches:
+        # No branch restriction assigned → the user already sees all companies
+        return True
+
+    branch = getattr(getattr(control, "shop", None), "branch", None)
+    return bool(branch and branch.name in user_branches)
+
+
 def mobile_control_billing(request, pk):
     control = get_object_or_404(MobileControl, pk=pk)
     is_api_licence = _is_licence_create_api(control)
+    # User Control tick: this user may set the user count manually (their companies only)
+    allow_manual_users = _can_edit_manual_users(request, control)
 
     # ── AUTO-CUT CHECK ──
     branch = getattr(getattr(control, 'shop', None), 'branch', None)
@@ -1143,7 +1182,9 @@ def mobile_control_billing(request, pk):
                 control.status = True
 
             # Licence Create API licences: users are driven by the package on renewal
-            if is_api_licence and control.package and control.package.users_count:
+            # (unless the User Control tick allows this user to edit them manually)
+            if (is_api_licence and not allow_manual_users
+                    and control.package and control.package.users_count):
                 control.login_limit = control.package.users_count
                 extend_login = 0
 
@@ -1172,7 +1213,8 @@ def mobile_control_billing(request, pk):
                 control.active_custom_package = None
                 package_selected = True
                 # If the package enforces a user count, drive login_limit from it
-                if package.users_count:
+                # (skipped when the User Control tick allows manual user editing)
+                if package.users_count and not allow_manual_users:
                     control.login_limit = package.users_count
                     extend_login = 0   # ignore manually-entered initial user count
             else:
@@ -1185,7 +1227,7 @@ def mobile_control_billing(request, pk):
 
         # ---------- LOGIN LIMIT (+ / -) ----------
         enforced_users = (control.package.users_count if control.package and control.package.users_count else 0)
-        if enforced_users:
+        if enforced_users and not allow_manual_users:
             # Package enforces a user count → login_limit is driven by the package,
             # and cannot be changed from the billing section.
             control.login_limit = enforced_users
@@ -1329,6 +1371,7 @@ def mobile_control_billing(request, pk):
         "is_api_licence": is_api_licence,
         "is_super_user": is_super_level_user(request),
         "force_first_billing": force_first_billing,
+        "allow_manual_users": allow_manual_users,
     })
 
 

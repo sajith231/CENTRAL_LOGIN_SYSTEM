@@ -13,9 +13,20 @@ EXCLUDED_PROJECT_NAMES = ["TASK MST"]
 
 
 def upcoming_expiry_view(request):
+    """Upcoming Expiry – licences expiring soon for non T-ERP projects."""
+    return render_upcoming_report(request, terp_only=False)
+
+
+def terp_upcoming_expiry_view(request):
+    """TERP Upcoming Expiry – licences expiring soon for T-ERP enabled projects."""
+    return render_upcoming_report(request, terp_only=True)
+
+
+def render_upcoming_report(request, terp_only=False):
+    menu_id = "terp_upcoming_expiry" if terp_only else "upcoming_expiry"
     allowed = request.session.get("allowed_menus") or []
-    # Superuser, or a custom user granted the 'upcoming_expiry' menu
-    if not (request.user.is_authenticated and request.user.is_superuser) and "upcoming_expiry" not in allowed:
+    # Superuser, or a custom user granted the matching report menu
+    if not (request.user.is_authenticated and request.user.is_superuser) and menu_id not in allowed:
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()
@@ -26,14 +37,17 @@ def upcoming_expiry_view(request):
     # Custom (non-superuser) users only see their assigned branches
     branch_ids = get_user_branch_ids(request)
 
-    # Upcoming expiries inside the next 30 days (NULL expiry dates are excluded by __gte)
-    # Only New, Trial and Transfer licences — no Developer licences
+    # Upcoming expiries inside the next 30 days (NULL expiry dates are excluded by __gte),
+    # scoped to the menu they belong to: the TERP report shows T-ERP projects
+    # (Developer/Trial licences), the main report shows only non T-ERP projects
+    licence_types = ["new", "trial", "transfer", "developer"] if terp_only else ["new", "trial", "transfer"]
     controls = (
         MobileControl.objects
         .filter(
             expiry_date__gte=now,
             expiry_date__lte=now + timedelta(days=30),
-            licence_type__in=["new", "trial", "transfer"],
+            licence_type__in=licence_types,
+            project__t_erp=terp_only,
         )
         .select_related("project", "shop", "shop__store", "shop__branch", "package", "active_custom_package")
         .order_by("expiry_date")
@@ -77,4 +91,5 @@ def upcoming_expiry_view(request):
         "selected_branch": branch,
         "projects": projects,
         "selected_project": project,
+        "terp_mode": terp_only,
     })

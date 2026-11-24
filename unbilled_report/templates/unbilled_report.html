@@ -1,6 +1,8 @@
 {% extends "base.html" %}
-{% block active_unbilled_report %}active{% endblock %}
-{% block header_title %}<strong>Unbilled Report</strong>{% endblock %}
+{% block title %}{% if terp_mode %}TERP Unbilled Report{% else %}Unbilled Report{% endif %}{% endblock %}
+{% block active_unbilled_report %}{% if not terp_mode %}active{% endif %}{% endblock %}
+{% block active_terp_unbilled_report %}{% if terp_mode %}active{% endif %}{% endblock %}
+{% block header_title %}<strong>{% if terp_mode %}TERP Unbilled Report{% else %}Unbilled Report{% endif %}</strong>{% endblock %}
 {% block content %}
 
 <style>
@@ -225,6 +227,12 @@
     border: 1px solid rgba(59, 130, 246, 0.3);
   }
 
+  .badge-developer {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+  }
+
   .badge-pending {
     background: #f59e0b;
     color: white;
@@ -328,8 +336,8 @@
 <div class="unbilled-wrapper">
   <div class="page-header">
     <h3 class="page-title">
-      <i class="fa-solid fa-file-invoice-dollar" style="color:#3b82f6;"></i>
-      Unbilled Licences Report
+      <i class="fa-solid {% if terp_mode %}fa-cubes{% else %}fa-file-invoice-dollar{% endif %}" style="color:#3b82f6;"></i>
+      {% if terp_mode %}TERP Unbilled Licences Report{% else %}Unbilled Licences Report{% endif %}
     </h3>
   </div>
 
@@ -338,7 +346,9 @@
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-file-circle-minus"></i> Total Unbilled</div>
       <div class="stat-value" id="statTotal">0</div>
-      <div class="stat-subtext">All unbilled new &amp; transfer licences</div>
+      <div class="stat-subtext">
+        {% if terp_mode %}All unbilled T-ERP licences{% else %}All unbilled new &amp; transfer licences{% endif %}
+      </div>
     </div>
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-circle-plus"></i> New Licences</div>
@@ -346,9 +356,13 @@
       <div class="stat-subtext">Unbilled new licences</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label"><i class="fa-solid fa-right-left"></i> Transfer Licences</div>
+      <div class="stat-label">
+        {% if terp_mode %}<i class="fa-solid fa-code"></i> Developer Licences{% else %}<i class="fa-solid fa-right-left"></i> Transfer Licences{% endif %}
+      </div>
       <div class="stat-value" id="statTransfer">0</div>
-      <div class="stat-subtext">Unbilled transfer licences</div>
+      <div class="stat-subtext">
+        {% if terp_mode %}Unbilled developer licences{% else %}Unbilled transfer licences{% endif %}
+      </div>
     </div>
     <div class="stat-card">
       <div class="stat-label"><i class="fa-solid fa-money-bill-wave"></i> Unpaid</div>
@@ -443,7 +457,7 @@
           <td style="white-space:nowrap;">
             <div style="display:flex; flex-direction:column; gap:6px;">
               <span class="badge badge-project" style="align-self:flex-start;">
-                <i class="fa-solid fa-mobile-screen-button"></i>
+                <i class="fa-solid {% if terp_mode %}fa-cubes{% else %}fa-mobile-screen-button{% endif %}"></i>
                 {{ c.project.project_name|default:"—" }}
               </span>
               {% if c.project.app_type %}
@@ -495,9 +509,11 @@
           </td>
 
           <td>
-            <span class="badge {% if c.licence_type == 'transfer' %}badge-transfer{% else %}badge-new{% endif %}">
+            <span class="badge {% if c.licence_type == 'transfer' %}badge-transfer{% elif c.licence_type == 'developer' %}badge-developer{% else %}badge-new{% endif %}">
               {% if c.licence_type == 'transfer' %}
               <i class="fa-solid fa-right-left" style="font-size:11px;"></i>
+              {% elif c.licence_type == 'developer' %}
+              <i class="fa-solid fa-code" style="font-size:11px;"></i>
               {% else %}
               <i class="fa-solid fa-circle-plus" style="font-size:11px;"></i>
               {% endif %}
@@ -540,7 +556,7 @@
         <tr>
           <td colspan="10" class="empty-state">
             <i class="fa-solid fa-circle-check" style="font-size:40px; display:block; margin-bottom:12px; color:#334155;"></i>
-            No unbilled new or transfer licences found.
+            {% if terp_mode %}No unbilled T-ERP licences found.{% else %}No unbilled new or transfer licences found.{% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -558,6 +574,7 @@
 </div>
 
 <script>
+  const isTerpMode = {{ terp_mode|yesno:"true,false" }};
   let currentPage = 1;
   let filteredRows = [];
 
@@ -608,7 +625,7 @@
   }
 
   function updateStats() {
-    const licenceTypeTotals = { new: 0, transfer: 0 };
+    const licenceTypeTotals = { new: 0, transfer: 0, developer: 0 };
     let unpaid = 0;
     let total = 0;
     rows.forEach(function (row) {
@@ -616,12 +633,13 @@
       const payment = row.dataset.payment || '';
       if (lt === 'new') licenceTypeTotals.new++;
       if (lt === 'transfer') licenceTypeTotals.transfer++;
+      if (lt === 'developer') licenceTypeTotals.developer++;
       if (!payment || payment === 'Not Paid') unpaid++;
       total++;
     });
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statNew').textContent = licenceTypeTotals.new;
-    document.getElementById('statTransfer').textContent = licenceTypeTotals.transfer;
+    document.getElementById('statTransfer').textContent = isTerpMode ? licenceTypeTotals.developer : licenceTypeTotals.transfer;
     document.getElementById('statUnpaid').textContent = unpaid;
   }
 

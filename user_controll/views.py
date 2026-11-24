@@ -81,7 +81,9 @@ def get_all_menus():
             "icon": "fa-solid fa-hourglass-half",
             "submenus": [
                 {"id": "upcoming_expiry", "name": "Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
+                {"id": "terp_upcoming_expiry", "name": "TERP Upcoming Expiry", "icon": "fa-solid fa-cubes"},
                 {"id": "expired_key_report", "name": "Expired Key Report", "icon": "fa-solid fa-key"},
+                {"id": "terp_expired_key_report", "name": "TERP Expired Key Report", "icon": "fa-solid fa-cubes"},
             ],
         },
         {
@@ -89,9 +91,11 @@ def get_all_menus():
             "icon": "fa-solid fa-chart-simple",
             "submenus": [
                 {"id": "unbilled_report", "name": "Unbilled Report", "icon": "fa-solid fa-file-invoice-dollar"},
+                {"id": "terp_unbilled_report", "name": "TERP Unbilled Report", "icon": "fa-solid fa-cubes"},
                 {"id": "task_mst_report", "name": "Task MST Report", "icon": "fa-solid fa-table-list"},
                 {"id": "trellisco_hub_report", "name": "Trellisco Hub Report", "icon": "fa-solid fa-network-wired"},
                 {"id": "new_licence_report", "name": "New Licence Report", "icon": "fa-solid fa-certificate"},
+                {"id": "terp_new_licence_report", "name": "TERP New Licence Report", "icon": "fa-solid fa-cubes"},
             ],
         },
     ]
@@ -154,6 +158,9 @@ def configure_user_menu(request, user_id):
 
         user.allowed_menus = selected_menus
         user.allowed_app_types = selected_app_types
+        # User Control tick: allow this user to set the licence user count
+        # manually in billing, even when the package defines a users limit
+        user.can_edit_manual_users = request.POST.get("can_edit_manual_users") == "1"
         user.save()
 
         # if editing your own permissions, update session

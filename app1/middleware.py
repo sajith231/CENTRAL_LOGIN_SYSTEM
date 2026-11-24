@@ -64,16 +64,20 @@ class MenuPermissionMiddleware:
         "user_controll:configure_user_menu": "user_menu_control",
         # Upcoming Expiry
         "upcoming_expiry:upcoming_expiry": "upcoming_expiry",
+        "upcoming_expiry:terp_upcoming_expiry": "terp_upcoming_expiry",
         # Expired Key Report
         "expired_key_report:expired_key_report": "expired_key_report",
+        "expired_key_report:terp_expired_key_report": "terp_expired_key_report",
         # Unbilled Report
         "unbilled_report:unbilled_report": "unbilled_report",
+        "unbilled_report:terp_unbilled_report": "terp_unbilled_report",
         # Task MST Report
         "task_mst_report:task_mst_report": "task_mst_report",
         # Trellisco Hub Report
         "trellisco_hub_report:trellisco_hub_report": "trellisco_hub_report",
         # New Licence Report
         "new_licence_report:new_licence_report": "new_licence_report",
+        "new_licence_report:terp_new_licence_report": "terp_new_licence_report",
         # Billing (Upcoming Expiry Billing button)
         "MobileApp:mobile_control_billing": "mobile_billing",
     }

@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}New Licence Report{% endblock %}
-{% block header_title %}<strong>New Licence Report</strong><span class="muted"> / full details of all new licences</span>{% endblock %}
-{% block active_new_licence_report %}active{% endblock %}
+{% block title %}{% if terp_mode %}TERP New Licence Report{% else %}New Licence Report{% endif %}{% endblock %}
+{% block header_title %}<strong>{% if terp_mode %}TERP New Licence Report{% else %}New Licence Report{% endif %}</strong><span class="muted"> / full details of all new licences</span>{% endblock %}
+{% block active_new_licence_report %}{% if not terp_mode %}active{% endif %}{% endblock %}
+{% block active_terp_new_licence_report %}{% if terp_mode %}active{% endif %}{% endblock %}
 
 {% block content %}
 <style>
@@ -380,9 +381,9 @@
 <div class="card" style="padding:0; margin-bottom:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06); flex-wrap:wrap; gap:10px;">
         <h2 style="margin:0; font-size:24px; font-weight:600; color:white;">
-            <i class="fa-solid fa-certificate" style="color:#a78bfa;"></i> New Licence Report
+            <i class="fa-solid {% if terp_mode %}fa-cubes{% else %}fa-certificate{% endif %}" style="color:#a78bfa;"></i> {% if terp_mode %}TERP New Licence Report{% else %}New Licence Report{% endif %}
         </h2>
-        <span class="muted" style="font-size:13px;">{{ stats.total }} licence(s) across all projects</span>
+        <span class="muted" style="font-size:13px;">{{ stats.total }} licence(s) across {% if terp_mode %}all T-ERP projects{% else %}all projects{% endif %}</span>
     </div>
 
     <!-- STATS -->
@@ -482,7 +483,7 @@
             </select>
         </div>
         <div class="tm-field" style="flex-direction:row; align-items:flex-end; gap:8px;">
-            <a href="{% url 'new_licence_report:new_licence_report' %}" style="font-size:13px; color:#94a3b8; text-decoration:none;">&#10005; Clear</a>
+            <a href="{% if terp_mode %}{% url 'new_licence_report:terp_new_licence_report' %}{% else %}{% url 'new_licence_report:new_licence_report' %}{% endif %}" style="font-size:13px; color:#94a3b8; text-decoration:none;">&#10005; Clear</a>
         </div>
     </form>
 
@@ -527,7 +528,7 @@
                         {% endif %}
                     </td>
                     <td style="white-space:nowrap;">
-                        <span class="tm-badge tm-badge-purple"><i class="fa-solid fa-mobile-screen-button" style="font-size:11px;"></i> {{ c.project.project_name }}</span>
+                        <span class="tm-badge tm-badge-purple"><i class="fa-solid {% if terp_mode %}fa-cubes{% else %}fa-mobile-screen-button{% endif %}" style="font-size:11px;"></i> {{ c.project.project_name }}</span>
                     </td>
                     <td style="white-space:nowrap;">
                         {% if r.branch_name %}
@@ -666,7 +667,7 @@
                 <tr>
                     <td colspan="18" class="tm-empty">
                         <i class="fa-solid fa-inbox" style="font-size:26px; color:#334155;"></i>
-                        <div style="margin-top:10px;">No new licences found matching the selected filters.</div>
+                        <div style="margin-top:10px;">{% if terp_mode %}No T-ERP new licences found matching the selected filters.{% else %}No new licences found matching the selected filters.{% endif %}</div>
                     </td>
                 </tr>
                 {% endfor %}

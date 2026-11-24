@@ -45,6 +45,28 @@
         </small>
       </div>
 
+      {# 2) Billing Permissions #}
+      <div style="margin-top:16px; padding:12px; border-radius:10px; background:#020617;">
+        <div style="font-weight:600; margin-bottom:8px;">
+          <i class="fa-solid fa-user-pen"></i> Billing Permissions
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <label style="display:flex; align-items:center; gap:6px; background:#0b1220; padding:8px 10px; border-radius:8px; font-size:14px;">
+            <input
+              type="checkbox"
+              name="can_edit_manual_users"
+              value="1"
+              {% if u.can_edit_manual_users %}checked{% endif %}
+              style="accent-color:#f59e0b;"
+            >
+            Allow manual user count editing in Billing
+          </label>
+        </div>
+        <small class="muted" style="font-size:11px; display:block; margin-top:6px;">
+          <i class="fa-solid fa-circle-info"></i> When enabled, this user can set the licence user count manually in the billing section even if the package defines a users limit. It applies only to licences of the branches (companies) assigned to this user.
+        </small>
+      </div>
+
       {% for m in menus %}
         {# show whole main menu only if at least one submenu is allowed OR we are configuring; in configure page we show all #}
         <div style="margin-top:16px; padding:12px; border-radius:10px; background:#020617;">

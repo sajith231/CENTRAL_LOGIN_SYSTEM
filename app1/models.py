@@ -25,6 +25,10 @@ class Users(models.Model):
     # 🔴 NEW FIELD – will store list of allowed submenu IDs
     allowed_menus = models.JSONField(default=list, blank=True)
     allowed_app_types = models.JSONField(default=list, blank=True)
+    # User Control tick — lets this user set the licence user count manually in
+    # the billing section even when the package defines a users limit.
+    # It only applies to licences of the branches (companies) assigned to the user.
+    can_edit_manual_users = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
 

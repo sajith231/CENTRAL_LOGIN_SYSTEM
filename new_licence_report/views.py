@@ -55,8 +55,19 @@ def _id_param(value):
 
 
 def new_licence_report_view(request):
+    """New Licence Report – new licences of non T-ERP projects."""
+    return render_new_licence_report(request, terp_only=False)
+
+
+def terp_new_licence_report_view(request):
+    """TERP New Licence Report – new licences of T-ERP enabled projects."""
+    return render_new_licence_report(request, terp_only=True)
+
+
+def render_new_licence_report(request, terp_only=False):
+    menu_id = "terp_new_licence_report" if terp_only else MENU_ID
     allowed = request.session.get("allowed_menus") or []
-    if not (request.user.is_authenticated and request.user.is_superuser) and MENU_ID not in allowed:
+    if not (request.user.is_authenticated and request.user.is_superuser) and menu_id not in allowed:
         return HttpResponseForbidden("Permission denied")
 
     now = timezone.now()
@@ -89,10 +100,11 @@ def new_licence_report_view(request):
     shop_id = _id_param(shop)
 
     # -------------------- BASE QUERYSET --------------------
-    # New licences across EVERY project (no project allow-list).
+    # New licences only, scoped to the menu they belong to:
+    # the TERP report shows T-ERP projects, the main report shows only non T-ERP projects
     controls = (
         MobileControl.objects
-        .filter(licence_type=LICENCE_TYPE)
+        .filter(licence_type=LICENCE_TYPE, project__t_erp=terp_only)
         .select_related(
             "project",
             "store",
@@ -122,6 +134,7 @@ def new_licence_report_view(request):
             MobileControl.objects
             .filter(
                 licence_type=LICENCE_TYPE,
+                project__t_erp=terp_only,
                 active_custom_package__modules__module_name__icontains=q,
             )
             .values_list("id", flat=True)
@@ -259,7 +272,7 @@ def new_licence_report_view(request):
     # -------------------- FILTER DROPDOWNS --------------------
     projects = (
         MobileProject.objects
-        .filter(controls__licence_type=LICENCE_TYPE)
+        .filter(controls__licence_type=LICENCE_TYPE, t_erp=terp_only)
         .order_by("project_name")
         .distinct()
     )
@@ -268,7 +281,7 @@ def new_licence_report_view(request):
     if branch_ids is not None:
         branches = branches.filter(id__in=branch_ids)
 
-    new_controls = MobileControl.objects.filter(licence_type=LICENCE_TYPE)
+    new_controls = MobileControl.objects.filter(licence_type=LICENCE_TYPE, project__t_erp=terp_only)
     if branch_ids is not None:
         new_controls = new_controls.filter(shop__branch_id__in=branch_ids)
 
@@ -341,4 +354,5 @@ def new_licence_report_view(request):
             "bill_status": bill_status, "expiry": expiry,
             "payment": payment,
         },
+        "terp_mode": terp_only,
     })
