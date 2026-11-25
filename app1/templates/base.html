@@ -398,7 +398,7 @@
           {% endif %}
 
           {# 2) APP CONTROL #}
-          {% if request.user.is_superuser or 'mobile_control' in am or 'terp_license' in am or 'mobile_demo' in am %}
+          {% if request.user.is_superuser or 'mobile_control' in am or 'mobile_demo' in am %}
 
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-mobile">
@@ -411,13 +411,6 @@
               <a href="{% url 'MobileApp:mobile_control' %}" onclick="sessionStorage.removeItem('mobileControlFilters');"
                 class="{% block active_mobile_control %}{% endblock %}">
                 <i class="fa-solid fa-sliders"></i> Licensing
-              </a>
-              {% endif %}
-
-              {% if request.user.is_superuser or 'terp_license' in am %}
-              <a href="{% url 'MobileApp:terp_license' %}" onclick="sessionStorage.removeItem('terpControlFilters');"
-                class="{% block active_terp_license %}{% endblock %}">
-                <i class="fa-solid fa-cubes"></i> TERP Licensing
               </a>
               {% endif %}
 
@@ -435,7 +428,54 @@
           </li>
           {% endif %}
 
-          {# 3) CLIENTS #}
+          {# 3) TERP – ALL TERP BASED MENUS #}
+          {% if request.user.is_superuser or 'terp_license' in am or 'terp_new_licence_report' in am or 'terp_unbilled_report' in am or 'terp_upcoming_expiry' in am or 'terp_expired_key_report' in am %}
+          <li>
+            <button class="menu-toggle" aria-expanded="false" data-target="submenu-terp">
+              <i class="fa-solid fa-cubes"></i>
+              <span>TERP</span>
+              <i class="fa-solid fa-chevron-right chev"></i>
+            </button>
+            <div id="submenu-terp" class="submenu">
+              {% if request.user.is_superuser or 'terp_license' in am %}
+              <a href="{% url 'MobileApp:terp_license' %}" onclick="sessionStorage.removeItem('terpControlFilters');"
+                class="{% block active_terp_license %}{% endblock %}">
+                <i class="fa-solid fa-sliders"></i> TERP Licensing
+              </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'terp_new_licence_report' in am %}
+              <a href="{% url 'new_licence_report:terp_new_licence_report' %}"
+                 class="{% block active_terp_new_licence_report %}{% endblock %}">
+                <i class="fa-solid fa-certificate"></i> TERP New Licence Report
+              </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'terp_unbilled_report' in am %}
+              <a href="{% url 'unbilled_report:terp_unbilled_report' %}"
+                 class="{% block active_terp_unbilled_report %}{% endblock %}">
+                <i class="fa-solid fa-file-invoice-dollar"></i> TERP Unbilled Report
+              </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'terp_upcoming_expiry' in am %}
+              <a href="{% url 'upcoming_expiry:terp_upcoming_expiry' %}"
+                 class="{% block active_terp_upcoming_expiry %}{% endblock %}">
+                <i class="fa-solid fa-hourglass-half"></i> TERP Upcoming Expiry
+              </a>
+              {% endif %}
+
+              {% if request.user.is_superuser or 'terp_expired_key_report' in am %}
+              <a href="{% url 'expired_key_report:terp_expired_key_report' %}"
+                 class="{% block active_terp_expired_key_report %}{% endblock %}">
+                <i class="fa-solid fa-key"></i> TERP Expired Key Report
+              </a>
+              {% endif %}
+            </div>
+          </li>
+          {% endif %}
+
+          {# 4) CLIENTS #}
           {% if request.user.is_superuser or 'stores_list' in am or 'shop_list' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-clients">
@@ -460,7 +500,7 @@
 
           <li class="menu-divider"></li>
 
-          {# 4) USER MANAGEMENT #}
+          {# 5) USER MANAGEMENT #}
           {% if request.user.is_superuser or 'users_table' in am or 'user_menu_control' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-user">
@@ -485,7 +525,7 @@
           {% endif %}
 
 
-          {# 5) DOWNLOADS #}
+          {# 6) DOWNLOADS #}
           {% if request.user.is_superuser or 'downloads_upload' in am or 'downloads_download' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-downloads">
@@ -511,7 +551,7 @@
           {% endif %}
 
 
-          {# 6) MASTER #}
+          {# 7) MASTER #}
           {% if request.user.is_superuser or 'branch_list' in am or 'mobileapp_list' in am or 'module_list' in am or 'package_list' in am %}
           <li>
             <button class="menu-toggle" aria-expanded="false" data-target="submenu-master">
@@ -544,7 +584,7 @@
           </li>
           {% endif %}
 
-          {# 7) AGENTS – SUPERUSER OR MENU-CONTROLLED #}
+          {# 8) AGENTS – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'agents' in am %}
           <li>
             <a href="{% url 'agents:agent_list' %}"
@@ -556,7 +596,7 @@
           </li>
           {% endif %}
 
-          {# 8) ACTIVITY LOG – SUPERUSER ONLY #}
+          {# 9) ACTIVITY LOG – SUPERUSER ONLY #}
           {% if request.user.is_superuser %}
           <li>
             <a href="{% url 'activity_log:activity_log' %}"
@@ -568,7 +608,7 @@
           </li>
           {% endif %}
 
-          {# 9) UNBILLED REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {# 10) UNBILLED REPORT – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'unbilled_report' in am %}
           <li>
             <a href="{% url 'unbilled_report:unbilled_report' %}"
@@ -576,18 +616,6 @@
                style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
               <i class="fa-solid fa-file-invoice-dollar" style="width:20px; text-align:center; font-size:16px; color:rgba(255,255,255,.7);"></i>
               <span>Unbilled Report</span>
-            </a>
-          </li>
-          {% endif %}
-
-          {# 10) TERP UNBILLED REPORT – SUPERUSER OR MENU-CONTROLLED #}
-          {% if request.user.is_superuser or 'terp_unbilled_report' in am %}
-          <li>
-            <a href="{% url 'unbilled_report:terp_unbilled_report' %}"
-               class="{% block active_terp_unbilled_report %}{% endblock %}"
-               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
-              <i class="fa-solid fa-cubes" style="width:20px; text-align:center; font-size:16px; color:rgba(255,255,255,.7);"></i>
-              <span>TERP Unbilled Report</span>
             </a>
           </li>
           {% endif %}
@@ -628,19 +656,7 @@
           </li>
           {% endif %}
 
-          {# 14) TERP NEW LICENCE REPORT – SUPERUSER OR MENU-CONTROLLED #}
-          {% if request.user.is_superuser or 'terp_new_licence_report' in am %}
-          <li>
-            <a href="{% url 'new_licence_report:terp_new_licence_report' %}"
-               class="{% block active_terp_new_licence_report %}{% endblock %}"
-               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
-              <i class="fa-solid fa-cubes" style="width:20px; text-align:center; font-size:16px;"></i>
-              <span>TERP New Licence Report</span>
-            </a>
-          </li>
-          {% endif %}
-
-          {# 15) FINANCIAL YEAR SETUP – DJANGO SUPERUSER ONLY #}
+          {# 14) FINANCIAL YEAR SETUP – DJANGO SUPERUSER ONLY #}
           {% if request.user.is_superuser %}
           <li>
             <a href="{% url 'financial_year_setup:setup' %}" class="{% block active_financial_year_setup %}{% endblock %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
@@ -650,7 +666,7 @@
           </li>
           {% endif %}
 
-          {# 16) UPCOMING EXPIRY – MENU-CONTROLLED #}
+          {# 15) UPCOMING EXPIRY – MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'upcoming_expiry' in am %}
           <li>
             <a href="{% url 'upcoming_expiry:upcoming_expiry' %}"
@@ -662,19 +678,7 @@
           </li>
           {% endif %}
 
-          {# 17) TERP UPCOMING EXPIRY – SUPERUSER OR MENU-CONTROLLED #}
-          {% if request.user.is_superuser or 'terp_upcoming_expiry' in am %}
-          <li>
-            <a href="{% url 'upcoming_expiry:terp_upcoming_expiry' %}"
-               class="{% block active_terp_upcoming_expiry %}{% endblock %}"
-               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
-              <i class="fa-solid fa-cubes" style="width:20px; text-align:center; font-size:16px; color:#fbbf24;"></i>
-              <span>TERP Upcoming Expiry</span>
-            </a>
-          </li>
-          {% endif %}
-
-          {# 18) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
+          {# 16) EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
           {% if request.user.is_superuser or 'expired_key_report' in am %}
           <li>
             <a href="{% url 'expired_key_report:expired_key_report' %}"
@@ -682,18 +686,6 @@
                style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
               <i class="fa-solid fa-key" style="width:20px; text-align:center; font-size:16px; color:#f87171;"></i>
               <span>Expired Key Report</span>
-            </a>
-          </li>
-          {% endif %}
-
-          {# 19) TERP EXPIRED KEY REPORT – SUPERUSER OR MENU-CONTROLLED #}
-          {% if request.user.is_superuser or 'terp_expired_key_report' in am %}
-          <li>
-            <a href="{% url 'expired_key_report:terp_expired_key_report' %}"
-               class="{% block active_terp_expired_key_report %}{% endblock %}"
-               style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; text-decoration:none; color:var(--text); font-size:14px; font-weight:500;">
-              <i class="fa-solid fa-cubes" style="width:20px; text-align:center; font-size:16px; color:#f87171;"></i>
-              <span>TERP Expired Key Report</span>
             </a>
           </li>
           {% endif %}

@@ -27,12 +27,22 @@ def get_all_menus():
             "icon": "fa-solid fa-mobile-screen-button",
             "submenus": [
                 {"id": "mobile_control", "name": "Licensing", "icon": "fa-solid fa-sliders"},
-                {"id": "terp_license", "name": "TERP Licensing", "icon": "fa-solid fa-cubes"},
                 {"id": "mobile_control_status","name": "Mobile Status Control","icon": "fa-solid fa-toggle-on"},
                 {"id": "mobile_billing","name": "Mobile Billing","icon": "fa-solid fa-file-invoice-dollar"},
                 {"id": "mobile_payment_status", "name": "Mobile Payment Status", "icon": "fa-solid fa-money-check-dollar"},
                 {"id": "mobile_device_remove","name": "Mobile Device Remove","icon": "fa-solid fa-trash"},
                 {"id": "mobile_demo", "name": "Demo Licensing", "icon": "fa-solid fa-mobile-screen"},
+            ],
+        },
+        {
+            "name": "TERP",
+            "icon": "fa-solid fa-cubes",
+            "submenus": [
+                {"id": "terp_license", "name": "TERP Licensing", "icon": "fa-solid fa-sliders"},
+                {"id": "terp_new_licence_report", "name": "TERP New Licence Report", "icon": "fa-solid fa-certificate"},
+                {"id": "terp_unbilled_report", "name": "TERP Unbilled Report", "icon": "fa-solid fa-file-invoice-dollar"},
+                {"id": "terp_upcoming_expiry", "name": "TERP Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
+                {"id": "terp_expired_key_report", "name": "TERP Expired Key Report", "icon": "fa-solid fa-key"},
             ],
         },
         {
@@ -81,9 +91,7 @@ def get_all_menus():
             "icon": "fa-solid fa-hourglass-half",
             "submenus": [
                 {"id": "upcoming_expiry", "name": "Upcoming Expiry", "icon": "fa-solid fa-hourglass-half"},
-                {"id": "terp_upcoming_expiry", "name": "TERP Upcoming Expiry", "icon": "fa-solid fa-cubes"},
                 {"id": "expired_key_report", "name": "Expired Key Report", "icon": "fa-solid fa-key"},
-                {"id": "terp_expired_key_report", "name": "TERP Expired Key Report", "icon": "fa-solid fa-cubes"},
             ],
         },
         {
@@ -91,11 +99,9 @@ def get_all_menus():
             "icon": "fa-solid fa-chart-simple",
             "submenus": [
                 {"id": "unbilled_report", "name": "Unbilled Report", "icon": "fa-solid fa-file-invoice-dollar"},
-                {"id": "terp_unbilled_report", "name": "TERP Unbilled Report", "icon": "fa-solid fa-cubes"},
                 {"id": "task_mst_report", "name": "Task MST Report", "icon": "fa-solid fa-table-list"},
                 {"id": "trellisco_hub_report", "name": "Trellisco Hub Report", "icon": "fa-solid fa-network-wired"},
                 {"id": "new_licence_report", "name": "New Licence Report", "icon": "fa-solid fa-certificate"},
-                {"id": "terp_new_licence_report", "name": "TERP New Licence Report", "icon": "fa-solid fa-cubes"},
             ],
         },
     ]
@@ -149,7 +155,6 @@ def configure_user_menu(request, user_id):
     if request.method == "POST":
         selected_menus = []
         selected_app_types = []
-        
         for key in request.POST:
             if key.startswith("menu_"):
                 selected_menus.append(key.replace("menu_", ""))
